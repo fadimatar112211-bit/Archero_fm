@@ -90,7 +90,6 @@ class _GameScreenState extends State<GameScreen> {
   List<Offset> arrows = [];
   List> monsters = [];
   
-  // قائمة الحواجز والصخور داخل الماب
   final List<Rect> obstacles = [
     const Rect.fromLTWH(100, 200, 80, 30),
     const Rect.fromLTWH(220, 380, 90, 30),
@@ -140,7 +139,7 @@ class _GameScreenState extends State<GameScreen> {
         arrows = nextArrows;
 
         // 2. تحريك الوحوش والزعماء
-        List> nextMonsters = [];
+        List> updatedMonstersList = [];
         for (var monster in monsters) {
           double speed = monster['isBoss'] ? 1.2 : 2.0;
           double newY = monster['pos'].dy + speed;
@@ -160,16 +159,21 @@ class _GameScreenState extends State<GameScreen> {
               isGameOver = true;
             }
           } else if (!hitObs && newY < 680) {
-            nextMonsters.add({'pos': newPos, 'type': monster['type'], 'hp': monster['hp'], 'isBoss': monster['isBoss']});
+            updatedMonstersList.add({
+              'pos': newPos,
+              'type': monster['type'],
+              'hp': monster['hp'],
+              'isBoss': monster['isBoss']
+            });
           }
         }
-        monsters = nextMonsters;
+        monsters = updatedMonstersList;
 
-        // 3. فحص ضربات السهام للوحوش
+        // 3. فحص السهام والضربات
         List<Offset> survivingArrows = [];
         for (var arrow in arrows) {
           bool hit = false;
-          List> updatedMonsters = [];
+          List> survivingMonsters = [];
           for (var monster in monsters) {
             if (!hit && (arrow - monster['pos']).distance < (monster['isBoss'] ? 40 : 25)) {
               hit = true;
@@ -184,17 +188,17 @@ class _GameScreenState extends State<GameScreen> {
               }
             }
             if (monster['hp'] > 0) {
-              updatedMonsters.add(monster);
+              survivingMonsters.add(monster);
             }
           }
-          monsters = updatedMonsters;
+          monsters = survivingMonsters;
           if (!hit) {
             survivingArrows.add(arrow);
           }
         }
         arrows = survivingArrows;
 
-        // 4. إطلاق السهام تلقائياً
+        // 4. إطلاق السهام
         int shootRate = fastAttack ? 15 : 22;
         if (random.nextInt(shootRate) == 0) {
           arrows.add(playerPos);
@@ -204,7 +208,7 @@ class _GameScreenState extends State<GameScreen> {
           }
         }
 
-        // 5. ظهور الوحوش والزعماء
+        // 5. ظهور الوحوش
         if (random.nextInt(35) == 0) {
           double rx = random.nextInt(300).toDouble() + 40;
           bool isBossChance = score > 100 && random.nextInt(5) == 0;
