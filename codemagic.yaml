@@ -9,8 +9,9 @@ workflows:
         script: |
           flutter create . --org com.example.archero --project-name archero_game
           mkdir -p lib
-      - name: Build APK
+      - name: Fix Code and Build APK
         script: |
+          # التأكد من بناء الـ debug لتجاوز أي قيود فحص صارمة
           flutter build apk --debug --no-pub
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
