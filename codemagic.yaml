@@ -5,8 +5,14 @@ workflows:
     environment:
       flutter: stable
     scripts:
+      - name: Initialize Flutter Project Structure
+        script: |
+          flutter create . --org com.example.archero --project-name archero_game
+          mkdir -p lib
+          # تأكد من إعادة نسخ أو وضع ملف الـ main داخل lib إذا لزم
       - name: Build APK
         script: |
           flutter build apk --release
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
+      
