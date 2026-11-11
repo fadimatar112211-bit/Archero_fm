@@ -5,12 +5,12 @@ workflows:
     environment:
       flutter: stable
     scripts:
-      - name: Setup and Build APK
+      - name: Setup Project and Build APK
         script: |
-          # إذا لم يكن مجلد الأندرويد موجوداً، قم بإنشائه لمرة واحدة
           if [ ! -d "android" ]; then
             flutter create . --org com.example.archero --project-name archero_game
           fi
+          mkdir -p lib
           flutter build apk --debug --no-pub
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
