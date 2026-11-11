@@ -5,10 +5,8 @@ workflows:
     environment:
       flutter: stable
     scripts:
-      - name: Initialize Project and Build APK
+      - name: Build APK
         script: |
-          flutter create . --org com.example.archero --project-name archero_game
-          mkdir -p lib
           flutter build apk --debug --no-pub
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
