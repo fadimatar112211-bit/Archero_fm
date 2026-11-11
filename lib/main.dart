@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
-import 'package:audioplayers/audioplayers.dart';
 
 void main() {
   runApp(const ArcheroUltimateApp());
@@ -102,13 +101,11 @@ class _GameScreenState extends State<GameScreen> {
   int xp = 0;
   late int health;
   bool isGameOver = false;
-  bool showSkillSelection = false; // شاشة اختيار المهارات عند التطور
+  bool showSkillSelection = false;
   
-  // مهارات اللاعب المطورة
   bool extraArrows = false;
   bool fastAttack = false;
 
-  final AudioPlayer audioPlayer = AudioPlayer();
   final Random random = Random();
 
   @override
@@ -116,12 +113,6 @@ class _GameScreenState extends State<GameScreen> {
     super.initState();
     health = widget.maxHp;
     startGameLoop();
-  }
-
-  void playSound(String soundType) async {
-    try {
-      // await audioPlayer.play(AssetSource('sounds/$soundType.mp3'));
-    } catch (e) {}
   }
 
   void startGameLoop() {
@@ -134,7 +125,6 @@ class _GameScreenState extends State<GameScreen> {
         for (var arrow in arrows) {
           if (arrow.dy > 0) {
             Offset nextA = Offset(arrow.dx, arrow.dy - 14);
-            // التأكد من عدم اصطدام السهم بالحواجز
             bool hitObstacle = false;
             for (var obs in obstacles) {
               if (obs.contains(nextA)) {
@@ -156,7 +146,6 @@ class _GameScreenState extends State<GameScreen> {
           double newY = monster['pos'].dy + speed;
           Offset newPos = Offset(monster['pos'].dx, newY);
 
-          // فحص الاصطدام بالحواجز
           bool hitObs = false;
           for (var obs in obstacles) {
             if (obs.contains(newPos)) {
@@ -167,10 +156,8 @@ class _GameScreenState extends State<GameScreen> {
 
           if ((newPos - playerPos).distance < 35) {
             health -= monster['isBoss'] ? 2 : 1;
-            playSound('hit');
             if (health <= 0) {
               isGameOver = true;
-              playSound('game_over');
             }
           } else if (!hitObs && newY < 680) {
             nextMonsters.add({'pos': newPos, 'type': monster['type'], 'hp': monster['hp'], 'isBoss': monster['isBoss']});
@@ -182,7 +169,7 @@ class _GameScreenState extends State<GameScreen> {
         List<Offset> survivingArrows = [];
         for (var arrow in arrows) {
           bool hit = false;
-          List> survivingMonsters = [];
+          List> updatedMonsters = [];
           for (var monster in monsters) {
             if (!hit && (arrow - monster['pos']).distance < (monster['isBoss'] ? 40 : 25)) {
               hit = true;
@@ -190,9 +177,6 @@ class _GameScreenState extends State<GameScreen> {
               if (monster['hp'] <= 0) {
                 score += monster['isBoss'] ? 50 : 15;
                 xp += 10;
-                playSound('enemy_death');
-
-                // فحص ترقية المستوى (كل 50 نقطة خبرة تظهر خيارات المهارات)
                 if (xp >= 50) {
                   xp = 0;
                   showSkillSelection = true;
@@ -200,10 +184,10 @@ class _GameScreenState extends State<GameScreen> {
               }
             }
             if (monster['hp'] > 0) {
-              survivingMonsters.add(monster);
+              updatedMonsters.add(monster);
             }
           }
-          monsters = survivingMonsters;
+          monsters = updatedMonsters;
           if (!hit) {
             survivingArrows.add(arrow);
           }
@@ -213,7 +197,6 @@ class _GameScreenState extends State<GameScreen> {
         // 4. إطلاق السهام تلقائياً
         int shootRate = fastAttack ? 15 : 22;
         if (random.nextInt(shootRate) == 0) {
-          playSound('shoot');
           arrows.add(playerPos);
           if (widget.heroName.contains('الرامي') || extraArrows) {
             arrows.add(Offset(playerPos.dx - 18, playerPos.dy));
@@ -221,7 +204,7 @@ class _GameScreenState extends State<GameScreen> {
           }
         }
 
-        // 5. ظهور الوحوش والزعماء بشكل عشوائي
+        // 5. ظهور الوحوش والزعماء
         if (random.nextInt(35) == 0) {
           double rx = random.nextInt(300).toDouble() + 40;
           bool isBossChance = score > 100 && random.nextInt(5) == 0;
@@ -254,7 +237,6 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void dispose() {
     gameLoopTimer?.cancel();
-    audioPlayer.dispose();
     super.dispose();
   }
 
@@ -274,7 +256,6 @@ class _GameScreenState extends State<GameScreen> {
             double ny = playerPos.dy + details.delta.dy;
             Offset newP = Offset(nx.clamp(30.0, 370.0), ny.clamp(50.0, 670.0));
             
-            // منع اللاعب من الاختراق داخل الحواجز
             bool collideObs = false;
             for (var obs in obstacles) {
               if (obs.inflate(15).contains(newP)) {
@@ -299,7 +280,6 @@ class _GameScreenState extends State<GameScreen> {
                 obstacles: obstacles,
               ),
             ),
-            // نافذة اختيار المهارات العشوائية عند ارتقاء المستوى
             if (showSkillSelection)
               Center(
                 child: Container(
@@ -351,7 +331,6 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                 ),
               ),
-            // شاشة نهاية اللعبة
             if (isGameOver)
               Center(
                 child: Container(
@@ -384,7 +363,6 @@ class _GameScreenState extends State<GameScreen> {
   }
 }
 
-// ==================== محرك الرسم الشامل والمتطور ====================
 class UltimateGamePainter extends CustomPainter {
   final Offset playerPos;
   final Color heroColor;
@@ -402,21 +380,17 @@ class UltimateGamePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. الخلفية
     final bgPaint = Paint()..color = const Color(0xFF121212);
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
 
-    // 2. الحدود
     final borderPaint = Paint()..color = Colors.blueGrey..style = PaintingStyle.stroke..strokeWidth = 4;
     canvas.drawRect(Rect.fromLTWH(15, 15, size.width - 30, size.height - 80), borderPaint);
 
-    // 3. رسم الحواجز والصخور داخل الماب
     final obsPaint = Paint()..color = Colors.brown.shade700;
     for (var obs in obstacles) {
       canvas.drawRRect(RRect.fromRectAndRadius(obs, const Radius.circular(8)), obsPaint);
     }
 
-    // 4. رسم اللاعب (شكل بشري مع القوس)
     final bodyPaint = Paint()..color = heroColor;
     final headPaint = Paint()..color = Colors.amber.shade200;
     canvas.drawRect(Rect.fromCenter(center: playerPos, width: 22, height: 32), bodyPaint);
@@ -424,7 +398,6 @@ class UltimateGamePainter extends CustomPainter {
     final bowPaint = Paint()..color = Colors.brown..style = PaintingStyle.stroke..strokeWidth = 3;
     canvas.drawArc(Rect.fromCenter(center: playerPos, width: 38, height: 38), 0, pi, false, bowPaint);
 
-    // 5. رسم الوحوش والزعماء
     for (var monster in monsters) {
       Offset mPos = monster['pos'];
       bool isBoss = monster['isBoss'];
@@ -434,13 +407,11 @@ class UltimateGamePainter extends CustomPainter {
       
       canvas.drawCircle(mPos, radius, mPaint);
       
-      // عيون وقرون الوحش
       final hornP = Paint()..color = Colors.orange;
       canvas.drawCircle(Offset(mPos.dx - (isBoss ? 15 : 8), mPos.dy - (isBoss ? 25 : 12)), isBoss ? 10 : 5, hornP);
       canvas.drawCircle(Offset(mPos.dx + (isBoss ? 15 : 8), mPos.dy - (isBoss ? 25 : 12)), isBoss ? 10 : 5, hornP);
     }
 
-    // 6. رسم السهام
     final arrowPaint = Paint()..color = Colors.yellowAccent..strokeWidth = 4..strokeCap = StrokeCap.round;
     for (var arrow in arrows) {
       canvas.drawLine(arrow, Offset(arrow.dx, arrow.dy - 18), arrowPaint);
