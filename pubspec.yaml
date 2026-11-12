@@ -1,6 +1,6 @@
 name: archero_fm
-description: "A new Flutter project for Archero multiplayer game."
-publish_to: 'none' # Prevent accidental publishing to pub.dev
+description: "A professional Archero clone with graphics and audio."
+publish_to: 'none'
 
 version: 1.0.0+1
 
@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   shared_preferences: ^2.2.2
+  audioplayers: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -18,4 +19,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  
+
+  # تعريف مجلدات الأصول للصور والأصوات
+  assets:
+    - assets/images/
+    - assets/audio/
+    
