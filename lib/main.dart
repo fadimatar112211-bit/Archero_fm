@@ -738,6 +738,9 @@ class _GameScreenState extends State<GameScreen> {
 
       enemy['x'] = (enemy['x'] as double) + cos(moveAngle) * moveSpeed;
       enemy['y'] = (enemy['y'] as double) + sin(moveAngle) * moveSpeed;
+      // دورة مشي مستقلة تتقدم بحسب سرعة الحركة الفعلية لكل عدو.
+      enemy['walkPhase'] = ((enemy['walkPhase'] as double?) ?? 0.0) +
+          moveSpeed.abs() * (type == 'runner' ? 0.16 : 0.11);
       if (distance < 23 + (enemy['radius'] as double)) {
         final now = DateTime.now();
         if (lastDamageAt == null ||
@@ -1042,7 +1045,8 @@ class _GameScreenState extends State<GameScreen> {
                       'boss' => Icons.whatshot,
                       _ => Icons.pest_control,
                     };
-                    final enemyPhase = animationTicks * 0.13 + (enemy['x'] as double) * 0.03;
+                    final walkPhase = (enemy['walkPhase'] as double?) ?? 0.0;
+                    final enemyPhase = walkPhase + (enemy['x'] as double) * 0.03;
                     final enemyAttacking = enemyType == 'runner'
                         ? animationTicks % 105 < 18
                         : enemyType == 'boss'
@@ -1105,7 +1109,7 @@ class _GameScreenState extends State<GameScreen> {
                                         frameCount: 4,
                                         frameIndex: enemyAttacking
                                             ? (animationTicks ~/ 2) % 4
-                                            : (animationTicks ~/ 7) % 4,
+                                            : (walkPhase * 1.8).floor() % 4,
                                       ),
                                       if (enemyHit)
                                         DecoratedBox(decoration: BoxDecoration(color: Colors.white.withOpacity(.32))),
