@@ -4,17 +4,17 @@ import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 
 void main() {
-  runApp(const ArcheroAdvancedApp());
+  runApp(const ArcheroSoundApp());
 }
 
-class ArcheroAdvancedApp extends StatelessWidget {
-  const ArcheroAdvancedApp({Key? key}) : super(key: key);
+class ArcheroSoundApp extends StatelessWidget {
+  const ArcheroSoundApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Archero Pro Advanced Edition',
+      title: 'Archero Sound Edition',
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF090a0f),
@@ -25,27 +25,46 @@ class ArcheroAdvancedApp extends StatelessWidget {
   }
 }
 
-// Global Economy & Audio Controller
+// Global Economy & Audio Engine
 int globalCoins = 150;
 int heroHpUpgrade = 0;
 int heroAtkUpgrade = 0;
-final AudioPlayer sfxPlayer = AudioPlayer();
+final AudioPlayer globalAudioPlayer = AudioPlayer();
 
-void playSound(String soundType) async {
+// دالة تشغيل الأصوات الحقيقية أونلاين لتجنب مشاكل الملفات المفقودة
+void playRealSound(String type) async {
   try {
-    // محاكاة أو تشغيل الأصوات (يمكن وضع ملفات صوتية في assets وتفعيلها لاحقاً)
-    // حالياً النظام مهيأ بالكامل لاستقبال ملفات الأصوات الحقيقية
+    String url = '';
+    if (type == 'shoot') {
+      url = 'https://www.soundjay.com/buttons/sounds/button-16.mp3';
+    } else if (type == 'hit') {
+      url = 'https://www.soundjay.com/buttons/sounds/button-3.mp3';
+    } else if (type == 'coin') {
+      url = 'https://www.soundjay.com/buttons/sounds/button-7.mp3';
+    } else if (type == 'special') {
+      url = 'https://www.soundjay.com/buttons/sounds/beep-07.mp3';
+    }
+    
+    if (url.isNotEmpty) {
+      await globalAudioPlayer.stop();
+      await globalAudioPlayer.play(UrlSource(url));
+    }
   } catch (e) {
-    // Fallback
+    // تجاهل أي خطأ مؤقت في الاتصال
   }
 }
 
 // ==========================================
-// 1. القائمة الرئيسية بتصاميم سينمائية متقدمة
+// 1. القائمة الرئيسية ومتجر التطوير
 // ==========================================
-class MainMenuScreen extends StatelessWidget {
+class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({Key? key}) : super(key: key);
 
+  @override
+  _MainMenuScreenState createState() => _MainMenuScreenState();
+}
+
+class _MainMenuScreenState extends State<MainMenuScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,16 +82,12 @@ class MainMenuScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.shield_rounded, size: 80, color: Colors.amberAccent),
+                const Icon(Icons.volume_up_rounded, size: 80, color: Colors.amberAccent),
                 const SizedBox(height: 10),
-                const Text(
-                  'ARCHERO: PRO EDITION',
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: 2, color: Colors.white),
-                ),
-                const Text('النسخة المتقدمة الكاملة', style: TextStyle(fontSize: 14, color: Colors.amber)),
+                const Text('ARCHERO: SOUND EDITION', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2, color: Colors.white)),
+                const Text('النسخة الكاملة مع المؤثرات الصوتية الحقيقية', style: TextStyle(fontSize: 13, color: Colors.amber)),
                 const SizedBox(height: 20),
                 
-                // لوحة العملات الأنيقة
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
@@ -91,7 +106,6 @@ class MainMenuScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 30),
 
-                // متجر التطوير المتقدم
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -110,9 +124,8 @@ class MainMenuScreen extends StatelessWidget {
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade800),
                             onPressed: () {
                               if (globalCoins >= 50) {
-                                globalCoins -= 50;
-                                heroHpUpgrade += 25;
-                                (context as Element).markNeedsBuild();
+                                setState(() { globalCoins -= 50; heroHpUpgrade += 25; });
+                                playRealSound('coin');
                               }
                             },
                             icon: const Icon(Icons.favorite, size: 16),
@@ -122,9 +135,8 @@ class MainMenuScreen extends StatelessWidget {
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange.shade800),
                             onPressed: () {
                               if (globalCoins >= 70) {
-                                globalCoins -= 70;
-                                heroAtkUpgrade += 15;
-                                (context as Element).markNeedsBuild();
+                                setState(() { globalCoins -= 70; heroAtkUpgrade += 15; });
+                                playRealSound('coin');
                               }
                             },
                             icon: const Icon(Icons.flash_on, size: 16),
@@ -137,7 +149,6 @@ class MainMenuScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 40),
 
-                // زر بدء اللعب الضخم
                 SizedBox(
                   width: double.infinity,
                   height: 55,
@@ -149,9 +160,10 @@ class MainMenuScreen extends StatelessWidget {
                       elevation: 8,
                     ),
                     onPressed: () {
+                      playRealSound('coin');
                       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HeroSelectionScreen()));
                     },
-                    child: const Text('دخول المعركة (Play)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    child: const Text('دخول المعركة بالأصوات (Play)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -164,7 +176,7 @@ class MainMenuScreen extends StatelessWidget {
 }
 
 // ==========================================
-// 2. شاشة اختيار الأبطال الأربعة بتصميم احترافي
+// 2. شاشة اختيار الأبطال الأربعة
 // ==========================================
 class HeroSelectionScreen extends StatelessWidget {
   const HeroSelectionScreen({Key? key}) : super(key: key);
@@ -192,6 +204,7 @@ class HeroSelectionScreen extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: InkWell(
         onTap: () {
+          playRealSound('special');
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => GameScreen(heroType: type)));
         },
         child: Container(
@@ -226,7 +239,7 @@ class HeroSelectionScreen extends StatelessWidget {
 }
 
 // ==========================================
-// 3. محرك اللعبة المتقدم والرسوميات التفاعلية
+// 3. محرك اللعبة الرئيسي مع الأصوات الحية
 // ==========================================
 class GameScreen extends StatefulWidget {
   final int heroType;
@@ -302,7 +315,7 @@ class _GameScreenState extends State<GameScreen> {
       double spread = (i == 0) ? 0 : (i % 2 == 1 ? 0.25 : -0.25);
       arrows.add({'x': playerX, 'y': playerY, 'vx': cos(angle + spread) * 8.5, 'vy': sin(angle + spread) * 8.5});
     }
-    playSound('shoot');
+    playRealSound('shoot');
   }
 
   void _useSpecialSkill() {
@@ -312,7 +325,7 @@ class _GameScreenState extends State<GameScreen> {
       enemies.clear();
       specialCooldown = 15;
     });
-    playSound('special');
+    playRealSound('special');
     Timer.periodic(const Duration(seconds: 1), (t) {
       if (!mounted) { t.cancel(); return; }
       setState(() { if (specialCooldown > 0) specialCooldown--; else t.cancel(); });
@@ -333,7 +346,7 @@ class _GameScreenState extends State<GameScreen> {
             coins.add({'x': enemies[j]['x'], 'y': enemies[j]['y']});
             enemies.removeAt(j);
             score += 20;
-            playSound('hit');
+            playRealSound('hit');
           }
           break;
         }
@@ -353,7 +366,7 @@ class _GameScreenState extends State<GameScreen> {
       if (sqrt(pow(playerX - coins[c]['x'], 2) + pow(playerY - coins[c]['y'], 2)) < 35) {
         globalCoins += 10;
         coins.removeAt(c);
-        playSound('coin');
+        playRealSound('coin');
       }
     }
 
@@ -362,6 +375,7 @@ class _GameScreenState extends State<GameScreen> {
       playerHp = min(playerMaxHp, playerHp + 35);
       if (stage % 2 == 0) {
         setState(() { showMysteryChest = true; });
+        playRealSound('special');
       } else {
         _showPerksDialog();
       }
@@ -407,6 +421,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _showGameOver() {
+    playRealSound('hit');
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -446,10 +461,8 @@ class _GameScreenState extends State<GameScreen> {
         },
         child: Stack(
           children: [
-            // خلفية أرضية المعركة بتصميم متطور
             Container(color: const Color(0xFF13151c)),
 
-            // لوحة التحكم والعدادات المتقدمة بالأعلى
             Positioned(
               top: 45, left: 16, right: 16,
               child: Container(
@@ -470,7 +483,6 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
-            // صندوق المكافآت الغامض (Mystery Chest) بتصميم ثلاثي الأبعاد
             if (showMysteryChest)
               Center(
                 child: Container(
@@ -495,6 +507,7 @@ class _GameScreenState extends State<GameScreen> {
                             globalCoins += 75;
                             showMysteryChest = false;
                           });
+                          playRealSound('coin');
                           _spawnEnemies();
                         },
                         child: const Text('احصل على 75 عملة مجانية!', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -504,7 +517,6 @@ class _GameScreenState extends State<GameScreen> {
                 ),
               ),
 
-            // رسم العملات المتساقطة
             ...coins.map((c) => Positioned(
               left: c['x'] - 10, top: c['y'] - 10,
               child: Container(
@@ -514,15 +526,8 @@ class _GameScreenState extends State<GameScreen> {
               ),
             )),
 
-            // رسم الأعداء والزعماء بتصميم متطور
             ...enemies.map((en) => Positioned(
               left: en['x'] - en['radius'], top: en['y'] - en['radius'],
               child: Container(
                 width: en['radius'] * 2, height: en['radius'] * 2,
                 decoration: BoxDecoration(
-                  gradient: RadialGradient(colors: en['type'] == 'boss' ? [Colors.purpleAccent, Colors.deepPurple] : [Colors.redAccent, Colors.red.shade900]),
-                  shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: Colors.black, blurRadius: 8)],
-                ),
-                child: Center(
-      
