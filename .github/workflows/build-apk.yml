@@ -34,17 +34,23 @@ jobs:
           rm -rf android
           flutter create . --platforms=android --org com.fadimatar --project-name archero_fm
           
+          echo "=== 3. Adjusting Gradle Build Properties ==="
+          if [ -f "android/local.properties" ]; then
+            echo "sdk.dir=$ANDROID_HOME" >> android/local.properties
+          else
+            echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+          fi
+          
       - name: Clean & Get Dependencies
         run: |
           flutter clean
           flutter pub get
           
-      - name: Build Release APK
-        run: flutter build apk --release --no-pub
+      - name: Build Release APK with Stacktrace
+        run: flutter build apk --release --no-pub --verbose
           
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
-          
