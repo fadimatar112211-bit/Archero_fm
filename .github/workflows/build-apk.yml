@@ -26,11 +26,11 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Get dependencies without test SDK
+        run: flutter pub get --no-example
 
       - name: Build APK Release
-        run: flutter build apk --release
+        run: flutter build apk --release --no-pub
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
