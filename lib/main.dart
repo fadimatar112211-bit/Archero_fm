@@ -669,6 +669,12 @@ class _GameScreenState extends State<GameScreen> {
       if (arrowRemoved) continue;
     }
 
+    // إطفاء ومضة الإصابة تدريجياً حتى لا تبقى الشخصية مضيئة.
+    for (final enemy in enemies) {
+      final hitTicks = (enemy['hitTicks'] as int?) ?? 0;
+      if (hitTicks > 0) enemy['hitTicks'] = hitTicks - 1;
+    }
+
     // ذكاء قتالي متنوع: اندفاع السريع، التفاف المتخفي، واندفاعة الزعيم.
     for (final enemy in enemies) {
       final dx = playerX - (enemy['x'] as double);
