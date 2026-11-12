@@ -30,14 +30,9 @@ jobs:
                       f.write(line)
           "
           
-          echo "=== 2. Fixing Unsupported Gradle Project Automatically ==="
-          # يقوم هذا الأمر بإنشاء هيكل أندرويد متوافق تلقائياً إذا كان المشروع قديماً
-          if [ ! -d "android/app" ]; then
-            flutter create . --platforms=android --org com.fadimatar --project-name archero_fm
-          else
-            # تحديث ملفات إعدادات الجرادل المستقلة لتتطابق مع فلاتر الحديث
-            flutter create . --platforms=android --org com.fadimatar --project-name archero_fm --force
-          fi
+          echo "=== 2. Recreating Android Bridge cleanly ==="
+          rm -rf android
+          flutter create . --platforms=android --org com.fadimatar --project-name archero_fm
           
       - name: Clean & Get Dependencies
         run: |
@@ -52,3 +47,4 @@ jobs:
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
+          
