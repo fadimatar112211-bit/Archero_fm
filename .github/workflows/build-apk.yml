@@ -32,6 +32,11 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
         
+      - name: Upgrade Android Project Wrapper
+        run: |
+          flutter config --no-analytics
+          flutter create . --platforms=android --org com.fadimatar --project-name archero_fm
+          
       - name: Build Release APK
         run: flutter build apk --release --no-pub
         
