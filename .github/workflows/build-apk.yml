@@ -7,19 +7,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
+          
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.x'
           channel: 'stable'
-      - name: Remove test dependency
-        run: sed -i '/flutter_test:/d' pubspec.yaml
-      - run: flutter pub get
-      - run: flutter build apk --release --no-pub
-      - uses: actions/upload-artifact@v4
+          
+      - name: Get Dependencies
+        run: flutter pub get
+        
+      - name: Build Release APK
+        run: flutter build apk --release --no-pub
+        
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
