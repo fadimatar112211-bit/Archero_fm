@@ -1103,13 +1103,17 @@ class _GameScreenState extends State<GameScreen> {
                                       SpriteSheetFrame(
                                         asset: enemyType == 'boss'
                                             ? 'assets/spritesheets/boss_attack.svg'
-                                            : enemyType == 'runner'
-                                                ? 'assets/spritesheets/enemy_runner.svg'
-                                                : enemyType == 'stalker'
-                                                    ? 'assets/spritesheets/enemy_stalker.svg'
-                                                    : enemyType == 'tank'
-                                                        ? 'assets/spritesheets/enemy_tank.svg'
-                                                        : 'assets/spritesheets/enemy_melee.svg',
+                                            : enemyAttacking && enemyType == 'stalker'
+                                                ? 'assets/spritesheets/enemy_stalker_attack.svg'
+                                                : enemyAttacking && enemyType == 'tank'
+                                                    ? 'assets/spritesheets/enemy_tank_attack.svg'
+                                                    : enemyType == 'runner'
+                                                        ? 'assets/spritesheets/enemy_runner.svg'
+                                                        : enemyType == 'stalker'
+                                                            ? 'assets/spritesheets/enemy_stalker.svg'
+                                                            : enemyType == 'tank'
+                                                                ? 'assets/spritesheets/enemy_tank.svg'
+                                                                : 'assets/spritesheets/enemy_melee.svg',
                                         frameCount: 4,
                                         frameIndex: enemyAttacking
                                             ? (animationTicks ~/ 2) % 4
