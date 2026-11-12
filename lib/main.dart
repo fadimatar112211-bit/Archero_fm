@@ -1183,7 +1183,7 @@ class _GameScreenState extends State<GameScreen> {
                           child: Transform.scale(
                             scale: (1 + sin(animationTicks * 0.13) * 0.025) * (heroAttackTicks > 0 ? 1.045 : 1.0),
                             child: SpriteSheetFrame(
-                              asset: heroAttackTicks > 0 ? 'assets/spritesheets/player_attack.svg' : 'assets/spritesheets/player_idle.svg',
+                              asset: heroAttackTicks > 0 ? 'assets/spritesheets/player_attack.svg' : 'assets/spritesheets/player_walk.svg',
                               frameCount: 4,
                               frameIndex: heroAttackTicks > 0 ? (animationTicks ~/ 2) % 4 : (animationTicks ~/ 7) % 4,
                             ),
