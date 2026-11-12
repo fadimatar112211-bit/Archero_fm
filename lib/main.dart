@@ -1304,7 +1304,7 @@ class _GameScreenState extends State<GameScreen> {
                                             ? (enemyAttacking ? 'assets/spritesheets/boss_attack.svg' : 'assets/spritesheets/boss_walk.svg')
                                             : enemyAttacking && enemyType == 'runner'
                                                 ? 'assets/spritesheets/enemy_runner_attack.svg'
-                                                : enemyAttacking && enemyType != 'stalker' && enemyType != 'tank'
+                                                : enemyAttacking && enemyType != 'stalker' && enemyType != 'tank' && enemyType != 'ranged'
                                                     ? 'assets/spritesheets/enemy_melee_attack.svg'
                                                     : enemyAttacking && enemyType == 'stalker'
                                                 ? 'assets/spritesheets/enemy_stalker_attack.svg'
