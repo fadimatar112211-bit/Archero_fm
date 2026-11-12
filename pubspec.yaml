@@ -1,7 +1,6 @@
 name: archero_fm
-description: "A professional Archero clone with graphics and audio."
+description: A new Flutter project.
 publish_to: 'none'
-
 version: 1.0.0+1
 
 environment:
@@ -10,18 +9,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  shared_preferences: ^2.2.2
-  audioplayers: ^6.0.0
+  cupertino_icons: ^1.0.6
 
 dev_dependencies:
   flutter_test:
-    sdk: flutter_lints
+    sdk: flutter
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
 
-  # تعريف مجلدات الأصول للصور والأصوات
   assets:
-    - assets/images/
-    - assets/audio/
+    - assets/
     
