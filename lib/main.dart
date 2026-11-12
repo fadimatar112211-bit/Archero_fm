@@ -1091,9 +1091,11 @@ class _GameScreenState extends State<GameScreen> {
                                       SpriteSheetFrame(
                                         asset: enemyType == 'boss'
                                             ? 'assets/spritesheets/boss_attack.svg'
-                                            : (enemyType == 'stalker' || enemyType == 'runner')
-                                                ? 'assets/spritesheets/enemy_ranged.svg'
-                                                : 'assets/spritesheets/enemy_melee.svg',
+                                            : enemyType == 'runner'
+                                                ? 'assets/spritesheets/enemy_runner.svg'
+                                                : enemyType == 'stalker'
+                                                    ? 'assets/spritesheets/enemy_ranged.svg'
+                                                    : 'assets/spritesheets/enemy_melee.svg',
                                         frameCount: 4,
                                         frameIndex: enemyAttacking
                                             ? (animationTicks ~/ 2) % 4
@@ -1123,7 +1125,9 @@ class _GameScreenState extends State<GameScreen> {
                       child: Opacity(
                         opacity: (life / 24).clamp(0.0, 1.0),
                         child: SpriteSheetFrame(
-                          asset: 'assets/spritesheets/enemy_death.svg',
+                          asset: sprite['boss'] == true
+                              ? 'assets/spritesheets/boss_death.svg'
+                              : 'assets/spritesheets/enemy_death.svg',
                           frameCount: 4,
                           frameIndex: ((24 - life) ~/ 6).clamp(0, 3),
                         ),
