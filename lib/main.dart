@@ -713,18 +713,58 @@ class _GameScreenState extends State<GameScreen> {
       if (attackTicks > 0) attackTicks--;
       if (attackCooldown > 0) attackCooldown--;
       final attackRange = 23 + (enemy['radius'] as double) + 24;
-      if (distance <= attackRange && attackCooldown == 0) {
-        attackTicks = type == 'boss' ? 24 : 16;
-        attackCooldown = type == 'boss' ? 105 : 76;
+      var areaAttackTicks = (enemy['areaAttackTicks'] as int?) ?? 0;
+      if (areaAttackTicks > 0) areaAttackTicks--;
+      if (type == 'boss' &&
+          distance <= 220 &&
+          areaAttackTicks == 0 &&
+          attackCooldown == 0) {
+        areaAttackTicks = 32;
+        attackCooldown = 180;
+        enemy['areaHitDone'] = false;
+        combatEffects.add({
+          'x': enemy['x'], 'y': enemy['y'],
+          'type': 'bossTell', 'life': 32,
+        });
+      } else if (type != 'boss' &&
+          distance <= attackRange &&
+          attackCooldown == 0) {
+        attackTicks = 16;
+        attackCooldown = 76;
         enemy['attackHitDone'] = false;
         combatEffects.add({
           'x': enemy['x'], 'y': enemy['y'],
-          'type': type == 'boss' ? 'bossTell' : 'enemyAttack',
-          'life': type == 'boss' ? 22 : 12,
+          'type': 'enemyAttack', 'life': 12,
         });
       }
+      enemy['areaAttackTicks'] = areaAttackTicks;
       enemy['attackTicks'] = attackTicks;
       enemy['attackCooldown'] = attackCooldown;
+      if (type == 'boss' &&
+          areaAttackTicks == 8 &&
+          enemy['areaHitDone'] != true) {
+        enemy['areaHitDone'] = true;
+        final blastDx = playerX - (enemy['x'] as double);
+        final blastDy = playerY - (enemy['y'] as double);
+        final blastDistance = sqrt(blastDx * blastDx + blastDy * blastDy);
+        if (blastDistance <= 112) {
+          if (playerMoveTicks > 0) {
+            combatEffects.add({
+              'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 18,
+            });
+          } else {
+            playerHp -= 15;
+            combatEffects.add({
+              'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 22,
+            });
+            playRealSound('hit');
+          }
+        }
+        combatEffects.add({
+          'x': enemy['x'], 'y': enemy['y'],
+          'type': 'bossBurst', 'life': 24,
+        });
+      }
       var moveSpeed = enemy['speed'] as double;
       var moveAngle = angle;
 
