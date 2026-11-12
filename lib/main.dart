@@ -1004,6 +1004,7 @@ class _GameScreenState extends State<GameScreen> {
                         painter: FighterSpritePainter(
                           kind: 'hero',
                           tint: _heroColor(),
+                          variant: widget.heroType,
                         ),
                       ),
                     ),
@@ -1164,7 +1165,8 @@ class _GameScreenState extends State<GameScreen> {
 class FighterSpritePainter extends CustomPainter {
   final String kind;
   final Color tint;
-  const FighterSpritePainter({required this.kind, required this.tint});
+  final int variant;
+  const FighterSpritePainter({required this.kind, required this.tint, this.variant = 0});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1185,6 +1187,18 @@ class FighterSpritePainter extends CustomPainter {
     // ظل أرضي يعطي الشخصية عمقاً.
     canvas.drawOval(const Rect.fromLTWH(10, 54, 44, 8),
         Paint()..color = Colors.black.withOpacity(0.30));
+    // هالة وقرون خاصة بالزعيم.
+    if (boss) {
+      canvas.drawCircle(const Offset(32, 32), 29,
+        Paint()..color = const Color(0xFFFF542E).withOpacity(.18)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7));
+      final horns = Path()
+        ..moveTo(22, 13)..lineTo(7, -2)..lineTo(13, 20)..close()
+        ..moveTo(42, 13)..lineTo(57, -2)..lineTo(51, 20)..close();
+      canvas.drawPath(horns, Paint()..color = const Color(0xFFFF6A35));
+      canvas.drawPath(horns, Paint()..color = const Color(0xFFFFD16B)
+        ..style = PaintingStyle.stroke..strokeWidth = 1.5);
+    }
     // عباءة/أجنحة خلف الجسم.
     final cloak = Path()
       ..moveTo(19, 23)..quadraticBezierTo(2, 35, 12, 57)
@@ -1207,6 +1221,32 @@ class FighterSpritePainter extends CustomPainter {
     canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(35, 43, 10, 13), const Radius.circular(4)), leg);
     canvas.drawOval(const Rect.fromLTWH(16, 51, 17, 7), dark);
     canvas.drawOval(const Rect.fromLTWH(33, 51, 17, 7), dark);
+    // دروع كتف ثقيلة للدبابة.
+    if (tank) {
+      final plate = Paint()..color = const Color(0xFF8796A3);
+      canvas.drawRRect(RRect.fromRectAndRadius(
+        const Rect.fromLTWH(7, 25, 17, 15), const Radius.circular(5)), plate);
+      canvas.drawRRect(RRect.fromRectAndRadius(
+        const Rect.fromLTWH(40, 25, 17, 15), const Radius.circular(5)), plate);
+      canvas.drawCircle(const Offset(15, 32), 3, light);
+      canvas.drawCircle(const Offset(49, 32), 3, light);
+    }
+    // غطاء رأس وظلال مضيئة للمتخفي.
+    if (stalker) {
+      final hood = Path()
+        ..moveTo(17, 20)..quadraticBezierTo(15, -2, 32, 0)
+        ..quadraticBezierTo(50, -2, 47, 20)
+        ..lineTo(42, 27)..lineTo(22, 27)..close();
+      canvas.drawPath(hood, Paint()..color = const Color(0xFF241C3D));
+      canvas.drawOval(const Rect.fromLTWH(22, 16, 20, 7),
+        Paint()..color = const Color(0xFFFF4CF0));
+    }
+    if (runner) {
+      final crest = Path()
+        ..moveTo(23, 8)..lineTo(27, -2)..lineTo(31, 8)
+        ..lineTo(37, -2)..lineTo(41, 9)..close();
+      canvas.drawPath(crest, Paint()..color = const Color(0xFFFFD15C));
+    }
     // الجسم والدرع.
     final body = Path()
       ..moveTo(19, 25)..quadraticBezierTo(32, 18, 45, 25)
@@ -1232,6 +1272,21 @@ class FighterSpritePainter extends CustomPainter {
       canvas.drawPath(hair, Paint()..color = const Color(0xFFF4F5FF));
       final scarf = Path()..moveTo(19, 28)..lineTo(43, 27)..lineTo(57, 43)..lineTo(42, 39)..lineTo(32, 34)..close();
       canvas.drawPath(scarf, Paint()..color = const Color(0xFFE43B35));
+      if (variant == 2) {
+        final flame = Path()
+          ..moveTo(18, 31)..quadraticBezierTo(4, 18, 18, 11)
+          ..quadraticBezierTo(16, 25, 27, 27)..close();
+        canvas.drawPath(flame, Paint()..color = const Color(0xFFFF762B));
+      } else if (variant == 3) {
+        canvas.drawPath(Path()..moveTo(18, 8)..lineTo(9, 1)..lineTo(14, 17)..close(),
+          Paint()..color = const Color(0xFF9B73FF));
+        canvas.drawPath(Path()..moveTo(44, 8)..lineTo(55, 1)..lineTo(49, 17)..close(),
+          Paint()..color = const Color(0xFF9B73FF));
+      } else if (variant == 4) {
+        canvas.drawCircle(const Offset(32, 37), 9,
+          Paint()..color = const Color(0xFF45E8D0).withOpacity(.28)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
+      }
     }
     final eye = Paint()..color = const Color(0xFF171525);
     canvas.drawCircle(const Offset(26, 19), 2, eye);
@@ -1258,7 +1313,7 @@ class FighterSpritePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant FighterSpritePainter oldDelegate) =>
-      oldDelegate.kind != kind || oldDelegate.tint != tint;
+      oldDelegate.kind != kind || oldDelegate.tint != tint || oldDelegate.variant != variant;
 }
 
 // -----------------------------------------------------------------------------
