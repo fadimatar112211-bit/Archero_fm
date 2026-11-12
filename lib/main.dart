@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'progress_store.dart';
 
 Future<void> main() async {
@@ -1057,13 +1058,22 @@ class _GameScreenState extends State<GameScreen> {
                           SizedBox(
                             width: radius * 2,
                             height: radius * 2,
-                            child: CustomPaint(
-                              painter: FighterSpritePainter(
-                                kind: enemyType,
-                                tint: enemyColor,
-                                phase: animationTicks * (enemyType == 'boss' ? 0.075 : 0.13) + (enemy['x'] as double) * 0.03,
-                                hitFlash: ((enemy['hitTicks'] as int?) ?? 0) > 0,
-                                attacking: enemyType == 'runner' && animationTicks % 105 < 18 || enemyType == 'boss' && animationTicks % 180 < 28,
+                            child: Transform.translate(
+                              offset: Offset(0, sin(animationTicks * 0.13 + (enemy['x'] as double) * 0.03) * 2.0),
+                              child: Transform.scale(
+                                scale: 1 + sin(animationTicks * 0.13 + (enemy['y'] as double) * 0.02) * 0.025,
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    SvgPicture.asset(
+                                      enemyType == 'boss' ? 'assets/boss.svg' :
+                                      (enemyType == 'stalker' || enemyType == 'runner') ? 'assets/enemy_ranged.svg' : 'assets/enemy_melee.svg',
+                                      fit: BoxFit.contain,
+                                    ),
+                                    if (((enemy['hitTicks'] as int?) ?? 0) > 0)
+                                      DecoratedBox(decoration: BoxDecoration(color: Colors.white.withOpacity(.32))),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -1097,13 +1107,11 @@ class _GameScreenState extends State<GameScreen> {
                     child: SizedBox(
                       width: 58,
                       height: 58,
-                      child: CustomPaint(
-                        painter: FighterSpritePainter(
-                          kind: 'hero',
-                          tint: _heroColor(),
-                          variant: widget.heroType,
-                          phase: animationTicks * 0.13,
-                          attacking: heroAttackTicks > 0,
+                      child: Transform.translate(
+                        offset: Offset(0, sin(animationTicks * 0.13) * 2.2),
+                        child: Transform.scale(
+                          scale: 1 + sin(animationTicks * 0.13) * 0.025,
+                          child: SvgPicture.asset('assets/player.svg', fit: BoxFit.contain),
                         ),
                       ),
                     ),
