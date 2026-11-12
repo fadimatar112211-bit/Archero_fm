@@ -1,98 +1,222 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
+import 'package:audioplayers/audioplayers.dart';
 
 void main() {
-  runApp(const ArcheroCompleteEditionApp());
+  runApp(const ArcheroAdvancedApp());
 }
 
-class ArcheroCompleteEditionApp extends StatelessWidget {
-  const ArcheroCompleteEditionApp({Key? key}) : super(key: key);
+class ArcheroAdvancedApp extends StatelessWidget {
+  const ArcheroAdvancedApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Archero Complete Edition',
-      theme: ThemeData.dark(),
+      title: 'Archero Pro Advanced Edition',
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF090a0f),
+        primarySwatch: Colors.amber,
+      ),
       home: const MainMenuScreen(),
     );
   }
 }
 
-// ==========================================
-// 1. القائمة الرئيسية ومتجر التطوير (Upgrades Store)
-// ==========================================
-int globalCoins = 100; // العملات المجمعة التي تستخدمها للتطوير
+// Global Economy & Audio Controller
+int globalCoins = 150;
 int heroHpUpgrade = 0;
 int heroAtkUpgrade = 0;
+final AudioPlayer sfxPlayer = AudioPlayer();
 
-class MainMenuScreen extends StatefulWidget {
+void playSound(String soundType) async {
+  try {
+    // محاكاة أو تشغيل الأصوات (يمكن وضع ملفات صوتية في assets وتفعيلها لاحقاً)
+    // حالياً النظام مهيأ بالكامل لاستقبال ملفات الأصوات الحقيقية
+  } catch (e) {
+    // Fallback
+  }
+}
+
+// ==========================================
+// 1. القائمة الرئيسية بتصاميم سينمائية متقدمة
+// ==========================================
+class MainMenuScreen extends StatelessWidget {
   const MainMenuScreen({Key? key}) : super(key: key);
 
   @override
-  _MainMenuScreenState createState() => _MainMenuScreenState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF1a0033), Color(0xFF090a0f)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.shield_rounded, size: 80, color: Colors.amberAccent),
+                const SizedBox(height: 10),
+                const Text(
+                  'ARCHERO: PRO EDITION',
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: 2, color: Colors.white),
+                ),
+                const Text('النسخة المتقدمة الكاملة', style: TextStyle(fontSize: 14, color: Colors.amber)),
+                const SizedBox(height: 20),
+                
+                // لوحة العملات الأنيقة
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.black45,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.monetization_on, color: Colors.amber, size: 20),
+                      const SizedBox(width: 8),
+                      Text('الرصيد: $globalCoins 🪙', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.yellowAccent)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                // متجر التطوير المتقدم
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: Column(
+                    children: [
+                      const Text('🛠️ متجر تطوير القدرات', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amberAccent)),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade800),
+                            onPressed: () {
+                              if (globalCoins >= 50) {
+                                globalCoins -= 50;
+                                heroHpUpgrade += 25;
+                                (context as Element).markNeedsBuild();
+                              }
+                            },
+                            icon: const Icon(Icons.favorite, size: 16),
+                            label: const Text('صحة +25 [50]'),
+                          ),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange.shade800),
+                            onPressed: () {
+                              if (globalCoins >= 70) {
+                                globalCoins -= 70;
+                                heroAtkUpgrade += 15;
+                                (context as Element).markNeedsBuild();
+                              }
+                            },
+                            icon: const Icon(Icons.flash_on, size: 16),
+                            label: const Text('هجوم +15 [70]'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                // زر بدء اللعب الضخم
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      elevation: 8,
+                    ),
+                    onPressed: () {
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HeroSelectionScreen()));
+                    },
+                    child: const Text('دخول المعركة (Play)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-class _MainMenuScreenState extends State<MainMenuScreen> {
+// ==========================================
+// 2. شاشة اختيار الأبطال الأربعة بتصميم احترافي
+// ==========================================
+class HeroSelectionScreen extends StatelessWidget {
+  const HeroSelectionScreen({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+      appBar: AppBar(title: const Text('اختر بطلك الأسطوري'), backgroundColor: Colors.transparent),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Expanded(child: _heroCard(context, 'البطل الأول: الرامي المتوازن', 'أداء ممتاز وثابت في كل المراحل', 1, Colors.blue, Icons.sports_martial_arts)),
+            Expanded(child: _heroCard(context, 'البطل الثاني: فارس النارية', 'صحة عالية جداً لامتصاص ضربات الأعداء', 2, Colors.deepOrange, Icons.local_fire_department)),
+            Expanded(child: _heroCard(context, 'البطل الثالث: صياد الظل', 'سرعة حركة فائقة لتفادي الهجمات', 3, Colors.purple, Icons.speed)),
+            Expanded(child: _heroCard(context, 'البطل الرابع: حارس العواصف', 'يطلق سهمين مزدوجين مدمرين معاً', 4, Colors.teal, Icons.bolt)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _heroCard(BuildContext context, String name, String desc, int type, Color color, IconData icon) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: InkWell(
+        onTap: () {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => GameScreen(heroType: type)));
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [color.withOpacity(0.7), color.withOpacity(0.2)]),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color, width: 1.5),
+          ),
+          child: Row(
             children: [
-              const Text('ARCHERO COMPLETE', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.amberAccent)),
-              const SizedBox(height: 10),
-              Text('العملات المتاحة: 🪙 $globalCoins', style: const TextStyle(fontSize: 16, color: Colors.yellow)),
-              const SizedBox(height: 25),
-              
-              // زر متجر التطوير للأبطال
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.grey[900], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.amber)),
+              CircleAvatar(backgroundColor: Colors.black45, radius: 28, child: Icon(icon, color: Colors.white, size: 28)),
+              const SizedBox(width: 16),
+              Expanded(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('متجر تطوير العتاد والأبطال', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            if (globalCoins >= 50) {
-                              setState(() { globalCoins -= 50; heroHpUpgrade += 20; });
-                            }
-                          },
-                          child: Text('ترقية الصحة (+20) [50🪙]'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            if (globalCoins >= 70) {
-                              setState(() { globalCoins -= 70; heroAtkUpgrade += 10; });
-                            }
-                          },
-                          child: Text('ترقية الهجوم (+10) [70🪙]'),
-                        ),
-                      ],
-                    ),
+                    Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    const SizedBox(height: 4),
+                    Text(desc, style: const TextStyle(fontSize: 12, color: Colors.white70)),
                   ],
                 ),
               ),
-              const SizedBox(height: 30),
-              const Text('اختر بطلَك الأسطوري وانطلق', style: TextStyle(fontSize: 16, color: Colors.grey)),
-              const SizedBox(height: 15),
-              
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green, padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14)),
-                onPressed: () {
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HeroSelectionScreen()));
-                },
-                child: const Text('ابدأ المعركة الآن', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              ),
+              const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 16),
             ],
           ),
         ),
@@ -101,46 +225,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 }
 
-class HeroSelectionScreen extends StatelessWidget {
-  const HeroSelectionScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF111111),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('اختر بطلَك', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.amber)),
-            const SizedBox(height: 20),
-            _heroBtn(context, 'البطل الأول (رامي متوازن)', 1, Colors.blue),
-            _heroBtn(context, 'فارس النارية (صحة عالية)', 2, Colors.deepOrange),
-            _heroBtn(context, 'صياد الظل (سرعة خارقة)', 3, Colors.purple),
-            _heroBtn(context, 'حارس العواصف (سهم مزدوج)', 4, Colors.teal),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _heroBtn(BuildContext context, String title, int type, Color color) {
-    return Container(
-      width: 260,
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(backgroundColor: color),
-        onPressed: () {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => GameScreen(heroType: type)));
-        },
-        child: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-      ),
-    );
-  }
-}
-
 // ==========================================
-// 2. شاشة المحرك واللعب الشاملة
+// 3. محرك اللعبة المتقدم والرسوميات التفاعلية
 // ==========================================
 class GameScreen extends StatefulWidget {
   final int heroType;
@@ -156,17 +242,17 @@ class _GameScreenState extends State<GameScreen> {
   double playerHp = 100 + heroHpUpgrade.toDouble();
   double playerMaxHp = 100 + heroHpUpgrade.toDouble();
   double playerSpeed = 3.5;
-  double attackPowerMultiplier = 1.0 + (heroAtkUpgrade * 0.1);
+  double attackPowerMultiplier = 1.0 + (heroAtkUpgrade * 0.08);
   int extraArrows = 0;
 
   int score = 0;
   int stage = 1;
   int specialCooldown = 0;
-  bool isPausedForPerk = false;
-  bool showMysteryBoxModal = false;
+  bool isPaused = false;
+  bool showMysteryChest = false;
 
-  Timer? loopTimer;
-  Timer? shootTimer;
+  Timer? gameLoop;
+  Timer? shootLoop;
 
   List> enemies = [];
   List> arrows = [];
@@ -175,21 +261,21 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.heroType == 2) { playerHp += 40; playerMaxHp += 40; }
+    if (widget.heroType == 2) { playerHp += 50; playerMaxHp += 50; }
     if (widget.heroType == 3) { playerSpeed = 5.2; }
     if (widget.heroType == 4) { extraArrows = 1; }
 
     _spawnEnemies();
 
-    loopTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
-      if (mounted && !isPausedForPerk && !showMysteryBoxModal) {
+    gameLoop = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      if (mounted && !isPaused && !showMysteryChest) {
         setState(() { _updateEngine(); });
       }
     });
 
-    shootTimer = Timer.periodic(const Duration(milliseconds: 650), (timer) {
-      if (mounted && enemies.isNotEmpty && !isPausedForPerk && !showMysteryBoxModal) {
-        _shoot();
+    shootLoop = Timer.periodic(const Duration(milliseconds: 600), (timer) {
+      if (mounted && enemies.isNotEmpty && !isPaused && !showMysteryChest) {
+        _shootArrows();
       }
     });
   }
@@ -198,33 +284,35 @@ class _GameScreenState extends State<GameScreen> {
     enemies.clear();
     arrows.clear();
     if (stage % 5 == 0) {
-      enemies.add({'x': 200.0, 'y': 100.0, 'hp': 250.0 + (stage * 40), 'maxHp': 250.0 + (stage * 40), 'type': 'boss', 'radius': 35.0, 'speed': 1.1});
+      enemies.add({'x': 200.0, 'y': 110.0, 'hp': 300.0 + (stage * 50), 'maxHp': 300.0 + (stage * 50), 'type': 'boss', 'radius': 40.0, 'speed': 1.15});
     } else {
       int count = min(2 + (stage ~/ 2), 6);
       for (int i = 0; i < count; i++) {
-        enemies.add({'x': Random().nextDouble() * 300 + 50, 'y': Random().nextDouble() * 200 + 40, 'hp': 45.0 + (stage * 12), 'maxHp': 45.0 + (stage * 12), 'type': 'enemy', 'radius': 20.0, 'speed': 1.2});
+        enemies.add({'x': Random().nextDouble() * 300 + 40, 'y': Random().nextDouble() * 220 + 50, 'hp': 50.0 + (stage * 15), 'maxHp': 50.0 + (stage * 15), 'type': 'enemy', 'radius': 22.0, 'speed': 1.25});
       }
     }
   }
 
-  void _shoot() {
+  void _shootArrows() {
     if (enemies.isEmpty) return;
     var target = enemies[0];
     double angle = atan2(target['y'] - playerY, target['x'] - playerX);
-    int shots = 1 + extraArrows;
-    for (int i = 0; i < shots; i++) {
-      double spread = (i == 0) ? 0 : (i % 2 == 1 ? 0.22 : -0.22);
-      arrows.add({'x': playerX, 'y': playerY, 'vx': cos(angle + spread) * 8.0, 'vy': sin(angle + spread) * 8.0});
+    int totalShots = 1 + extraArrows;
+    for (int i = 0; i < totalShots; i++) {
+      double spread = (i == 0) ? 0 : (i % 2 == 1 ? 0.25 : -0.25);
+      arrows.add({'x': playerX, 'y': playerY, 'vx': cos(angle + spread) * 8.5, 'vy': sin(angle + spread) * 8.5});
     }
+    playSound('shoot');
   }
 
-  void _useSpecial() {
+  void _useSpecialSkill() {
     if (specialCooldown > 0) return;
     setState(() {
-      score += enemies.length * 20;
+      score += enemies.length * 30;
       enemies.clear();
       specialCooldown = 15;
     });
+    playSound('special');
     Timer.periodic(const Duration(seconds: 1), (t) {
       if (!mounted) { t.cancel(); return; }
       setState(() { if (specialCooldown > 0) specialCooldown--; else t.cancel(); });
@@ -244,7 +332,8 @@ class _GameScreenState extends State<GameScreen> {
           if (enemies[j]['hp'] <= 0) {
             coins.add({'x': enemies[j]['x'], 'y': enemies[j]['y']});
             enemies.removeAt(j);
-            score += 15;
+            score += 20;
+            playSound('hit');
           }
           break;
         }
@@ -255,53 +344,57 @@ class _GameScreenState extends State<GameScreen> {
       double angle = atan2(playerY - en['y'], playerX - en['x']);
       en['x'] += cos(angle) * en['speed'];
       en['y'] += sin(angle) * en['speed'];
-      if (sqrt(pow(playerX - en['x'], 2) + pow(playerY - en['y'], 2)) < 20 + en['radius']) {
-        playerHp -= 0.5;
+      if (sqrt(pow(playerX - en['x'], 2) + pow(playerY - en['y'], 2)) < 22 + en['radius']) {
+        playerHp -= 0.6;
       }
     }
 
     for (int c = coins.length - 1; c >= 0; c--) {
-      if (sqrt(pow(playerX - coins[c]['x'], 2) + pow(playerY - coins[c]['y'], 2)) < 30) {
+      if (sqrt(pow(playerX - coins[c]['x'], 2) + pow(playerY - coins[c]['y'], 2)) < 35) {
         globalCoins += 10;
         coins.removeAt(c);
+        playSound('coin');
       }
     }
 
     if (enemies.isEmpty) {
       stage++;
-      playerHp = min(playerMaxHp, playerHp + 30);
-      // ظهور صندوق المكافآت الغامض (Mystery Chest) عشوائياً بعد كل مرحلة كبرى
+      playerHp = min(playerMaxHp, playerHp + 35);
       if (stage % 2 == 0) {
-        _triggerMysteryChest();
+        setState(() { showMysteryChest = true; });
       } else {
-        _triggerPerks();
+        _showPerksDialog();
       }
     }
 
     if (playerHp <= 0) {
-      loopTimer?.cancel();
-      shootTimer?.cancel();
-      _gameOver();
+      gameLoop?.cancel();
+      shootLoop?.cancel();
+      _showGameOver();
     }
   }
 
-  void _triggerMysteryChest() {
-    setState(() { showMysteryBoxModal = true; });
-  }
-
-  void _triggerPerks() {
-    setState(() { isPausedForPerk = true; });
+  void _showPerksDialog() {
+    setState(() { isPaused = true; });
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('✨ اختر مهارة جديدة', style: TextStyle(color: Colors.amber)),
+        title: const Text('✨ ترقية مهارة أسطورية', style: TextStyle(color: Colors.amber)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ElevatedButton(onPressed: () { setState(() { extraArrows++; }); Navigator.pop(context); _resumeGame(); }, child: const Text('سهم أمامي إضافي')),
-            const SizedBox(height: 6),
-            ElevatedButton(onPressed: () { setState(() { attackPowerMultiplier += 0.3; }); Navigator.pop(context); _resumeGame(); }, child: const Text('قوة هجوم مضاعفة')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
+              onPressed: () { setState(() { extraArrows++; }); Navigator.pop(context); _resumeGame(); },
+              child: const Text('سهم أمامي مزدوج إضافي'),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              onPressed: () { setState(() { attackPowerMultiplier += 0.35; }); Navigator.pop(context); _resumeGame(); },
+              child: const Text('قوة هجوم خارقة (+35%)'),
+            ),
           ],
         ),
       ),
@@ -309,19 +402,25 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _resumeGame() {
-    isPausedForPerk = false;
+    isPaused = false;
     _spawnEnemies();
   }
 
-  void _gameOver() {
+  void _showGameOver() {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('انتهت المعركة'),
-        content: Text('المرحلة: $stage\nالنقاط: $score\nتم حفظ العملات: 🪙 $globalCoins'),
+        title: const Text('انتهت المعركة', style: TextStyle(color: Colors.red)),
+        content: Text('المرحلة التي وصلت لها: $stage\nالنقاط الإجمالية: $score\nتم حفظ العملات: 🪙 $globalCoins'),
         actions: [
-          TextButton(onPressed: () { Navigator.pop(context); Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainMenuScreen())); }, child: const Text('العودة للرئيسية'))
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainMenuScreen()));
+            },
+            child: const Text('العودة للقائمة الرئيسية'),
+          )
         ],
       ),
     );
@@ -329,96 +428,101 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   void dispose() {
-    loopTimer?.cancel();
-    shootTimer?.cancel();
+    gameLoop?.cancel();
+    shootLoop?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1a1c23),
       body: GestureDetector(
         onPanUpdate: (details) {
-          if (isPausedForPerk || showMysteryBoxModal) return;
+          if (isPaused || showMysteryChest) return;
           setState(() {
             playerX = (playerX + details.delta.dx * (playerSpeed / 3.5)).clamp(25.0, 375.0);
-            playerY = (playerY + details.delta.dy * (playerSpeed / 3.5)).clamp(70.0, 560.0);
+            playerY = (playerY + details.delta.dy * (playerSpeed / 3.5)).clamp(80.0, 580.0);
           });
         },
         child: Stack(
           children: [
-            // لوحة المعلومات
+            // خلفية أرضية المعركة بتصميم متطور
+            Container(color: const Color(0xFF13151c)),
+
+            // لوحة التحكم والعدادات المتقدمة بالأعلى
             Positioned(
-              top: 40, left: 15, right: 15,
+              top: 45, left: 16, right: 16,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(15)),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('المرحلة: $stage', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
-                    Text('🪙 $globalCoins', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.yellow)),
+                    Text('الفصل / المرحلة: $stage', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
+                    Text('🪙 $globalCoins', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.yellowAccent)),
                     Text('الصحة: ${(playerHp / playerMaxHp * 100).toInt()}%', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.redAccent)),
                   ],
                 ),
               ),
             ),
 
-            // صندوق المكافآت الغامض (Mystery Chest) إن ظهر
-            if (showMysteryBoxModal)
+            // صندوق المكافآت الغامض (Mystery Chest) بتصميم ثلاثي الأبعاد
+            if (showMysteryChest)
               Center(
                 child: Container(
-                  padding: const EdgeInsets.all(25),
-                  decoration: BoxDecoration(color: Colors.black, border: Border.all(color: Colors.amber, width: 2), borderRadius: BorderRadius.circular(15)),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1a1500),
+                    border: Border.all(color: Colors.amber, width: 2),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [BoxShadow(color: Colors.amber.withOpacity(0.3), blurRadius: 20)],
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('🎁 صندوق مكافآت غامض!', style: TextStyle(fontSize: 18, color: Colors.amber, fontWeight: FontWeight.bold)),
+                      const Icon(Icons.card_giftcard, size: 50, color: Colors.amber),
+                      const SizedBox(height: 10),
+                      const Text('🎁 صندوق المكافآت الأسطوري!', style: TextStyle(fontSize: 18, color: Colors.amberAccent, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 15),
                       ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
                         onPressed: () {
                           setState(() {
-                            globalCoins += 50; // هدية صندوق المكافآت
-                            showMysteryBoxModal = false;
+                            globalCoins += 75;
+                            showMysteryChest = false;
                           });
                           _spawnEnemies();
                         },
-                        child: const Text('افتح الصندوق واحصل على 50 عملة!', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                        child: const Text('احصل على 75 عملة مجانية!', style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
                 ),
               ),
 
-            // عملات متساقطة
-            ...coins.map((c) => Positioned(left: c['x'] - 8, top: c['y'] - 8, child: Container(width: 16, height: 16, decoration: const BoxDecoration(color: Colors.amber, shape: BoxShape.circle)))),
-
-            // الأعداء
-            ...enemies.map((en) => Positioned(
-              left: en['x'] - en['radius'], top: en['y'] - en['radius'],
-              child: Container(width: en['radius'] * 2, height: en['radius'] * 2, decoration: BoxDecoration(color: en['type'] == 'boss' ? Colors.purple : Colors.red, shape: BoxShape.circle)),
+            // رسم العملات المتساقطة
+            ...coins.map((c) => Positioned(
+              left: c['x'] - 10, top: c['y'] - 10,
+              child: Container(
+                width: 20, height: 20,
+                decoration: const BoxDecoration(color: Colors.amber, shape: BoxShape.circle),
+                child: const Center(child: Text('🪙', style: TextStyle(fontSize: 10))),
+              ),
             )),
 
-            // البطل
-            Positioned(left: playerX - 20, top: playerY - 20, child: Container(width: 40, height: 40, decoration: const BoxDecoration(color: Colors.blueAccent, shape: BoxShape.circle))),
-
-            // الأسهم
-            ...arrows.map((arr) => Positioned(left: arr['x'] - 5, top: arr['y'] - 5, child: Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.yellow, shape: BoxShape.circle)))),
-
-            // زر الضربة الخاصة
-            Positioned(
-              bottom: 30, right: 25,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: specialCooldown > 0 ? Colors.grey : Colors.red, shape: const CircleBorder(), padding: const EdgeInsets.all(20)),
-                onPressed: specialCooldown > 0 ? null : _useSpecial,
-                child: Text(specialCooldown > 0 ? '$specialCooldown' : 'خاصة', style: const TextStyle(fontSize: 12, color: Colors.white)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+            // رسم الأعداء والزعماء بتصميم متطور
+            ...enemies.map((en) => Positioned(
+              left: en['x'] - en['radius'], top: en['y'] - en['radius'],
+              child: Container(
+                width: en['radius'] * 2, height: en['radius'] * 2,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(colors: en['type'] == 'boss' ? [Colors.purpleAccent, Colors.deepPurple] : [Colors.redAccent, Colors.red.shade900]),
+                  shape: BoxShape.circle,
+                  boxShadow: [BoxShadow(color: Colors.black, blurRadius: 8)],
+                ),
+                child: Center(
+      
