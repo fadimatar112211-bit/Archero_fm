@@ -1249,7 +1249,9 @@ class _GameScreenState extends State<GameScreen> {
                   ...combatEffects.map((effect) {
                     final life = effect['life'] as int;
                     final type = effect['type'] as String;
-                    final radius = type == 'bossBurst' ? 72.0 : ((type == 'defeat' || type == 'playerHit') ? 42.0 : 29.0);
+                    final radius = type == 'bossTell' || type == 'bossBurst'
+                        ? 112.0
+                        : ((type == 'defeat' || type == 'playerHit') ? 42.0 : 29.0);
                     return Positioned(
                       left: (effect['x'] as double) - radius,
                       top: (effect['y'] as double) - radius,
@@ -1257,7 +1259,13 @@ class _GameScreenState extends State<GameScreen> {
                         size: Size(radius * 2, radius * 2),
                         painter: CombatEffectPainter(
                           type: type,
-                          progress: 1 - life / ((type == 'impact' || type.endsWith('Hit') || type == 'enemyAttack') ? (type == 'enemyAttack' ? 12 : 16) : 25),
+                          progress: (1 - life / (
+                            type == 'bossTell' ? 32 :
+                            type == 'bossBurst' ? 24 :
+                            (type == 'impact' || type.endsWith('Hit') || type == 'enemyAttack')
+                                ? (type == 'enemyAttack' ? 12 : 16)
+                                : 25
+                          )).clamp(0.0, 1.0),
                         ),
                       ),
                     );
