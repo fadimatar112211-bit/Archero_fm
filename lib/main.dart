@@ -665,17 +665,53 @@ class _GameScreenState extends State<GameScreen> {
       if (arrowRemoved) continue;
     }
 
-    // حركة الأعداء باتجاه اللاعب والضرر عند الاقتراب.
+    // ذكاء قتالي متنوع: اندفاع السريع، التفاف المتخفي، واندفاعة الزعيم.
     for (final enemy in enemies) {
       final dx = playerX - (enemy['x'] as double);
       final dy = playerY - (enemy['y'] as double);
-      final angle = atan2(dy, dx);
-      enemy['x'] = (enemy['x'] as double) +
-          cos(angle) * (enemy['speed'] as double);
-      enemy['y'] = (enemy['y'] as double) +
-          sin(angle) * (enemy['speed'] as double);
-
       final distance = sqrt(dx * dx + dy * dy);
+      final angle = atan2(dy, dx);
+      final type = enemy['type'] as String;
+      var moveSpeed = enemy['speed'] as double;
+      var moveAngle = angle;
+
+      if (type == 'runner') {
+        final dashCycle = animationTicks % 105;
+        if (dashCycle < 18) {
+          moveSpeed *= 2.35;
+          if (dashCycle == 0) {
+            combatEffects.add({
+              'x': enemy['x'], 'y': enemy['y'],
+              'type': 'enemyAttack', 'life': 12,
+            });
+          }
+        } else {
+          moveSpeed *= 0.78;
+        }
+      } else if (type == 'stalker') {
+        // يتحرك جانبياً حول اللاعب بدلاً من مطاردته بخط مستقيم.
+        final side = sin(animationTicks * 0.055 + (enemy['x'] as double)) >= 0 ? 1.0 : -1.0;
+        moveAngle += side * 0.48;
+        moveSpeed *= distance < 105 ? 0.72 : 1.12;
+      } else if (type == 'boss') {
+        final bossCycle = animationTicks % 180;
+        if (bossCycle < 28) {
+          moveSpeed *= 2.65;
+          if (bossCycle == 0) {
+            combatEffects.add({
+              'x': enemy['x'], 'y': enemy['y'],
+              'type': 'bossTell', 'life': 28,
+            });
+          }
+        } else {
+          moveSpeed *= 0.72;
+        }
+      } else if (type == 'tank') {
+        moveSpeed *= 0.82;
+      }
+
+      enemy['x'] = (enemy['x'] as double) + cos(moveAngle) * moveSpeed;
+      enemy['y'] = (enemy['y'] as double) + sin(moveAngle) * moveSpeed;
       if (distance < 23 + (enemy['radius'] as double)) {
         final now = DateTime.now();
         if (lastDamageAt == null ||
@@ -1233,9 +1269,10 @@ class CombatEffectPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final boss = type == 'bossBurst' || type == 'bossHit';
+    final boss = type == 'bossBurst' || type == 'bossHit' || type == 'bossTell';
     final impact = type == 'impact' || type.endsWith('Hit') || type == 'enemyAttack';
     final playerHit = type == 'playerHit';
+    final telegraph = type == 'bossTell';
     final metal = type == 'metalHit';
     final shadow = type == 'shadowHit';
     final radius = size.width * (.12 + progress * (impact ? .30 : .43));
@@ -1251,7 +1288,12 @@ class CombatEffectPainter extends CustomPainter {
     canvas.drawCircle(center, radius, glow);
     final ring = Paint()..color = color.withOpacity(1 - progress)
       ..style = PaintingStyle.stroke..strokeWidth = boss ? 4 : 2.5;
-    if (playerHit) {
+    if (telegraph) {
+      final warning = Paint()..color = color.withOpacity((1 - progress) * .85)
+        ..style = PaintingStyle.stroke..strokeWidth = 4..strokeCap = StrokeCap.round;
+      canvas.drawCircle(center, radius * (0.55 + progress * .45), warning);
+      canvas.drawCircle(center, radius * .72, warning..strokeWidth = 2);
+    } else if (playerHit) {
       final slash = Paint()..color = color.withOpacity(1 - progress)
         ..strokeWidth = 4..strokeCap = StrokeCap.round;
       canvas.drawLine(center + Offset(-radius, -radius * .55),
