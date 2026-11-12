@@ -1570,11 +1570,33 @@ class BossAuraPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = attacking ? 2.5 : 1.4;
     canvas.drawCircle(center, radius * (1 + pulse * .08), ring);
+    final innerRing = Paint()
+      ..color = const Color(0xFFFFD98B).withOpacity(attacking ? .62 : .24)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    canvas.drawCircle(center, radius * .72, innerRing);
+    // Four rotating ember sigils make the boss silhouette readable even in a crowded fight.
     for (var i = 0; i < 4; i++) {
       final angle = phase * (attacking ? 1.8 : .7) + i * pi / 2;
-      final point = center + Offset(cos(angle) * radius, sin(angle) * radius);
-      canvas.drawCircle(point, attacking ? 2.8 : 1.8,
-        Paint()..color = const Color(0xFFFFD98B).withOpacity(.9));
+      final direction = Offset(cos(angle), sin(angle));
+      final point = center + direction * radius;
+      canvas.save();
+      canvas.translate(point.dx, point.dy);
+      canvas.rotate(angle + pi / 4);
+      final sigil = Path()
+        ..moveTo(0, -5)..lineTo(3.5, 0)..lineTo(0, 5)..lineTo(-3.5, 0)..close();
+      canvas.drawPath(sigil, Paint()..color = const Color(0xFFFFD98B).withOpacity(.95));
+      canvas.restore();
+      canvas.drawCircle(point, attacking ? 4 : 2.5,
+        Paint()..color = const Color(0xFFFF7B43).withOpacity(.7));
+    }
+    if (attacking) {
+      final arc = Paint()
+        ..color = const Color(0xFFFF7448).withOpacity(.72)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3;
+      canvas.drawArc(Rect.fromCircle(center: center, radius: radius * 1.18),
+          phase * 1.4, pi * 1.25, false, arc);
     }
   }
 
