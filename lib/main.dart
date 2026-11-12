@@ -1073,10 +1073,16 @@ class _GameScreenState extends State<GameScreen> {
                                   child: Stack(
                                     fit: StackFit.expand,
                                     children: [
-                                      SvgPicture.asset(
-                                        enemyType == 'boss' ? 'assets/boss.svg' :
-                                        (enemyType == 'stalker' || enemyType == 'runner') ? 'assets/enemy_ranged.svg' : 'assets/enemy_melee.svg',
-                                        fit: BoxFit.contain,
+                                      SpriteSheetFrame(
+                                        asset: enemyType == 'boss'
+                                            ? 'assets/spritesheets/boss_attack.svg'
+                                            : (enemyType == 'stalker' || enemyType == 'runner')
+                                                ? 'assets/spritesheets/enemy_ranged.svg'
+                                                : 'assets/spritesheets/enemy_melee.svg',
+                                        frameCount: 4,
+                                        frameIndex: enemyAttacking
+                                            ? (animationTicks ~/ 2) % 4
+                                            : (animationTicks ~/ 7) % 4,
                                       ),
                                       if (enemyHit)
                                         DecoratedBox(decoration: BoxDecoration(color: Colors.white.withOpacity(.32))),
@@ -1122,7 +1128,11 @@ class _GameScreenState extends State<GameScreen> {
                           angle: heroAttackTicks > 0 ? -0.10 - (heroAttackTicks / 12) * 0.13 : sin(animationTicks * 0.13) * 0.025,
                           child: Transform.scale(
                             scale: (1 + sin(animationTicks * 0.13) * 0.025) * (heroAttackTicks > 0 ? 1.045 : 1.0),
-                            child: SvgPicture.asset('assets/player.svg', fit: BoxFit.contain),
+                            child: SpriteSheetFrame(
+                              asset: heroAttackTicks > 0 ? 'assets/spritesheets/player_attack.svg' : 'assets/spritesheets/player_idle.svg',
+                              frameCount: 4,
+                              frameIndex: heroAttackTicks > 0 ? (animationTicks ~/ 2) % 4 : (animationTicks ~/ 7) % 4,
+                            ),
                           ),
                         ),
                       ),
@@ -1693,4 +1703,53 @@ class ArenaPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant ArenaPainter oldDelegate) => false;
+}
+
+/// Displays one cell from a horizontal vector sprite sheet.
+class SpriteSheetFrame extends StatelessWidget {
+  const SpriteSheetFrame({
+    super.key,
+    required this.asset,
+    required this.frameCount,
+    required this.frameIndex,
+  });
+
+  final String asset;
+  final int frameCount;
+  final int frameIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+        if (!width.isFinite || !height.isFinite || width <= 0 || height <= 0) {
+          return const SizedBox.expand();
+        }
+        final frame = frameIndex % frameCount;
+        return ClipRect(
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: OverflowBox(
+              alignment: Alignment.centerLeft,
+              minWidth: width * frameCount,
+              maxWidth: width * frameCount,
+              minHeight: height,
+              maxHeight: height,
+              child: Transform.translate(
+                offset: Offset(-width * frame, 0),
+                child: SizedBox(
+                  width: width * frameCount,
+                  height: height,
+                  child: SvgPicture.asset(asset, fit: BoxFit.fill),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
