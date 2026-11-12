@@ -372,17 +372,38 @@ class HeroSelectionScreen extends StatelessWidget {
           itemBuilder: (context, index) {
             final hero = heroChoices[index];
             return Card(
-              color: hero.color.withOpacity(0.18),
+              clipBehavior: Clip.antiAlias,
+              color: const Color(0xFF111725),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(17),
-                side: BorderSide(color: hero.color, width: 1.3),
+                borderRadius: BorderRadius.circular(19),
+                side: BorderSide(color: hero.color.withOpacity(.9), width: 1.4),
               ),
+              elevation: 7,
+              shadowColor: hero.color.withOpacity(.28),
               child: ListTile(
                 contentPadding: const EdgeInsets.all(13),
-                leading: CircleAvatar(
-                  radius: 27,
-                  backgroundColor: hero.color,
-                  child: Icon(hero.icon, color: Colors.white),
+                leading: Container(
+                  width: 76,
+                  height: 76,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(colors: [
+                      hero.color.withOpacity(.42),
+                      const Color(0xFF101522),
+                    ]),
+                    border: Border.all(color: hero.color.withOpacity(.9), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(color: hero.color.withOpacity(.32), blurRadius: 14, spreadRadius: 1),
+                    ],
+                  ),
+                  child: CustomPaint(
+                    painter: FighterSpritePainter(
+                      kind: 'hero',
+                      tint: hero.color,
+                      variant: hero.id,
+                      phase: hero.id * .7,
+                    ),
+                  ),
                 ),
                 title: Text(
                   hero.name,
@@ -1569,10 +1590,22 @@ class FighterSpritePainter extends CustomPainter {
         Paint()..color = Colors.white.withOpacity(.42)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
     }
-    final armor = Paint()..color = hero ? const Color(0xFF243C69) : Color.lerp(tint, Colors.black, 0.28)!;
-    final light = Paint()..color = hero ? const Color(0xFFFFD36B) : Color.lerp(tint, Colors.white, 0.38)!;
+    final heroArmor = switch (variant) {
+      2 => const Color(0xFF71301F),
+      3 => const Color(0xFF30234F),
+      4 => const Color(0xFF164D55),
+      _ => const Color(0xFF243C69),
+    };
+    final heroMetal = switch (variant) {
+      2 => const Color(0xFFFF9A43),
+      3 => const Color(0xFFB58CFF),
+      4 => const Color(0xFF63F4DF),
+      _ => const Color(0xFFFFD36B),
+    };
+    final armor = Paint()..color = hero ? heroArmor : Color.lerp(tint, Colors.black, 0.28)!;
+    final light = Paint()..color = hero ? heroMetal : Color.lerp(tint, Colors.white, 0.38)!;
     final skin = Paint()..color = hero ? const Color(0xFFFFD5B2) : (boss ? const Color(0xFF6D244F) : const Color(0xFF83A84A));
-    final cape = Paint()..color = hero ? const Color(0xFFE33E35) : (stalker ? const Color(0xFF39265F) : Color.lerp(tint, Colors.black, 0.48)!);
+    final cape = Paint()..color = hero ? (variant == 3 ? const Color(0xFF35204F) : variant == 4 ? const Color(0xFF12645E) : variant == 2 ? const Color(0xFF9A351E) : const Color(0xFFE33E35)) : (stalker ? const Color(0xFF39265F) : Color.lerp(tint, Colors.black, 0.48)!);
     final motion = sin(phase * 1.7);
     final breathe = 1 + sin(phase * 2) * 0.018;
 
@@ -1730,6 +1763,16 @@ class FighterSpritePainter extends CustomPainter {
           Paint()..color = const Color(0xFF45E8D0).withOpacity(.28)
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
       }
+      // شارة كتف وهوية لونية مستقلة لكل بطل.
+      final crestColor = Paint()..color = variant == 2
+          ? const Color(0xFFFF8B35)
+          : variant == 3 ? const Color(0xFFB58CFF)
+          : variant == 4 ? const Color(0xFF62F2DE)
+          : const Color(0xFFFFD36B);
+      canvas.drawRRect(RRect.fromRectAndRadius(
+        const Rect.fromLTWH(16, 34, 7, 11), const Radius.circular(2)), crestColor);
+      canvas.drawRRect(RRect.fromRectAndRadius(
+        const Rect.fromLTWH(41, 34, 7, 11), const Radius.circular(2)), crestColor);
     }
     final eyeGlow = Paint()
       ..color = (stalker || boss ? const Color(0xFFFF4CF0) : const Color(0xFF8DEBFF)).withOpacity(.32)
@@ -1852,6 +1895,26 @@ class ArenaPainter extends CustomPainter {
       canvas.drawPath(flame, Paint()..color = const Color(0xFFFFB52E));
       canvas.drawPath(flame, Paint()..color = const Color(0xFFFFF0A1)
         ..style = PaintingStyle.stroke..strokeWidth = 1.2);
+    }
+
+    // شقوق دقيقة في البلاط تمنح الساحة مظهراً أقدم وأكثر واقعية.
+    final crack = Paint()
+      ..color = const Color(0xFF263A32).withOpacity(.58)
+      ..strokeWidth = 1.25
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 18; i++) {
+      final x = (i * 89.0 + 31) % size.width;
+      final y = 118 + (i * 113.0 + 17) % (size.height - 135);
+      canvas.drawLine(Offset(x, y), Offset(x + 5 + (i % 4) * 2, y + 3 + (i % 3) * 2), crack);
+      canvas.drawLine(Offset(x + 5 + (i % 4) * 2, y + 3 + (i % 3) * 2),
+          Offset(x + 10 + (i % 5) * 2, y + 1 + (i % 4) * 3), crack);
+    }
+    // جمرات صغيرة متناثرة قرب المشاعل.
+    for (var i = 0; i < 16; i++) {
+      final x = (i * 97.0 + 43) % size.width;
+      final y = 96 + (i * 71.0 + 29) % (size.height - 110);
+      canvas.drawCircle(Offset(x, y), i.isEven ? 1.5 : 1.0,
+        Paint()..color = const Color(0xFFFFB34A).withOpacity(.22));
     }
 
     // Ruined blocks, vines and edge shading.
