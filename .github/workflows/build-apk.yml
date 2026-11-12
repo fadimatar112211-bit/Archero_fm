@@ -29,11 +29,10 @@ jobs:
                       f.write(line)
           "
           
-      - name: Setup Android Build Properties
+      - name: Force Clean and Create Compatible Android Project
         run: |
-          if [ -f "android/app/build.gradle" ]; then
-            sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle
-          fi
+          rm -rf android
+          flutter create . --platforms=android --org com.fadimatar --project-name archero_fm
           
       - name: Get Dependencies
         run: flutter pub get
