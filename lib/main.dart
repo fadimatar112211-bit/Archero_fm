@@ -1055,7 +1055,11 @@ class _GameScreenState extends State<GameScreen> {
                                 ? animationTicks % 132 < 16
                                 : enemyType == 'tank' && animationTicks % 156 < 20;
                     final enemyHit = ((enemy['hitTicks'] as int?) ?? 0) > 0;
-                    final attackLean = enemyAttacking ? (enemyType == 'boss' ? -0.16 : -0.24) : 0.0;
+                    // حركة مشي ناعمة مستمرة فوق إطارات الـSVG، مع اختلاف وزن كل فئة.
+                    final gait = sin(walkPhase * 1.8);
+                    final gaitBounce = cos(walkPhase * 3.6).abs();
+                    final gaitStrength = enemyType == 'tank' || enemyType == 'boss' ? 0.45 : 1.0;
+                    final attackLean = enemyAttacking ? (enemyType == 'boss' ? -0.16 : -0.24) : gait * 0.045 * gaitStrength;
                     final hpRatio = ((enemy['hp'] as double) /
                             (enemy['maxHp'] as double))
                         .clamp(0.0, 1.0);
@@ -1088,11 +1092,11 @@ class _GameScreenState extends State<GameScreen> {
                             width: radius * 2,
                             height: radius * 2,
                             child: Transform.translate(
-                              offset: Offset(enemyAttacking ? -3.5 : sin(enemyPhase).abs() * -2.0, sin(enemyPhase * 1.35) * 2.0),
+                              offset: Offset(enemyAttacking ? -3.5 : sin(enemyPhase).abs() * -2.0, (sin(enemyPhase * 1.35) * 1.5 - gaitBounce * 1.15 * gaitStrength) * (enemyAttacking ? 0.45 : 1.0)),
                               child: Transform.rotate(
                                 angle: enemyHit ? 0.10 * sin(enemyPhase * 5) : attackLean,
                                 child: Transform.scale(
-                                  scale: (1 + sin(enemyPhase) * 0.025) * (enemyAttacking ? 1.06 : 1.0) * (enemyHit ? 0.96 : 1.0),
+                                  scale: (1 + gaitBounce * 0.018 * gaitStrength + sin(enemyPhase) * 0.012) * (enemyAttacking ? 1.06 : 1.0) * (enemyHit ? 0.96 : 1.0),
                                   child: Stack(
                                     fit: StackFit.expand,
                                     children: [
