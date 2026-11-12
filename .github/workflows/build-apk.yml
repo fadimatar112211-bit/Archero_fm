@@ -18,6 +18,17 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
           
+      - name: Fix pubspec.yaml safely
+        run: |
+          python3 -c "
+          with open('pubspec.yaml', 'r') as f:
+              lines = f.readlines()
+          with open('pubspec.yaml', 'w') as f:
+              for line in lines:
+                  if 'flutter_test' not in line:
+                      f.write(line)
+          "
+          
       - name: Get Dependencies
         run: flutter pub get
         
