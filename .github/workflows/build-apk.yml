@@ -29,17 +29,23 @@ jobs:
                       f.write(line)
           "
           
-      - name: Create Clean Android Project & Fix Gradle Wrapper
+      - name: Create Clean Android Project & Fix Gradle Configs
         run: |
           rm -rf android
           flutter create . --platforms=android --org com.fadimatar --project-name archero_fm
           
+          # ضبط إصدار الـ Gradle Wrapper
           mkdir -p android/gradle/wrapper
           echo "distributionBase=GRADLE_USER_HOME" > android/gradle/wrapper/gradle-wrapper.properties
           echo "distributionPath=wrapper/dists" >> android/gradle/wrapper/gradle-wrapper.properties
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.4-bin.zip" >> android/gradle/wrapper/gradle-wrapper.properties
           echo "zipStoreBase=GRADLE_USER_HOME" >> android/gradle/wrapper/gradle-wrapper.properties
           echo "zipStorePath=wrapper/dists" >> android/gradle/wrapper/gradle-wrapper.properties
+          
+          # تفعيل MultiDex ودعم التوافق في ملف الإعدادات
+          if [ -f "android/app/build.gradle" ]; then
+            sed -i 's/defaultConfig {/defaultConfig {\n        multiDexEnabled true/g' android/app/build.gradle
+          fi
           
       - name: Get Dependencies
         run: flutter pub get
