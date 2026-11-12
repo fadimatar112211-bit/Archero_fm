@@ -1276,13 +1276,16 @@ class CombatEffectPainter extends CustomPainter {
     final metal = type == 'metalHit';
     final shadow = type == 'shadowHit';
     final radius = size.width * (.12 + progress * (impact ? .30 : .43));
-    final color = boss ? const Color(0xFFFF642F)
-        : (playerHit ? const Color(0xFFFF365D)
-        : (metal ? const Color(0xFFB9D5E8)
-        : (shadow ? const Color(0xFFB66BFF)
-        : (type == 'sparkHit' ? const Color(0xFFFFC04D)
-        : (type == 'enemyAttack' ? const Color(0xFFFF7043)
-        : (type == 'impact' ? const Color(0xFFFFE58A) : const Color(0xFF8DDAFF))))));
+    final color = switch (type) {
+      'bossBurst' || 'bossHit' || 'bossTell' => const Color(0xFFFF642F),
+      'playerHit' => const Color(0xFFFF365D),
+      'metalHit' => const Color(0xFFB9D5E8),
+      'shadowHit' => const Color(0xFFB66BFF),
+      'sparkHit' => const Color(0xFFFFC04D),
+      'enemyAttack' => const Color(0xFFFF7043),
+      'impact' => const Color(0xFFFFE58A),
+      _ => const Color(0xFF8DDAFF),
+    };
     final glow = Paint()..color = color.withOpacity((1 - progress) * .45)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
     canvas.drawCircle(center, radius, glow);
