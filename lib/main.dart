@@ -396,13 +396,16 @@ class HeroSelectionScreen extends StatelessWidget {
                       BoxShadow(color: hero.color.withOpacity(.32), blurRadius: 14, spreadRadius: 1),
                     ],
                   ),
-                  child: CustomPaint(
-                    painter: FighterSpritePainter(
-                      kind: 'hero',
-                      tint: hero.color,
-                      variant: hero.id,
-                      phase: hero.id * .7,
-                    ),
+                  padding: const EdgeInsets.all(7),
+                  child: SpriteSheetFrame(
+                    asset: switch (hero.id) {
+                      2 => 'assets/spritesheets/player_flame_idle.svg',
+                      3 => 'assets/spritesheets/player_shadow_idle.svg',
+                      4 => 'assets/spritesheets/player_storm_idle.svg',
+                      _ => 'assets/spritesheets/player_idle.svg',
+                    },
+                    frameCount: 4,
+                    frameIndex: 0,
                   ),
                 ),
                 title: Text(
@@ -1322,7 +1325,7 @@ class _GameScreenState extends State<GameScreen> {
                             scale: (1 + sin(animationTicks * 0.13) * 0.025) * (heroAttackTicks > 0 ? 1.045 : 1.0),
                             child: SpriteSheetFrame(
                               asset: playerDying
-                                  ? 'assets/spritesheets/player_death.svg'
+                                  ? '${playerSpritePrefix}_death.svg'
                                   : heroAttackTicks > 0
                                       ? '${playerSpritePrefix}_attack.svg'
                                       : playerMoveTicks > 0
