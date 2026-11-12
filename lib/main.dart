@@ -491,6 +491,7 @@ class _GameScreenState extends State<GameScreen> {
 
   final List<GameObject> enemies = [];
   final List<GameObject> arrows = [];
+  final List<GameObject> enemyProjectiles = [];
   final List<GameObject> coins = [];
 
   @override
@@ -538,6 +539,7 @@ class _GameScreenState extends State<GameScreen> {
   void _spawnEnemies() {
     enemies.clear();
     arrows.clear();
+    enemyProjectiles.clear();
 
     if (stage % 5 == 0) {
       final bossHp = 300.0 + stage * 50;
@@ -559,19 +561,21 @@ class _GameScreenState extends State<GameScreen> {
           0 => 'runner',
           1 => 'tank',
           2 => 'stalker',
-          _ => 'enemy',
+          _ => 'ranged',
         };
         final baseHp = 50.0 + stage * 15;
         final hp = switch (enemyType) {
           'tank' => baseHp * 1.8,
           'runner' => baseHp * 0.72,
           'stalker' => baseHp * 0.9,
+          'ranged' => baseHp * 0.82,
           _ => baseHp,
         };
         final speed = switch (enemyType) {
           'tank' => 0.55 + stage * 0.012,
           'runner' => 1.35 + stage * 0.035,
           'stalker' => 0.95 + stage * 0.025,
+          'ranged' => 0.72 + stage * 0.018,
           _ => 0.8 + stage * 0.025,
         };
         enemies.add({
@@ -671,6 +675,30 @@ class _GameScreenState extends State<GameScreen> {
       if ((combatEffects[i]['life'] as int) <= 0) combatEffects.removeAt(i);
     }
 
+    // تحريك مقذوفات الأعداء وفحص إصابة اللاعب.
+    for (int i = enemyProjectiles.length - 1; i >= 0; i--) {
+      final shot = enemyProjectiles[i];
+      shot['x'] = (shot['x'] as double) + (shot['vx'] as double);
+      shot['y'] = (shot['y'] as double) + (shot['vy'] as double);
+      shot['life'] = (shot['life'] as int) - 1;
+      final sx = (shot['x'] as double) - playerX;
+      final sy = (shot['y'] as double) - playerY;
+      if (sqrt(sx * sx + sy * sy) < 19) {
+        if (playerMoveTicks > 0) {
+          combatEffects.add({'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14});
+        } else {
+          playerHp -= 7.0;
+          combatEffects.add({'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20});
+          playRealSound('hit');
+        }
+        enemyProjectiles.removeAt(i);
+      } else if ((shot['life'] as int) <= 0 ||
+          (shot['x'] as double) < -20 || (shot['x'] as double) > 420 ||
+          (shot['y'] as double) < -20 || (shot['y'] as double) > 850) {
+        enemyProjectiles.removeAt(i);
+      }
+    }
+
     // تحريك الأسهم وفحص اصطدامها بالأعداء.
     for (int i = arrows.length - 1; i >= 0; i--) {
       final arrow = arrows[i];
@@ -748,6 +776,17 @@ class _GameScreenState extends State<GameScreen> {
       final attackRange = 23 + (enemy['radius'] as double) + 24;
       var areaAttackTicks = (enemy['areaAttackTicks'] as int?) ?? 0;
       if (areaAttackTicks > 0) areaAttackTicks--;
+      if (type == 'ranged' && distance >= 105 && distance <= 255 && attackCooldown == 0) {
+        final shotAngle = atan2(dy, dx);
+        enemyProjectiles.add({
+          'x': enemy['x'], 'y': enemy['y'],
+          'vx': cos(shotAngle) * 4.2, 'vy': sin(shotAngle) * 4.2,
+          'life': 100,
+        });
+        attackTicks = 12;
+        attackCooldown = 108;
+        combatEffects.add({'x': enemy['x'], 'y': enemy['y'], 'type': 'sparkHit', 'life': 12});
+      }
       if (type == 'boss' &&
           distance <= 220 &&
           areaAttackTicks == 0 &&
@@ -801,7 +840,16 @@ class _GameScreenState extends State<GameScreen> {
       var moveSpeed = enemy['speed'] as double;
       var moveAngle = angle;
 
-      if (type == 'runner') {
+      if (type == 'ranged') {
+        if (distance < 145) {
+          moveAngle += pi;
+          moveSpeed *= 1.05;
+        } else if (distance < 185) {
+          moveSpeed *= 0.08;
+        } else {
+          moveSpeed *= 0.72;
+        }
+      } else if (type == 'runner') {
         final dashCycle = animationTicks % 105;
         if (dashCycle < 18) {
           moveSpeed *= 2.35;
@@ -1146,12 +1194,28 @@ class _GameScreenState extends State<GameScreen> {
                         ),
                       )),
 
+                  // مقذوفات الأعداء بعيدة المدى.
+                  ...enemyProjectiles.map((shot) => Positioned(
+                        left: (shot['x'] as double) - 7,
+                        top: (shot['y'] as double) - 7,
+                        child: Container(
+                          width: 14, height: 14,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.cyanAccent,
+                            boxShadow: [BoxShadow(color: Colors.cyanAccent.withOpacity(.8), blurRadius: 12, spreadRadius: 2)],
+                            border: Border.all(color: Colors.white, width: 1.2),
+                          ),
+                        ),
+                      )),
+
                   // الأعداء وأشرطة صحتهم.
                   ...enemies.map((enemy) {
                     final radius = enemy['radius'] as double;
                     final enemyType = enemy['type'] as String;
                     final isBoss = enemyType == 'boss';
                     final enemyColor = switch (enemyType) {
+                      'ranged' => Colors.cyan,
                       'runner' => Colors.orange,
                       'tank' => Colors.blueGrey,
                       'stalker' => Colors.purple,
@@ -1159,6 +1223,7 @@ class _GameScreenState extends State<GameScreen> {
                       _ => Colors.red,
                     };
                     final enemyIcon = switch (enemyType) {
+                      'ranged' => Icons.bolt,
                       'runner' => Icons.flash_on,
                       'tank' => Icons.shield,
                       'stalker' => Icons.visibility,
@@ -1233,7 +1298,9 @@ class _GameScreenState extends State<GameScreen> {
                                           ),
                                         ),
                                       SpriteSheetFrame(
-                                        asset: enemyType == 'boss'
+                                        asset: enemyType == 'ranged'
+                                            ? 'assets/spritesheets/enemy_ranged.svg'
+                                            : enemyType == 'boss'
                                             ? (enemyAttacking ? 'assets/spritesheets/boss_attack.svg' : 'assets/spritesheets/boss_walk.svg')
                                             : enemyAttacking && enemyType == 'runner'
                                                 ? 'assets/spritesheets/enemy_runner_attack.svg'
