@@ -430,6 +430,7 @@ class _GameScreenState extends State<GameScreen> {
   double attackPowerMultiplier = 1;
   int extraArrows = 0;
   int animationTicks = 0;
+  int heroAttackTicks = 0;
   final List<Map<String, dynamic>> combatEffects = [];
 
   int score = 0;
@@ -554,6 +555,7 @@ class _GameScreenState extends State<GameScreen> {
       (target['x'] as double) - playerX,
     );
 
+    heroAttackTicks = 12;
     final totalShots = 1 + extraArrows;
     for (int i = 0; i < totalShots; i++) {
       final spread = i == 0 ? 0.0 : (i.isOdd ? 0.20 : -0.20);
@@ -605,6 +607,7 @@ class _GameScreenState extends State<GameScreen> {
   void _updateEngine() {
     if (!mounted || gameOverShown || stageTransitioning) return;
     animationTicks++;
+    if (heroAttackTicks > 0) heroAttackTicks--;
 
     // تحديث عمر المؤثرات القتالية.
     for (int i = combatEffects.length - 1; i >= 0; i--) {
@@ -643,6 +646,7 @@ class _GameScreenState extends State<GameScreen> {
           combatEffects.add({
             'x': enemy['x'], 'y': enemy['y'], 'type': hitType, 'life': 16,
           });
+          enemy['hitTicks'] = 9;
           enemy['hp'] = (enemy['hp'] as double) -
               (35 * attackPowerMultiplier);
           arrows.removeAt(i);
@@ -1051,7 +1055,9 @@ class _GameScreenState extends State<GameScreen> {
                               painter: FighterSpritePainter(
                                 kind: enemyType,
                                 tint: enemyColor,
-                                phase: animationTicks * 0.13 + (enemy['x'] as double) * 0.03,
+                                phase: animationTicks * (enemyType == 'boss' ? 0.075 : 0.13) + (enemy['x'] as double) * 0.03,
+                                hitFlash: ((enemy['hitTicks'] as int?) ?? 0) > 0,
+                                attacking: enemyType == 'runner' && animationTicks % 105 < 18 || enemyType == 'boss' && animationTicks % 180 < 28,
                               ),
                             ),
                           ),
@@ -1091,6 +1097,7 @@ class _GameScreenState extends State<GameScreen> {
                           tint: _heroColor(),
                           variant: widget.heroType,
                           phase: animationTicks * 0.13,
+                          attacking: heroAttackTicks > 0,
                         ),
                       ),
                     ),
@@ -1337,7 +1344,9 @@ class FighterSpritePainter extends CustomPainter {
   final Color tint;
   final int variant;
   final double phase;
-  const FighterSpritePainter({required this.kind, required this.tint, this.variant = 0, this.phase = 0});
+  final bool attacking;
+  final bool hitFlash;
+  const FighterSpritePainter({required this.kind, required this.tint, this.variant = 0, this.phase = 0, this.attacking = false, this.hitFlash = false});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1351,6 +1360,11 @@ class FighterSpritePainter extends CustomPainter {
     final stalker = kind == 'stalker';
     final hero = kind == 'hero';
     final dark = Paint()..color = const Color(0xFF171525);
+    if (hitFlash) {
+      canvas.drawCircle(const Offset(32, 32), 29,
+        Paint()..color = Colors.white.withOpacity(.42)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
+    }
     final armor = Paint()..color = hero ? const Color(0xFF243C69) : Color.lerp(tint, Colors.black, 0.28)!;
     final light = Paint()..color = hero ? const Color(0xFFFFD36B) : Color.lerp(tint, Colors.white, 0.38)!;
     final skin = Paint()..color = hero ? const Color(0xFFFFD5B2) : (boss ? const Color(0xFF6D244F) : const Color(0xFF83A84A));
@@ -1463,13 +1477,13 @@ class FighterSpritePainter extends CustomPainter {
     // الذراعان.
     canvas.save();
     canvas.translate(16, 31);
-    canvas.rotate(sin(phase) * 0.12);
+    canvas.rotate(attacking ? -0.72 : sin(phase) * 0.12);
     canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(-5, -3, 11, 19), const Radius.circular(5)), skin);
     canvas.drawCircle(const Offset(0, 15), 5, light);
     canvas.restore();
     canvas.save();
     canvas.translate(48, 31);
-    canvas.rotate(-sin(phase) * 0.12);
+    canvas.rotate(attacking ? 0.95 : -sin(phase) * 0.12);
     canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(-5, -3, 11, 19), const Radius.circular(5)), skin);
     canvas.drawCircle(const Offset(0, 15), 5, light);
     canvas.restore();
@@ -1516,6 +1530,11 @@ class FighterSpritePainter extends CustomPainter {
         Paint()..color = const Color(0xFF552D35)..strokeWidth = 1.5..style = PaintingStyle.stroke);
     // سلاح صغير واضح للشخصية.
     final weapon = Paint()..color = const Color(0xFFFFD76A)..strokeWidth = 3..strokeCap = StrokeCap.round;
+    if (attacking) {
+      final slash = Paint()..color = const Color(0xFFFFF0A1).withOpacity(.82)
+        ..style = PaintingStyle.stroke..strokeWidth = 3.2..strokeCap = StrokeCap.round;
+      canvas.drawArc(const Rect.fromLTWH(35, 3, 34, 34), -1.1, 1.45, false, slash);
+    }
     if (hero || runner) {
       canvas.drawLine(const Offset(49, 38), const Offset(57, 13), weapon);
       canvas.drawLine(const Offset(57, 13), const Offset(61, 22), weapon);
@@ -1534,7 +1553,7 @@ class FighterSpritePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant FighterSpritePainter oldDelegate) =>
-      oldDelegate.kind != kind || oldDelegate.tint != tint || oldDelegate.variant != variant || oldDelegate.phase != phase;
+      oldDelegate.kind != kind || oldDelegate.tint != tint || oldDelegate.variant != variant || oldDelegate.phase != phase || oldDelegate.attacking != attacking || oldDelegate.hitFlash != hitFlash;
 }
 
 // -----------------------------------------------------------------------------
