@@ -26,8 +26,10 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Get dependencies without test SDK
-        run: flutter pub get --no-example
+      - name: Clean and Get Dependencies
+        run: |
+          flutter clean
+          flutter pub get
 
       - name: Build APK Release
         run: flutter build apk --release --no-pub
