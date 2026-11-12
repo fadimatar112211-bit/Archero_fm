@@ -1,4 +1,4 @@
-name: Build Flutter APK
+concurrency: name: Build Flutter APK
 
 on:
   workflow_dispatch:
@@ -26,12 +26,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Clean and Get Dependencies
-        run: |
-          flutter clean
-          flutter pub get
-
-      - name: Build APK Release
+      - name: Build APK without pub get
         run: flutter build apk --release --no-pub
 
       - name: Upload APK Artifact
