@@ -1177,10 +1177,10 @@ class FighterSpritePainter extends CustomPainter {
     final stalker = kind == 'stalker';
     final hero = kind == 'hero';
     final dark = Paint()..color = const Color(0xFF171525);
-    final armor = Paint()..color = hero ? const Color(0xFF243C69) : tint.shade700;
-    final light = Paint()..color = hero ? const Color(0xFFFFD36B) : tint.shade300;
+    final armor = Paint()..color = hero ? const Color(0xFF243C69) : Color.lerp(tint, Colors.black, 0.28)!;
+    final light = Paint()..color = hero ? const Color(0xFFFFD36B) : Color.lerp(tint, Colors.white, 0.38)!;
     final skin = Paint()..color = hero ? const Color(0xFFFFD5B2) : (boss ? const Color(0xFF6D244F) : const Color(0xFF83A84A));
-    final cape = Paint()..color = hero ? const Color(0xFFE33E35) : (stalker ? const Color(0xFF39265F) : tint.shade900);
+    final cape = Paint()..color = hero ? const Color(0xFFE33E35) : (stalker ? const Color(0xFF39265F) : Color.lerp(tint, Colors.black, 0.48)!);
 
     // ظل أرضي يعطي الشخصية عمقاً.
     canvas.drawOval(const Rect.fromLTWH(10, 54, 44, 8),
@@ -1194,11 +1194,11 @@ class FighterSpritePainter extends CustomPainter {
     if (boss || stalker) {
       final wing = Path()
         ..moveTo(17, 27)..lineTo(1, 12)..lineTo(5, 38)..lineTo(20, 43)..close();
-      canvas.drawPath(wing, Paint()..color = tint.shade700);
+      canvas.drawPath(wing, Paint()..color = Color.lerp(tint, Colors.black, 0.28)!);
       canvas.save();
       canvas.translate(64, 0);
       canvas.scale(-1, 1);
-      canvas.drawPath(wing, Paint()..color = tint.shade700);
+      canvas.drawPath(wing, Paint()..color = Color.lerp(tint, Colors.black, 0.28)!);
       canvas.restore();
     }
     // الساقان والحذاء.
@@ -1213,7 +1213,7 @@ class FighterSpritePainter extends CustomPainter {
       ..lineTo(48, 46)..quadraticBezierTo(32, 53, 16, 46)..close();
     canvas.drawPath(body, armor);
     canvas.drawPath(Path()..moveTo(32, 27)..lineTo(42, 31)..lineTo(39, 45)..lineTo(32, 48)..close(), light);
-    canvas.drawCircle(const Offset(32, 37), 4, Paint()..color = hero ? const Color(0xFF54DDF5) : tint.shade200);
+    canvas.drawCircle(const Offset(32, 37), 4, Paint()..color = hero ? const Color(0xFF54DDF5) : Color.lerp(tint, Colors.white, 0.55)!);
     // الذراعان.
     canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(10, 28, 11, 19), const Radius.circular(5)), skin);
     canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(43, 28, 11, 19), const Radius.circular(5)), skin);
