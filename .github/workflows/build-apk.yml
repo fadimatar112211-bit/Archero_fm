@@ -29,7 +29,7 @@ jobs:
                       f.write(line)
           "
           
-      - name: Create Clean Android Project & Fix Gradle Configs
+      - name: Create Clean Android Project & Force SDK 34
         run: |
           rm -rf android
           flutter create . --platforms=android --org com.fadimatar --project-name archero_fm
@@ -42,8 +42,11 @@ jobs:
           echo "zipStoreBase=GRADLE_USER_HOME" >> android/gradle/wrapper/gradle-wrapper.properties
           echo "zipStorePath=wrapper/dists" >> android/gradle/wrapper/gradle-wrapper.properties
           
-          # تفعيل MultiDex ودعم التوافق في ملف الإعدادات
+          # تعديل إعدادات الـ build.gradle لفرض توافق الـ SDK والتجميع
           if [ -f "android/app/build.gradle" ]; then
+            sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle
+            sed -i 's/targetSdkVersion .*/targetSdkVersion 34/g' android/app/build.gradle
+            sed -i 's/compileSdkVersion .*/compileSdkVersion 34/g' android/app/build.gradle
             sed -i 's/defaultConfig {/defaultConfig {\n        multiDexEnabled true/g' android/app/build.gradle
           fi
           
