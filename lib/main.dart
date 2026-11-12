@@ -501,15 +501,35 @@ class _GameScreenState extends State<GameScreen> {
     } else {
       final count = min(2 + (stage ~/ 2), 7);
       for (int i = 0; i < count; i++) {
-        final hp = 50.0 + stage * 15;
+        // تنويع الأعداء تدريجياً حتى يختلف أسلوب كل مواجهة.
+        final variant = (i + stage) % 4;
+        final String enemyType = switch (variant) {
+          0 => 'runner',
+          1 => 'tank',
+          2 => 'stalker',
+          _ => 'enemy',
+        };
+        final baseHp = 50.0 + stage * 15;
+        final hp = switch (enemyType) {
+          'tank' => baseHp * 1.8,
+          'runner' => baseHp * 0.72,
+          'stalker' => baseHp * 0.9,
+          _ => baseHp,
+        };
+        final speed = switch (enemyType) {
+          'tank' => 0.55 + stage * 0.012,
+          'runner' => 1.35 + stage * 0.035,
+          'stalker' => 0.95 + stage * 0.025,
+          _ => 0.8 + stage * 0.025,
+        };
         enemies.add({
           'x': 35.0 + random.nextDouble() * 290,
           'y': 90.0 + random.nextDouble() * 190,
           'hp': hp,
           'maxHp': hp,
-          'type': 'enemy',
-          'radius': 19.0,
-          'speed': 0.8 + stage * 0.025,
+          'type': enemyType,
+          'radius': enemyType == 'tank' ? 23.0 : 19.0,
+          'speed': speed,
         });
       }
     }
@@ -914,7 +934,22 @@ class _GameScreenState extends State<GameScreen> {
                   // الأعداء وأشرطة صحتهم.
                   ...enemies.map((enemy) {
                     final radius = enemy['radius'] as double;
-                    final isBoss = enemy['type'] == 'boss';
+                    final enemyType = enemy['type'] as String;
+                    final isBoss = enemyType == 'boss';
+                    final enemyColor = switch (enemyType) {
+                      'runner' => Colors.orange,
+                      'tank' => Colors.blueGrey,
+                      'stalker' => Colors.purple,
+                      'boss' => Colors.deepPurple,
+                      _ => Colors.red,
+                    };
+                    final enemyIcon = switch (enemyType) {
+                      'runner' => Icons.flash_on,
+                      'tank' => Icons.shield,
+                      'stalker' => Icons.visibility,
+                      'boss' => Icons.whatshot,
+                      _ => Icons.pest_control,
+                    };
                     final hpRatio = ((enemy['hp'] as double) /
                             (enemy['maxHp'] as double))
                         .clamp(0.0, 1.0);
@@ -937,7 +972,7 @@ class _GameScreenState extends State<GameScreen> {
                               widthFactor: hpRatio,
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: isBoss ? Colors.purpleAccent : Colors.redAccent,
+                                  color: isBoss ? Colors.purpleAccent : enemyColor,
                                   borderRadius: BorderRadius.circular(5),
                                 ),
                               ),
@@ -947,24 +982,21 @@ class _GameScreenState extends State<GameScreen> {
                             width: radius * 2,
                             height: radius * 2,
                             decoration: BoxDecoration(
-                              color: isBoss
-                                  ? Colors.deepPurple
-                                  : Colors.red.shade800,
+                              color: isBoss ? Colors.deepPurple : enemyColor.shade800,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: isBoss ? Colors.amber : Colors.redAccent,
+                                color: isBoss ? Colors.amber : enemyColor,
                                 width: isBoss ? 3 : 2,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: (isBoss ? Colors.purple : Colors.red)
-                                      .withOpacity(0.5),
+                                  color: enemyColor.withOpacity(0.5),
                                   blurRadius: 12,
                                 ),
                               ],
                             ),
                             child: Icon(
-                              isBoss ? Icons.whatshot : Icons.pest_control,
+                              enemyIcon,
                               color: Colors.white,
                               size: isBoss ? 30 : 23,
                             ),
