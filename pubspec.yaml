@@ -26,3 +26,4 @@ flutter:
     - assets/enemy_melee.svg
     - assets/enemy_ranged.svg
     - assets/boss.svg
+    - assets/spritesheets/
