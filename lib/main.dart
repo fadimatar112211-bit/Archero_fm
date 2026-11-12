@@ -716,6 +716,7 @@ class _GameScreenState extends State<GameScreen> {
       if (distance <= attackRange && attackCooldown == 0) {
         attackTicks = type == 'boss' ? 24 : 16;
         attackCooldown = type == 'boss' ? 105 : 76;
+        enemy['attackHitDone'] = false;
         combatEffects.add({
           'x': enemy['x'], 'y': enemy['y'],
           'type': type == 'boss' ? 'bossTell' : 'enemyAttack',
@@ -767,12 +768,18 @@ class _GameScreenState extends State<GameScreen> {
       // دورة مشي مستقلة تتقدم بحسب سرعة الحركة الفعلية لكل عدو.
       enemy['walkPhase'] = ((enemy['walkPhase'] as double?) ?? 0.0) +
           moveSpeed.abs() * (type == 'runner' ? 0.16 : 0.11);
-      if (distance < 23 + (enemy['radius'] as double)) {
+      // لحظة الضرر تقع في منتصف ضربة الهجوم، مرة واحدة لكل دورة.
+      final impactDistance = 23 + (enemy['radius'] as double) + 14;
+      final impactFrame = type == 'boss' ? 12 : 8;
+      if (attackTicks == impactFrame &&
+          enemy['attackHitDone'] != true &&
+          distance <= impactDistance) {
         final now = DateTime.now();
         if (lastDamageAt == null ||
-            now.difference(lastDamageAt!).inMilliseconds >= 450) {
-          playerHp -= enemy['type'] == 'boss' ? 9.0 : 5.0;
+            now.difference(lastDamageAt!).inMilliseconds >= 220) {
+          playerHp -= type == 'boss' ? 9.0 : 5.0;
           lastDamageAt = now;
+          enemy['attackHitDone'] = true;
           combatEffects.add({
             'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
           });
