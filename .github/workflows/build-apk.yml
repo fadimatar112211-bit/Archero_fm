@@ -42,6 +42,22 @@ jobs:
       - name: Run tests
         run: flutter test
 
+      - name: Install Android NDK with retry
+        run: |
+          NDK_VERSION="28.2.13676358"
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          for attempt in 1 2 3; do
+            rm -rf "$ANDROID_HOME/ndk/$NDK_VERSION"
+            if yes | "$SDKMANAGER" --install "ndk;$NDK_VERSION"; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "NDK installation failed after 3 attempts"
+              exit 1
+            fi
+            sleep 15
+          done
+
       - name: Build release APK
         run: flutter build apk --release
 
