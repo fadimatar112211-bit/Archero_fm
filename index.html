@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Archero Mini - لعبة ارتشرو</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            color: #fff;
+            font-family: Tahoma, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+        canvas {
+            background: #2c3e50;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            border-radius: 8px;
+            max-width: 100%;
+            max-height: 80vh;
+        }
+        #ui {
+            position: absolute;
+            top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: flex;
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <div>المرحلة: <span id="waveText">1</span></div>
+        <div>النقاط: <span id="scoreText">0</span></div>
+        <div>الصحة: <span id="hpText">💯</span></div>
+    </div>
+
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // تحميل الصور من مجلد assets
+        const images = {};
+        const imageSources = {
+            player: 'assets/player.svg',
+            enemyMelee: 'assets/enemy_melee.svg',
+            enemyRanged: 'assets/enemy_ranged.svg',
+            boss: 'assets/boss.svg',
+            arrow: 'assets/arrow.svg',
+            fireball: 'assets/fireball.svg',
+            wall: 'assets/wall.svg',
+            coin: 'assets/coin.svg'
+        };
+
+        let loadedImages = 0;
+        const totalImages = Object.keys(imageSources).length;
+
+        for (let key in imageSources) {
+            images[key] = new Image();
+            images[key].src = imageSources[key];
+            images[key].onload = () => {
+                loadedImages++;
+                if (loadedImages === totalImages) {
+                    initGame();
+                }
+            };
+        }
+
+        // متغيرات اللعبة
+        let player = { x: 200, y: 500, radius: 20, speed: 3, hp: 100 };
+        let joystick = { active: false, x: 0, y: 0, dx: 0, dy: 0 };
+        let arrows = [];
+        let enemies = [];
+        let score = 0;
+        let wave = 1;
+        let gameStarted = false;
+
+        // التحكم باللمس والماوس
+        canvas.addEventListener("touchstart", (e) => {
+            joystick.active = true;
+            const rect = canvas.getBoundingClientRect();
+            joystick.x = e.touches[0].clientX - rect.left;
+            joystick.y = e.touches[0].clientY - rect.top;
+        });
+
+        canvas.addEventListener("touchmove", (e) => {
+            if (!joystick.active) return;
+            const rect = canvas.getBoundingClientRect();
+            let currentX = e.touches[0].clientX - rect.left;
+            let currentY = e.touches[0].clientY - rect.top;
+            joystick.dx = (currentX - joystick.x) * 0.05;
+            joystick.dy = (currentY - joystick.y) * 0.05;
+        });
+
+        canvas.addEventListener("touchend", () => {
+            joystick.active = false;
+            joystick.dx = 0;
+            joystick.dy = 0;
+        });
+
+        // توليد الأعداء
+        function spawnEnemies() {
+            enemies = [];
+            let count = 2 + wave;
+            for (let i = 0; i < count; i++) {
+                enemies.push({
+                    x: Math.random() * 350 + 25,
+                    y: Math.random() * 200 + 50,
+                    radius: 22,
+                    hp: 30 + wave * 10,
+                    type: Math.random() > 0.5 ? 'melee' : 'ranged',
+                    speed: 1 + wave * 0.2
+                });
+            }
+        }
+
+        function initGame() {
+            spawnEnemies();
+            gameStarted = true;
+            update();
+            setInterval(shootArrow, 800); // إطلاق سهم تلقائي كل فترة
+        }
+
+        function shootArrow() {
+            if (!gameStarted || enemies.length === 0) return;
+            // إطلاق سهم نحو أقرب عدو
+            let target = enemies[0];
+            let angle = Math.atan2(target.y - player.y, target.x - player.x);
+            arrows.push({
+                x: player.x,
+                y: player.y,
+                vx: Math.cos(angle) * 6,
+                vy: Math.sin(angle) * 6
+            });
+        }
+
+        function update() {
+            if (!gameStarted) return;
+
+            // حركة اللاعب
+            player.x += joystick.dx;
+            player.y += joystick.dy;
+            player.x = Math.max(20, Math.min(canvas.width - 20, player.x));
+            player.y = Math.max(20, Math.min(canvas.height - 20, player.y));
+
+            // تحديث الأسهم
+            arrows.forEach((arr, index) => {
+                arr.x += arr.vx;
+                arr.y += arr.vy;
+
+                // اصطدام السهم بالأعداء
+                enemies.forEach((en, eIndex) => {
+                    let dist = Math.hypot(arr.x - en.x, arr.y - en.y);
+                    if (dist < en.radius) {
+                        en.hp -= 25;
+                        arrows.splice(index, 1);
+                        if (en.hp <= 0) {
+                            enemies.splice(eIndex, 1);
+                            score += 10;
+                            document.getElementById("scoreText").innerText = score;
+                        }
+                    }
+                });
+            });
+
+            // تحرك الأعداء نحو اللاعب
+            enemies.forEach(en => {
+                let angle = Math.atan2(player.y - en.y, player.x - en.x);
+                en.x += Math.cos(angle) * en.speed;
+                en.y += Math.sin(angle) * en.speed;
+
+                let dist = Math.hypot(player.x - en.x, player.y - en.y);
+                if (dist < player.radius + en.radius) {
+                    player.hp -= 0.5;
+                    document.getElementById("hpText").innerText = Math.max(0, Math.floor(player.hp)) + "%";
+                }
+            });
+
+            // إذا انتهوا الأعداء، انتقل للمرحلة التالية
+            if (enemies.length === 0) {
+                wave++;
+                document.getElementById("waveText").innerText = wave;
+                spawnEnemies();
+            }
+
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // رسم اللاعب
+            ctx.drawImage(images.player, player.x - 20, player.y - 20, 40, 40);
+
+            // رسم الأعداء
+            enemies.forEach(en => {
+                let img = en.type === 'melee' ? images.enemyMelee : images.enemyRanged;
+                ctx.drawImage(img, en.x - 22, en.y - 22, 44, 44);
+            });
+
+            // رسم الأسهم
+            arrows.forEach(arr => {
+                ctx.drawImage(images.arrow, arr.x - 10, arr.y - 10, 20, 20);
+            });
+        }
+    </script>
+</body>
+</html>
