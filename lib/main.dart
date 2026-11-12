@@ -182,21 +182,28 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     ),
                     const SizedBox(height: 12),
                     _panel(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      child: Wrap(
+                        alignment: WrapAlignment.spaceEvenly,
+                        runAlignment: WrapAlignment.center,
+                        spacing: 22,
+                        runSpacing: 12,
                         children: [
                           Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.emoji_events, color: Colors.amber),
                               const SizedBox(height: 4),
-                              Text('أفضل مرحلة: $bestStage'),
+                              Text('أفضل مرحلة: $bestStage',
+                                  textAlign: TextAlign.center),
                             ],
                           ),
                           Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.stars, color: Colors.lightBlueAccent),
                               const SizedBox(height: 4),
-                              Text('أفضل نتيجة: $bestScore'),
+                              Text('أفضل نتيجة: $bestScore',
+                                  textAlign: TextAlign.center),
                             ],
                           ),
                         ],
