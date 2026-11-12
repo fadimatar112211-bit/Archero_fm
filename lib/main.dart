@@ -978,27 +978,14 @@ class _GameScreenState extends State<GameScreen> {
                               ),
                             ),
                           ),
-                          Container(
+                          SizedBox(
                             width: radius * 2,
                             height: radius * 2,
-                            decoration: BoxDecoration(
-                              color: isBoss ? Colors.deepPurple : enemyColor.shade800,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isBoss ? Colors.amber : enemyColor,
-                                width: isBoss ? 3 : 2,
+                            child: CustomPaint(
+                              painter: FighterSpritePainter(
+                                kind: enemyType,
+                                tint: enemyColor,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: enemyColor.withOpacity(0.5),
-                                  blurRadius: 12,
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              enemyIcon,
-                              color: Colors.white,
-                              size: isBoss ? 30 : 23,
                             ),
                           ),
                         ],
@@ -1010,21 +997,15 @@ class _GameScreenState extends State<GameScreen> {
                   Positioned(
                     left: playerX - 21,
                     top: playerY - 21,
-                    child: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: _heroColor(),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: _heroColor().withOpacity(0.7),
-                            blurRadius: 15,
-                          ),
-                        ],
+                    child: SizedBox(
+                      width: 58,
+                      height: 58,
+                      child: CustomPaint(
+                        painter: FighterSpritePainter(
+                          kind: 'hero',
+                          tint: _heroColor(),
+                        ),
                       ),
-                      child: Icon(_heroIcon(), color: Colors.white, size: 25),
                     ),
                   ),
 
@@ -1175,6 +1156,109 @@ class _GameScreenState extends State<GameScreen> {
         return Icons.person;
     }
   }
+}
+
+// -----------------------------------------------------------------------------
+// شخصيات قتالية مرسومة بأسلوب كرتوني أصلي (بدون أشكال دائرية أو أيقونات)
+// -----------------------------------------------------------------------------
+class FighterSpritePainter extends CustomPainter {
+  final String kind;
+  final Color tint;
+  const FighterSpritePainter({required this.kind, required this.tint});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.shortestSide / 64;
+    canvas.save();
+    canvas.scale(scale);
+    final boss = kind == 'boss';
+    final tank = kind == 'tank';
+    final runner = kind == 'runner';
+    final stalker = kind == 'stalker';
+    final hero = kind == 'hero';
+    final dark = Paint()..color = const Color(0xFF171525);
+    final armor = Paint()..color = hero ? const Color(0xFF243C69) : tint.shade700;
+    final light = Paint()..color = hero ? const Color(0xFFFFD36B) : tint.shade300;
+    final skin = Paint()..color = hero ? const Color(0xFFFFD5B2) : (boss ? const Color(0xFF6D244F) : const Color(0xFF83A84A));
+    final cape = Paint()..color = hero ? const Color(0xFFE33E35) : (stalker ? const Color(0xFF39265F) : tint.shade900);
+
+    // ظل أرضي يعطي الشخصية عمقاً.
+    canvas.drawOval(const Rect.fromLTWH(10, 54, 44, 8),
+        Paint()..color = Colors.black.withOpacity(0.30));
+    // عباءة/أجنحة خلف الجسم.
+    final cloak = Path()
+      ..moveTo(19, 23)..quadraticBezierTo(2, 35, 12, 57)
+      ..lineTo(30, 48)..lineTo(45, 58)
+      ..quadraticBezierTo(62, 34, 44, 22)..close();
+    canvas.drawPath(cloak, cape);
+    if (boss || stalker) {
+      final wing = Path()
+        ..moveTo(17, 27)..lineTo(1, 12)..lineTo(5, 38)..lineTo(20, 43)..close();
+      canvas.drawPath(wing, Paint()..color = tint.shade700);
+      canvas.save();
+      canvas.translate(64, 0);
+      canvas.scale(-1, 1);
+      canvas.drawPath(wing, Paint()..color = tint.shade700);
+      canvas.restore();
+    }
+    // الساقان والحذاء.
+    final leg = Paint()..color = const Color(0xFF30283A);
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(20, 43, 10, 13), const Radius.circular(4)), leg);
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(35, 43, 10, 13), const Radius.circular(4)), leg);
+    canvas.drawOval(const Rect.fromLTWH(16, 51, 17, 7), dark);
+    canvas.drawOval(const Rect.fromLTWH(33, 51, 17, 7), dark);
+    // الجسم والدرع.
+    final body = Path()
+      ..moveTo(19, 25)..quadraticBezierTo(32, 18, 45, 25)
+      ..lineTo(48, 46)..quadraticBezierTo(32, 53, 16, 46)..close();
+    canvas.drawPath(body, armor);
+    canvas.drawPath(Path()..moveTo(32, 27)..lineTo(42, 31)..lineTo(39, 45)..lineTo(32, 48)..close(), light);
+    canvas.drawCircle(const Offset(32, 37), 4, Paint()..color = hero ? const Color(0xFF54DDF5) : tint.shade200);
+    // الذراعان.
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(10, 28, 11, 19), const Radius.circular(5)), skin);
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(43, 28, 11, 19), const Radius.circular(5)), skin);
+    canvas.drawCircle(const Offset(15, 46), 5, light);
+    canvas.drawCircle(const Offset(49, 46), 5, light);
+    // الرأس والملامح.
+    canvas.drawOval(const Rect.fromLTWH(19, 3, 26, 28), skin);
+    canvas.drawOval(const Rect.fromLTWH(21, 4, 23, 11), hero ? Paint()..color = const Color(0xFFE9F2FF) : dark);
+    if (!hero) {
+      final horn = Path()..moveTo(23, 9)..lineTo(15, 0)..lineTo(19, 15)..close();
+      canvas.drawPath(horn, light);
+      canvas.save(); canvas.translate(64, 0); canvas.scale(-1, 1);
+      canvas.drawPath(horn, light); canvas.restore();
+    } else {
+      final hair = Path()..moveTo(19, 16)..lineTo(13, 3)..lineTo(28, 8)..lineTo(39, 1)..lineTo(45, 14)..close();
+      canvas.drawPath(hair, Paint()..color = const Color(0xFFF4F5FF));
+      final scarf = Path()..moveTo(19, 28)..lineTo(43, 27)..lineTo(57, 43)..lineTo(42, 39)..lineTo(32, 34)..close();
+      canvas.drawPath(scarf, Paint()..color = const Color(0xFFE43B35));
+    }
+    final eye = Paint()..color = const Color(0xFF171525);
+    canvas.drawCircle(const Offset(26, 19), 2, eye);
+    canvas.drawCircle(const Offset(38, 19), 2, eye);
+    canvas.drawArc(const Rect.fromLTWH(27, 21, 10, 5), 0, 3.14, false,
+        Paint()..color = const Color(0xFF552D35)..strokeWidth = 1.5..style = PaintingStyle.stroke);
+    // سلاح صغير واضح للشخصية.
+    final weapon = Paint()..color = const Color(0xFFFFD76A)..strokeWidth = 3..strokeCap = StrokeCap.round;
+    if (hero || runner) {
+      canvas.drawLine(const Offset(49, 38), const Offset(57, 13), weapon);
+      canvas.drawLine(const Offset(57, 13), const Offset(61, 22), weapon);
+      canvas.drawLine(const Offset(57, 13), const Offset(51, 19), weapon);
+    } else {
+      canvas.drawLine(const Offset(50, 43), const Offset(59, 21), weapon);
+      canvas.drawLine(const Offset(59, 21), const Offset(55, 24), weapon);
+      canvas.drawLine(const Offset(59, 21), const Offset(62, 27), weapon);
+    }
+    if (boss || tank) {
+      canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(7, 27, 50, 24), const Radius.circular(9)),
+          Paint()..color = tint.withOpacity(0.18)..style = PaintingStyle.stroke..strokeWidth = 2);
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant FighterSpritePainter oldDelegate) =>
+      oldDelegate.kind != kind || oldDelegate.tint != tint;
 }
 
 // -----------------------------------------------------------------------------
