@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Archero Mini - لعبة ارتشرو</title>
+    <title>Archero - النسخة الأصلية الكاملة</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background: #1a1a1a;
+            background: #0f0f0f;
             color: #fff;
             font-family: Tahoma, sans-serif;
             display: flex;
@@ -20,32 +20,86 @@
             touch-action: none;
         }
         canvas {
-            background: #2c3e50;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            border-radius: 8px;
+            background: #1e272e;
+            box-shadow: 0 0 25px rgba(0,0,0,0.9);
+            border-radius: 10px;
             max-width: 100%;
-            max-height: 80vh;
+            max-height: 75vh;
         }
         #ui {
             position: absolute;
             top: 10px;
-            font-size: 18px;
+            font-size: 15px;
             font-weight: bold;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.8);
             padding: 8px 15px;
             border-radius: 20px;
             display: flex;
-            gap: 20px;
+            gap: 12px;
+            z-index: 10;
+            border: 1px solid #34495e;
+        }
+        #menu {
+            position: absolute;
+            background: rgba(15,15,15,0.95);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+        }
+        .hero-btn {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            margin: 10px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            width: 250px;
+            text-align: center;
+        }
+        #specialBtn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #c0392b, #e74c3c);
+            color: white;
+            border: none;
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            cursor: pointer;
+            z-index: 10;
+            display: none;
         }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        <div>المرحلة: <span id="waveText">1</span></div>
-        <div>النقاط: <span id="scoreText">0</span></div>
-        <div>الصحة: <span id="hpText">💯</span></div>
+    <div id="menu">
+        <h2 style="color: #f39c12; margin-bottom: 20px;">اختر بطلك الأسطوري</h2>
+        <button class="hero-btn" onclick="selectHero(1)">رامي الأخضر (متوازن)</button>
+        <button class="hero-btn" onclick="selectHero(2)">فارس النارية (صحة عالية)</button>
+        <button class="hero-btn" onclick="selectHero(3)">صياد الظل (سرعة فائقة)</button>
+        <button class="hero-btn" onclick="selectHero(4)">حارس العواصف (سهم مزدوج)</button>
     </div>
+
+    <div id="ui" style="display:none;">
+        <div>المرحلة: <span id="stageText">1</span></div>
+        <div>النقاط: <span id="scoreText">0</span></div>
+        <div>الصحة: <span id="hpText">100%</span></div>
+    </div>
+
+    <button id="specialBtn" onclick="useSpecialSkill()">ضربة خاصة</button>
 
     <canvas id="gameCanvas" width="400" height="600"></canvas>
 
@@ -53,7 +107,6 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // تحميل الصور من مجلد assets
         const images = {};
         const imageSources = {
             player: 'assets/player.svg',
@@ -66,30 +119,41 @@
             coin: 'assets/coin.svg'
         };
 
-        let loadedImages = 0;
-        const totalImages = Object.keys(imageSources).length;
-
         for (let key in imageSources) {
             images[key] = new Image();
             images[key].src = imageSources[key];
-            images[key].onload = () => {
-                loadedImages++;
-                if (loadedImages === totalImages) {
-                    initGame();
-                }
-            };
         }
 
-        // متغيرات اللعبة
-        let player = { x: 200, y: 500, radius: 20, speed: 3, hp: 100 };
+        let player = { x: 200, y: 500, radius: 18, speed: 3.5, hp: 100, maxHp: 100, heroType: 1 };
         let joystick = { active: false, x: 0, y: 0, dx: 0, dy: 0 };
         let arrows = [];
+        let enemyProjectiles = [];
         let enemies = [];
+        let walls = [];
         let score = 0;
-        let wave = 1;
+        let stage = 1;
         let gameStarted = false;
+        let specialCooldown = 0;
 
-        // التحكم باللمس والماوس
+        function selectHero(type) {
+            player.heroType = type;
+            if(type === 1) { player.speed = 3.5; player.hp = 100; }
+            if(type === 2) { player.speed = 3.0; player.hp = 140; }
+            if(type === 3) { player.speed = 4.6; player.hp = 90; }
+            if(type === 4) { player.speed = 3.3; player.hp = 120; }
+            player.maxHp = player.hp;
+
+            document.getElementById("menu").style.display = "none";
+            document.getElementById("ui").style.display = "flex";
+            document.getElementById("specialBtn").style.display = "block";
+            
+            initStage();
+            gameStarted = true;
+            update();
+            setInterval(shootArrow, 700);
+            setInterval(enemyShoot, 2000);
+        }
+
         canvas.addEventListener("touchstart", (e) => {
             joystick.active = true;
             const rect = canvas.getBoundingClientRect();
@@ -112,69 +176,162 @@
             joystick.dy = 0;
         });
 
-        // توليد الأعداء
-        function spawnEnemies() {
+        function initStage() {
             enemies = [];
-            let count = 2 + wave;
-            for (let i = 0; i < count; i++) {
+            walls = [];
+            arrows = [];
+            enemyProjectiles = [];
+
+            // توليد عوائق ثابتة في الغرفة (مثل اللعبة الأصلية)
+            if (stage > 2) {
+                walls.push({x: 120, y: 180, w: 60, h: 20});
+                walls.push({x: 220, y: 350, w: 60, h: 20});
+            }
+
+            // هل المرحلة الحالية مرحلة زعيم؟ (كل 5 مراحل)
+            let isBossStage = (stage % 5 === 0);
+
+            if (isBossStage) {
                 enemies.push({
-                    x: Math.random() * 350 + 25,
-                    y: Math.random() * 200 + 50,
-                    radius: 22,
-                    hp: 30 + wave * 10,
-                    type: Math.random() > 0.5 ? 'melee' : 'ranged',
-                    speed: 1 + wave * 0.2
+                    x: 200, y: 100,
+                    radius: 35,
+                    hp: 200 + (stage * 30),
+                    maxHp: 200 + (stage * 30),
+                    type: 'boss',
+                    speed: 1.2
                 });
+            } else {
+                let count = Math.min(2 + Math.floor(stage / 2), 7);
+                for (let i = 0; i < count; i++) {
+                    let typeDecider = Math.random();
+                    let eType = (typeDecider > 0.5) ? 'ranged' : 'melee';
+                    enemies.push({
+                        x: Math.random() * 320 + 40,
+                        y: Math.random() * 200 + 40,
+                        radius: 20,
+                        hp: 40 + (stage * 15),
+                        maxHp: 40 + (stage * 15),
+                        type: eType,
+                        speed: 1 + (stage * 0.05)
+                    });
+                }
             }
         }
 
-        function initGame() {
-            spawnEnemies();
-            gameStarted = true;
-            update();
-            setInterval(shootArrow, 800); // إطلاق سهم تلقائي كل فترة
+        function useSpecialSkill() {
+            if (specialCooldown > 0) return;
+            // تدمير جماعي لكل الأعداء في الشاشة
+            enemies.forEach(en => { score += 20; });
+            enemies = [];
+            document.getElementById("scoreText").innerText = score;
+            
+            specialCooldown = 12;
+            let btn = document.getElementById("specialBtn");
+            btn.style.background = "#7f8c8d";
+            
+            let timer = setInterval(() => {
+                specialCooldown--;
+                btn.innerText = `خاص (${specialCooldown}ث)`;
+                if (specialCooldown <= 0) {
+                    clearInterval(timer);
+                    btn.innerText = "ضربة خاصة";
+                    btn.style.background = "linear-gradient(45deg, #c0392b, #e74c3c)";
+                }
+            }, 1000);
         }
 
         function shootArrow() {
             if (!gameStarted || enemies.length === 0) return;
-            // إطلاق سهم نحو أقرب عدو
             let target = enemies[0];
             let angle = Math.atan2(target.y - player.y, target.x - player.x);
-            arrows.push({
-                x: player.x,
-                y: player.y,
-                vx: Math.cos(angle) * 6,
-                vy: Math.sin(angle) * 6
+            
+            let count = (player.heroType === 4) ? 2 : 1;
+            for(let i=0; i<count; i++) {
+                let offset = (i === 0) ? 0 : 0.25;
+                arrows.push({
+                    x: player.x,
+                    y: player.y,
+                    vx: Math.cos(angle + offset) * 8,
+                    vy: Math.sin(angle + offset) * 8
+                });
+            }
+        }
+
+        function enemyShoot() {
+            if (!gameStarted) return;
+            enemies.forEach(en => {
+                if (en.type === 'ranged' || en.type === 'boss') {
+                    let angle = Math.atan2(player.y - en.y, player.x - en.x);
+                    enemyProjectiles.push({
+                        x: en.x, y: en.y,
+                        vx: Math.cos(angle) * 4,
+                        vy: Math.sin(angle) * 4
+                    });
+                }
             });
         }
 
         function update() {
             if (!gameStarted) return;
 
-            // حركة اللاعب
-            player.x += joystick.dx;
-            player.y += joystick.dy;
-            player.x = Math.max(20, Math.min(canvas.width - 20, player.x));
-            player.y = Math.max(20, Math.min(canvas.height - 20, player.y));
+            // حركة اللاعب مع الاصطدام بالعوائق والجدران
+            let nextX = player.x + joystick.dx;
+            let nextY = player.y + joystick.dy;
 
-            // تحديث الأسهم
+            // حدود الشاشة
+            nextX = Math.max(20, Math.min(canvas.width - 20, nextX));
+            nextY = Math.max(20, Math.min(canvas.height - 20, nextY));
+
+            // فحص الاصطدام بالجدران
+            let hitWall = false;
+            walls.forEach(w => {
+                if (nextX > w.x && nextX < w.x + w.w && nextY > w.y && nextY < w.y + w.h) {
+                    hitWall = true;
+                }
+            });
+
+            if (!hitWall) {
+                player.x = nextX;
+                player.y = nextY;
+            }
+
+            // تحديث السهام الخاصة باللاعب
             arrows.forEach((arr, index) => {
                 arr.x += arr.vx;
                 arr.y += arr.vy;
 
-                // اصطدام السهم بالأعداء
+                // فحص الاصطدام بالجدران للأسهم
+                walls.forEach(w => {
+                    if (arr.x > w.x && arr.x < w.x + w.w && arr.y > w.y && arr.y < w.y + w.h) {
+                        arrows.splice(index, 1);
+                    }
+                });
+
+                // فحص الاصطدام بالأعداء
                 enemies.forEach((en, eIndex) => {
                     let dist = Math.hypot(arr.x - en.x, arr.y - en.y);
                     if (dist < en.radius) {
-                        en.hp -= 25;
+                        en.hp -= 35;
                         arrows.splice(index, 1);
                         if (en.hp <= 0) {
                             enemies.splice(eIndex, 1);
-                            score += 10;
+                            score += 15;
                             document.getElementById("scoreText").innerText = score;
                         }
                     }
                 });
+            });
+
+            // تحديث مقذوفات الأعداء
+            enemyProjectiles.forEach((proj, pIndex) => {
+                proj.x += proj.vx;
+                proj.y += proj.vy;
+                let dist = Math.hypot(player.x - proj.x, player.y - proj.y);
+                if (dist < player.radius + 5) {
+                    player.hp -= 10;
+                    enemyProjectiles.splice(pIndex, 1);
+                    document.getElementById("hpText").innerText = Math.max(0, Math.floor((player.hp / player.maxHp) * 100)) + "%";
+                }
             });
 
             // تحرك الأعداء نحو اللاعب
@@ -185,16 +342,24 @@
 
                 let dist = Math.hypot(player.x - en.x, player.y - en.y);
                 if (dist < player.radius + en.radius) {
-                    player.hp -= 0.5;
-                    document.getElementById("hpText").innerText = Math.max(0, Math.floor(player.hp)) + "%";
+                    player.hp -= 0.6;
+                    document.getElementById("hpText").innerText = Math.max(0, Math.floor((player.hp / player.maxHp) * 100)) + "%";
                 }
             });
 
-            // إذا انتهوا الأعداء، انتقل للمرحلة التالية
+            // إنهاء المرحلة والانتقال للتي بعدها
             if (enemies.length === 0) {
-                wave++;
-                document.getElementById("waveText").innerText = wave;
-                spawnEnemies();
+                stage++;
+                document.getElementById("stageText").innerText = stage;
+                // استعادة بسيطة للصحة عند إنهاء المرحلة تماماً مثل الأصلية
+                player.hp = Math.min(player.maxHp, player.hp + 20);
+                initStage();
+            }
+
+            // فحص الخسارة
+            if (player.hp <= 0) {
+                alert("انتهت اللعبة! صُمّدت حتى المرحلة: " + stage);
+                location.reload();
             }
 
             draw();
@@ -204,18 +369,43 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // رسم اللاعب
-            ctx.drawImage(images.player, player.x - 20, player.y - 20, 40, 40);
+            // رسم الجدران
+            walls.forEach(w => {
+                ctx.drawImage(images.wall, w.x, w.y, w.w, w.h);
+            });
 
-            // رسم الأعداء
+            // رسم اللاعب مع ألوان مميزة للأبطال الأربعة
+            ctx.save();
+            if(player.heroType === 2) ctx.filter = "hue-rotate(90deg)";
+            if(player.heroType === 3) ctx.filter = "hue-rotate(180deg)";
+            if(player.heroType === 4) ctx.filter = "hue-rotate(270deg)";
+            ctx.drawImage(images.player, player.x - 20, player.y - 20, 40, 40);
+            ctx.restore();
+
+            // رسم الأعداء أو الزعماء
             enemies.forEach(en => {
-                let img = en.type === 'melee' ? images.enemyMelee : images.enemyRanged;
-                ctx.drawImage(img, en.x - 22, en.y - 22, 44, 44);
+                let img = images.enemyMelee;
+                if (en.type === 'ranged') img = images.enemyRanged;
+                if (en.type === 'boss') img = images.boss;
+                
+                let size = (en.type === 'boss') ? 70 : 44;
+                ctx.drawImage(img, en.x - size/2, en.y - size/2, size, size);
+
+                // شريط حياة العدو فوقه
+                ctx.fillStyle = "red";
+                ctx.fillRect(en.x - 20, en.y - size/2 - 10, 40, 5);
+                ctx.fillStyle = "green";
+                ctx.fillRect(en.x - 20, en.y - size/2 - 10, 40 * (en.hp / en.maxHp), 5);
             });
 
             // رسم الأسهم
             arrows.forEach(arr => {
                 ctx.drawImage(images.arrow, arr.x - 10, arr.y - 10, 20, 20);
+            });
+
+            // رسم طلقات الأعداء
+            enemyProjectiles.forEach(proj => {
+                ctx.drawImage(images.fireball, proj.x - 8, proj.y - 8, 16, 16);
             });
         }
     </script>
