@@ -1,44 +1,40 @@
-name: Build Release APK
+name: Build Flutter APK
 
 on:
+  workflow_dispatch: # يتيح لك تشغيل البناء يدوياً متى شئت
   push:
-    branches: [ "main", "master" ]
-  workflow_dispatch:
-
-permissions:
-  contents: read
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
 
     steps:
-      - name: Download project
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: "17"
+          distribution: 'zulu'
+          java-version: '17'
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version: '3.19.x' # أو أحدث إصدار متوافق مع مشروعك
+          channel: 'stable'
           cache: true
 
-      - name: Download dependencies
+      - name: Install dependencies
         run: flutter pub get
 
-      - name: Build release APK
+      - name: Build APK Release
         run: flutter build apk --release
 
-      - name: Upload release APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: archero-game-release
+          name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
           
