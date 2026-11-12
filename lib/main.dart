@@ -430,6 +430,7 @@ class _GameScreenState extends State<GameScreen> {
   double attackPowerMultiplier = 1;
   int extraArrows = 0;
   int animationTicks = 0;
+  final List<Map<String, dynamic>> combatEffects = [];
 
   int score = 0;
   int stage = 1;
@@ -605,6 +606,12 @@ class _GameScreenState extends State<GameScreen> {
     if (!mounted || gameOverShown || stageTransitioning) return;
     animationTicks++;
 
+    // تحديث عمر المؤثرات القتالية.
+    for (int i = combatEffects.length - 1; i >= 0; i--) {
+      combatEffects[i]['life'] = (combatEffects[i]['life'] as int) - 1;
+      if ((combatEffects[i]['life'] as int) <= 0) combatEffects.removeAt(i);
+    }
+
     // تحريك الأسهم وفحص اصطدامها بالأعداء.
     for (int i = arrows.length - 1; i >= 0; i--) {
       final arrow = arrows[i];
@@ -626,12 +633,20 @@ class _GameScreenState extends State<GameScreen> {
         final dy = (arrow['y'] as double) - (enemy['y'] as double);
         if (sqrt(dx * dx + dy * dy) <
             (enemy['radius'] as double) + 5) {
+          combatEffects.add({
+            'x': enemy['x'], 'y': enemy['y'], 'type': 'impact', 'life': 13,
+          });
           enemy['hp'] = (enemy['hp'] as double) -
               (35 * attackPowerMultiplier);
           arrows.removeAt(i);
           arrowRemoved = true;
 
           if ((enemy['hp'] as double) <= 0) {
+            combatEffects.add({
+              'x': enemy['x'], 'y': enemy['y'],
+              'type': enemy['type'] == 'boss' ? 'bossBurst' : 'defeat',
+              'life': 25,
+            });
             coins.add({'x': enemy['x'], 'y': enemy['y']});
             score += enemy['type'] == 'boss' ? 150 : 20;
             enemies.removeAt(j);
@@ -925,10 +940,9 @@ class _GameScreenState extends State<GameScreen> {
                             arrow['vy'] as double,
                             arrow['vx'] as double,
                           ),
-                          child: const Icon(
-                            Icons.arrow_forward,
-                            color: Colors.amberAccent,
-                            size: 19,
+                          child: const CustomPaint(
+                            size: Size(25, 12),
+                            painter: ArrowSpritePainter(),
                           ),
                         ),
                       )),
@@ -992,6 +1006,24 @@ class _GameScreenState extends State<GameScreen> {
                             ),
                           ),
                         ],
+                      ),
+                    );
+                  }),
+
+                  // ومضات الاصطدام وانفجارات هزيمة الوحوش.
+                  ...combatEffects.map((effect) {
+                    final life = effect['life'] as int;
+                    final type = effect['type'] as String;
+                    final radius = type == 'bossBurst' ? 72.0 : (type == 'defeat' ? 42.0 : 25.0);
+                    return Positioned(
+                      left: (effect['x'] as double) - radius,
+                      top: (effect['y'] as double) - radius,
+                      child: CustomPaint(
+                        size: Size(radius * 2, radius * 2),
+                        painter: CombatEffectPainter(
+                          type: type,
+                          progress: 1 - life / (type == 'impact' ? 13 : 25),
+                        ),
                       ),
                     );
                   }),
@@ -1161,6 +1193,57 @@ class _GameScreenState extends State<GameScreen> {
         return Icons.person;
     }
   }
+}
+
+class ArrowSpritePainter extends CustomPainter {
+  const ArrowSpritePainter();
+  @override
+  void paint(Canvas canvas, Size size) {
+    final shaft = Paint()..color = const Color(0xFFFFE5A0)..strokeWidth = 2.4..strokeCap = StrokeCap.round;
+    final glow = Paint()..color = const Color(0xFFFFA52F).withOpacity(.45)..strokeWidth = 6..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+    canvas.drawLine(const Offset(2, 6), const Offset(21, 6), glow);
+    canvas.drawLine(const Offset(2, 6), const Offset(21, 6), shaft);
+    final head = Path()..moveTo(24, 6)..lineTo(16, 1)..lineTo(17, 6)..lineTo(16, 11)..close();
+    canvas.drawPath(head, Paint()..color = const Color(0xFFFFB52E));
+    canvas.drawLine(const Offset(5, 6), const Offset(1, 2), shaft);
+    canvas.drawLine(const Offset(5, 6), const Offset(1, 10), shaft);
+  }
+  @override
+  bool shouldRepaint(covariant ArrowSpritePainter oldDelegate) => false;
+}
+
+class CombatEffectPainter extends CustomPainter {
+  final String type;
+  final double progress;
+  const CombatEffectPainter({required this.type, required this.progress});
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final boss = type == 'bossBurst';
+    final impact = type == 'impact';
+    final radius = size.width * (.12 + progress * (impact ? .30 : .43));
+    final color = boss ? const Color(0xFFFF642F) : (impact ? const Color(0xFFFFE58A) : const Color(0xFF8DDAFF));
+    final glow = Paint()..color = color.withOpacity((1 - progress) * .45)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+    canvas.drawCircle(center, radius, glow);
+    final ring = Paint()..color = color.withOpacity(1 - progress)
+      ..style = PaintingStyle.stroke..strokeWidth = boss ? 4 : 2.5;
+    canvas.drawCircle(center, radius, ring);
+    for (var i = 0; i < 8; i++) {
+      final angle = i * pi / 4 + progress * 1.7;
+      final inner = radius * .45;
+      final outer = radius * (1.0 + (i.isEven ? .22 : -.08));
+      canvas.drawLine(
+        center + Offset(cos(angle) * inner, sin(angle) * inner),
+        center + Offset(cos(angle) * outer, sin(angle) * outer),
+        Paint()..color = const Color(0xFFFFE7A1).withOpacity(1 - progress)
+          ..strokeWidth = boss ? 3 : 2..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+  @override
+  bool shouldRepaint(covariant CombatEffectPainter oldDelegate) =>
+      oldDelegate.type != type || oldDelegate.progress != progress;
 }
 
 // -----------------------------------------------------------------------------
