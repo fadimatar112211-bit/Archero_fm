@@ -29,17 +29,14 @@ jobs:
                       f.write(line)
           "
           
-      - name: Get Dependencies
-        run: flutter pub get
-        
-      - name: Upgrade Android Project Wrapper
+      - name: Clean Project & Get Dependencies
         run: |
-          flutter config --no-analytics
-          flutter create . --platforms=android --org com.fadimatar --project-name archero_fm
+          flutter clean
+          flutter pub get
           
       - name: Build Release APK
         run: flutter build apk --release --no-pub
-        
+          
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
