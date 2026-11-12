@@ -1102,8 +1102,12 @@ class _GameScreenState extends State<GameScreen> {
                                     children: [
                                       SpriteSheetFrame(
                                         asset: enemyType == 'boss'
-                                            ? 'assets/spritesheets/boss_attack.svg'
-                                            : enemyAttacking && enemyType == 'stalker'
+                                            ? (enemyAttacking ? 'assets/spritesheets/boss_attack.svg' : 'assets/spritesheets/boss_walk.svg')
+                                            : enemyAttacking && enemyType == 'runner'
+                                                ? 'assets/spritesheets/enemy_runner_attack.svg'
+                                                : enemyAttacking && enemyType != 'stalker' && enemyType != 'tank'
+                                                    ? 'assets/spritesheets/enemy_melee_attack.svg'
+                                                    : enemyAttacking && enemyType == 'stalker'
                                                 ? 'assets/spritesheets/enemy_stalker_attack.svg'
                                                 : enemyAttacking && enemyType == 'tank'
                                                     ? 'assets/spritesheets/enemy_tank_attack.svg'
