@@ -1221,7 +1221,7 @@ class FighterSpritePainter extends CustomPainter {
     canvas.drawCircle(const Offset(49, 46), 5, light);
     // الرأس والملامح.
     canvas.drawOval(const Rect.fromLTWH(19, 3, 26, 28), skin);
-    canvas.drawOval(const Rect.fromLTWH(21, 4, 23, 11), hero ? Paint()..color = const Color(0xFFE9F2FF) : dark);
+    canvas.drawOval(const Rect.fromLTWH(21, 4, 23, 11), hero ? (Paint()..color = const Color(0xFFE9F2FF)) : dark);
     if (!hero) {
       final horn = Path()..moveTo(23, 9)..lineTo(15, 0)..lineTo(19, 15)..close();
       canvas.drawPath(horn, light);
