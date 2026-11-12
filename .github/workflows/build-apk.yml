@@ -15,12 +15,9 @@ jobs:
         with:
           flutter-version: '3.22.x'
           channel: 'stable'
-      - name: Remove test dependency to fix workflow
-        run: |
-          sed -i '/flutter_test:/d' pubspec.yaml
-          sed -i '/sdk: flutter/ { N; /flutter_test/d; }' pubspec.yaml
+      - name: Remove test dependency
+        run: sed -i '/flutter_test:/d' pubspec.yaml
       - run: flutter pub get
-      - run: flutter create . --platforms=android --org com.example
       - run: flutter build apk --release --no-pub
       - uses: actions/upload-artifact@v4
         with:
