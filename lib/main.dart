@@ -1270,27 +1270,93 @@ class ArenaPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.035)
-      ..strokeWidth = 1;
+    final rect = Offset.zero & size;
+    canvas.drawRect(rect, Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF172B35), Color(0xFF35513D), Color(0xFF182D2B)],
+      ).createShader(rect));
 
-    const gap = 42.0;
-    for (double x = 0; x < size.width; x += gap) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    // Outer mossy stone walls and corner towers.
+    final wall = Paint()..color = const Color(0xFF59616A);
+    final wallDark = Paint()..color = const Color(0xFF303D43);
+    final moss = Paint()..color = const Color(0xFF547A4A);
+    canvas.drawRRect(RRect.fromRectAndRadius(
+      Rect.fromLTWH(5, 72, size.width - 10, size.height - 80),
+      const Radius.circular(24)), wallDark);
+    canvas.drawRRect(RRect.fromRectAndRadius(
+      Rect.fromLTWH(12, 80, size.width - 24, size.height - 96),
+      const Radius.circular(20)), moss);
+
+    // Irregular stone courtyard tiles.
+    final tile = Paint()..color = const Color(0xFF89917A);
+    final tileEdge = Paint()..color = const Color(0xFF46584D)
+      ..style = PaintingStyle.stroke..strokeWidth = 1.4;
+    const tileW = 54.0, tileH = 38.0;
+    for (var row = 0; row < (size.height / tileH).ceil(); row++) {
+      for (var col = 0; col < (size.width / tileW).ceil(); col++) {
+        final x = col * tileW + (row.isOdd ? 14 : 0);
+        final y = 82 + row * tileH;
+        if (x > size.width - 14 || y > size.height - 8) continue;
+        final r = Rect.fromLTWH(x + 2, y + 2, tileW - 5, tileH - 5);
+        final path = Path()
+          ..moveTo(r.left + 5, r.top)
+          ..lineTo(r.right - 7, r.top + 1)
+          ..lineTo(r.right, r.top + 8)
+          ..lineTo(r.right - 3, r.bottom - 5)
+          ..lineTo(r.left + 7, r.bottom)
+          ..lineTo(r.left, r.bottom - 8)..close();
+        canvas.drawPath(path, tile);
+        canvas.drawPath(path, tileEdge);
+      }
     }
-    for (double y = 0; y < size.height; y += gap) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+
+    // Grass patches, tiny flowers and scattered stones.
+    final grass = Paint()..color = const Color(0xFF244D37);
+    final flower = Paint()..color = const Color(0xFFFFC5D7);
+    final gold = Paint()..color = const Color(0xFFFFD36B);
+    for (var i = 0; i < 34; i++) {
+      final x = (i * 73.0 + 19) % size.width;
+      final y = 100 + (i * 97.0 + 31) % (size.height - 110);
+      canvas.drawOval(Rect.fromCenter(center: Offset(x, y), width: 15, height: 7), grass);
+      if (i % 3 == 0) {
+        canvas.drawCircle(Offset(x + 3, y - 3), 2.5, flower);
+        canvas.drawCircle(Offset(x - 2, y - 4), 2, gold);
+      }
     }
 
-    final borderPaint = Paint()
-      ..color = Colors.amber.withOpacity(0.12)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+    // Decorative stone pillars with warm fire bowls.
+    for (final x in [size.width * .12, size.width * .88]) {
+      final baseY = size.height * .28;
+      canvas.drawRRect(RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(x, baseY + 25), width: 48, height: 14),
+        const Radius.circular(4)), wallDark);
+      canvas.drawRect(Rect.fromCenter(center: Offset(x, baseY), width: 34, height: 42), wall);
+      canvas.drawRect(Rect.fromCenter(center: Offset(x, baseY - 22), width: 46, height: 9), wall);
+      canvas.drawCircle(Offset(x, baseY - 30), 8, Paint()..color = const Color(0xFFFF8B27)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12));
+      final flame = Path()
+        ..moveTo(x, baseY - 19)..quadraticBezierTo(x - 14, baseY - 42, x, baseY - 53)
+        ..quadraticBezierTo(x + 13, baseY - 37, x, baseY - 19)..close();
+      canvas.drawPath(flame, Paint()..color = const Color(0xFFFFB52E));
+      canvas.drawPath(flame, Paint()..color = const Color(0xFFFFF0A1)
+        ..style = PaintingStyle.stroke..strokeWidth = 1.2);
+    }
 
-    canvas.drawRect(
-      Rect.fromLTWH(8, 85, size.width - 16, size.height - 95),
-      borderPaint,
-    );
+    // Ruined blocks, vines and edge shading.
+    for (var i = 0; i < 12; i++) {
+      final x = (i * 131.0 + 8) % size.width;
+      final y = i.isEven ? 91.0 : size.height - 18;
+      final stone = Rect.fromLTWH(x, y, 28 + (i % 3) * 8, 15);
+      canvas.drawRRect(RRect.fromRectAndRadius(stone, const Radius.circular(3)), wall);
+      canvas.drawLine(Offset(stone.left + 3, stone.top + 4),
+        Offset(stone.right - 4, stone.top + 4), Paint()..color = Colors.white.withOpacity(.16)..strokeWidth = 2);
+    }
+    final vignette = Paint()
+      ..shader = RadialGradient(colors: [Colors.transparent, Colors.black.withOpacity(.48)],
+        stops: const [0.55, 1]).createShader(rect);
+    canvas.drawRect(rect, vignette);
   }
 
   @override
