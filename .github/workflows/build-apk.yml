@@ -18,9 +18,8 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
           
-      - name: Auto-Fix Errors & Gradle Project
+      - name: Safe Clean pubspec.yaml
         run: |
-          echo "=== 1. Cleaning pubspec.yaml ==="
           python3 -c "
           with open('pubspec.yaml', 'r') as f:
               lines = f.readlines()
@@ -30,24 +29,11 @@ jobs:
                       f.write(line)
           "
           
-          echo "=== 2. Recreating Android Bridge cleanly ==="
-          rm -rf android
-          flutter create . --platforms=android --org com.fadimatar --project-name archero_fm
+      - name: Get Dependencies
+        run: flutter pub get
           
-          echo "=== 3. Adjusting Gradle Build Properties ==="
-          if [ -f "android/local.properties" ]; then
-            echo "sdk.dir=$ANDROID_HOME" >> android/local.properties
-          else
-            echo "sdk.dir=$ANDROID_HOME" > android/local.properties
-          fi
-          
-      - name: Clean & Get Dependencies
-        run: |
-          flutter clean
-          flutter pub get
-          
-      - name: Build Release APK with Stacktrace
-        run: flutter build apk --release --no-pub --verbose
+      - name: Build Release APK
+        run: flutter build apk --release --no-pub
           
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
