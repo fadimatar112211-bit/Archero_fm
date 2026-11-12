@@ -785,7 +785,7 @@ class _GameScreenState extends State<GameScreen> {
         });
         attackTicks = 12;
         attackCooldown = 108;
-        combatEffects.add({'x': enemy['x'], 'y': enemy['y'], 'type': 'sparkHit', 'life': 12});
+        combatEffects.add({'x': enemy['x'], 'y': enemy['y'], 'type': 'rangedShot', 'life': 12});
       }
       if (type == 'boss' &&
           distance <= 220 &&
@@ -1196,15 +1196,13 @@ class _GameScreenState extends State<GameScreen> {
 
                   // مقذوفات الأعداء بعيدة المدى.
                   ...enemyProjectiles.map((shot) => Positioned(
-                        left: (shot['x'] as double) - 7,
-                        top: (shot['y'] as double) - 7,
-                        child: Container(
-                          width: 14, height: 14,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.cyanAccent,
-                            boxShadow: [BoxShadow(color: Colors.cyanAccent.withOpacity(.8), blurRadius: 12, spreadRadius: 2)],
-                            border: Border.all(color: Colors.white, width: 1.2),
+                        left: (shot['x'] as double) - 11,
+                        top: (shot['y'] as double) - 11,
+                        child: Transform.rotate(
+                          angle: animationTicks * .16,
+                          child: const CustomPaint(
+                            size: Size(22, 22),
+                            painter: RangedProjectilePainter(),
                           ),
                         ),
                       )),
@@ -1585,6 +1583,7 @@ class EnemyAuraPainter extends CustomPainter {
     final c = Offset(size.width / 2, size.height / 2);
     final pulse = .5 + sin(phase * (type == 'runner' ? 2.2 : 1.25)) * .5;
     final color = switch (type) {
+      'ranged' => const Color(0xFF55E8FF),
       'runner' => const Color(0xFFFFA33B),
       'tank' => const Color(0xFF75C8D8),
       'stalker' => const Color(0xFFB77AFF),
@@ -1600,11 +1599,16 @@ class EnemyAuraPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = type == 'tank' ? 2.6 : 1.5;
     canvas.drawCircle(c, radius * (1 + pulse * .055), ring);
-    if (type == 'stalker' || type == 'runner') {
+    if (type == 'stalker' || type == 'runner' || type == 'ranged') {
       for (var i = 0; i < 3; i++) {
-        final a = phase * (type == 'runner' ? 2.8 : .65) + i * 2 * pi / 3;
+        final a = phase * (type == 'runner' ? 2.8 : type == 'ranged' ? 1.15 : .65) + i * 2 * pi / 3;
         final p = c + Offset(cos(a) * radius * 1.12, sin(a) * radius * .72);
-        canvas.drawCircle(p, attacking ? 2.7 : 1.7, Paint()..color = color.withOpacity(.85));
+        if (type == 'ranged') {
+          final shard = Path()..moveTo(p.dx, p.dy - 3.5)..lineTo(p.dx + 2.5, p.dy)..lineTo(p.dx, p.dy + 3.5)..lineTo(p.dx - 2.5, p.dy)..close();
+          canvas.drawPath(shard, Paint()..color = color.withOpacity(.9));
+        } else {
+          canvas.drawCircle(p, attacking ? 2.7 : 1.7, Paint()..color = color.withOpacity(.85));
+        }
       }
     } else if (type == 'tank') {
       for (var i = 0; i < 4; i++) {
@@ -1674,6 +1678,41 @@ class BossAuraPainter extends CustomPainter {
       oldDelegate.phase != phase || oldDelegate.attacking != attacking;
 }
 
+class RangedProjectilePainter extends CustomPainter {
+  const RangedProjectilePainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final glow = Paint()
+      ..color = const Color(0xFF42DFFF).withOpacity(.5)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7);
+    canvas.drawCircle(center, 8, glow);
+    final outer = Paint()
+      ..color = const Color(0xFF8AF3FF)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6;
+    canvas.drawCircle(center, 7, outer);
+    final crystal = Path()
+      ..moveTo(center.dx, 1)
+      ..lineTo(size.width - 3, center.dy)
+      ..lineTo(center.dx, size.height - 1)
+      ..lineTo(3, center.dy)
+      ..close();
+    canvas.drawPath(crystal, Paint()..color = const Color(0xFF24C8F2));
+    canvas.drawCircle(center, 2.3, Paint()..color = Colors.white);
+    final trail = Paint()
+      ..color = const Color(0xFF72EFFF).withOpacity(.8)
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(1, center.dy), Offset(5, center.dy), trail);
+    canvas.drawLine(Offset(center.dx, 1), Offset(center.dx, 4), trail);
+  }
+
+  @override
+  bool shouldRepaint(covariant RangedProjectilePainter oldDelegate) => false;
+}
+
 class ArrowSpritePainter extends CustomPainter {
   const ArrowSpritePainter();
   @override
@@ -1711,6 +1750,7 @@ class CombatEffectPainter extends CustomPainter {
       'metalHit' => const Color(0xFFB9D5E8),
       'shadowHit' => const Color(0xFFB66BFF),
       'sparkHit' => const Color(0xFFFFC04D),
+      'rangedShot' => const Color(0xFF55E8FF),
       'enemyAttack' => const Color(0xFFFF7043),
       'impact' => const Color(0xFFFFE58A),
       _ => const Color(0xFF8DDAFF),
