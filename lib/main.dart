@@ -439,6 +439,7 @@ class _GameScreenState extends State<GameScreen> {
   int extraArrows = 0;
   int animationTicks = 0;
   int heroAttackTicks = 0;
+  int playerMoveTicks = 0;
   final List<Map<String, dynamic>> combatEffects = [];
   final List<Map<String, dynamic>> defeatedSprites = [];
 
@@ -625,6 +626,7 @@ class _GameScreenState extends State<GameScreen> {
     if (!mounted || gameOverShown || stageTransitioning) return;
     animationTicks++;
     if (heroAttackTicks > 0) heroAttackTicks--;
+    if (playerMoveTicks > 0) playerMoveTicks--;
 
     // Update timed enemy defeat animations.
     for (int i = defeatedSprites.length - 1; i >= 0; i--) {
@@ -938,6 +940,7 @@ class _GameScreenState extends State<GameScreen> {
               onPanUpdate: (details) {
                 if (isPaused || showMysteryChest || gameOverShown) return;
                 setState(() {
+                  if (details.delta.distanceSquared > 0.25) playerMoveTicks = 8;
                   playerX = (playerX + details.delta.dx)
                       .clamp(22.0, width - 22.0)
                       .toDouble();
@@ -1210,13 +1213,17 @@ class _GameScreenState extends State<GameScreen> {
                                   ? 'assets/spritesheets/player_death.svg'
                                   : heroAttackTicks > 0
                                       ? 'assets/spritesheets/player_attack.svg'
-                                      : 'assets/spritesheets/player_walk.svg',
+                                      : playerMoveTicks > 0
+                                          ? 'assets/spritesheets/player_walk.svg'
+                                          : 'assets/spritesheets/player_idle.svg',
                               frameCount: 4,
                               frameIndex: playerDying
                                   ? (playerDeathTicks ~/ 6).clamp(0, 3)
                                   : heroAttackTicks > 0
                                       ? (animationTicks ~/ 2) % 4
-                                      : (animationTicks ~/ 7) % 4,
+                                      : playerMoveTicks > 0
+                                          ? (animationTicks ~/ 7) % 4
+                                          : 0,
                             ),
                           ),
                         ),
