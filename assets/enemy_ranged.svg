@@ -1,8 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <ellipse cx="32" cy="56" rx="16" ry="5" fill="rgba(0,0,0,0.3)"/>
-  <polygon points="32,16 16,52 48,52" fill="#8e44ad" stroke="#4a235a" stroke-width="2"/>
-  <circle cx="32" cy="24" r="9" fill="#2c3e50"/>
-  <circle cx="29" cy="24" r="2" fill="#e74c3c"/>
-  <circle cx="35" cy="24" r="2" fill="#e74c3c"/>
-  <polygon points="32,4 18,20 46,20" fill="#6c3483" stroke="#4a235a" stroke-width="2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+<defs><linearGradient id="hood" x2="0" y2="1"><stop stop-color="#a66be8"/><stop offset="1" stop-color="#42235f"/></linearGradient></defs>
+<ellipse cx="48" cy="88" rx="24" ry="5" fill="#080d19" opacity=".35"/>
+<path d="M25 43Q48 32 71 43L78 82 18 82Z" fill="#3b275b" stroke="#211632" stroke-width="3"/>
+<path d="M29 47 48 57 67 47 61 76 35 76Z" fill="#6b3d92" stroke="#b78bea" stroke-width="2"/>
+<path d="M20 40Q16 3 48 4Q82 3 76 42L67 59 29 59Z" fill="url(#hood)" stroke="#2a1a42" stroke-width="3"/>
+<path d="M29 34Q48 19 67 34L62 51 34 51Z" fill="#17162b"/>
+<path d="M33 37 43 40M63 37 53 40" stroke="#ff64ed" stroke-width="4" stroke-linecap="round"/>
+<circle cx="39" cy="39" r="2" fill="#fff0ff"/><circle cx="57" cy="39" r="2" fill="#fff0ff"/>
+<path d="M29 52 15 68 27 75 38 59M67 52 81 68 69 75 58 59" fill="#543273" stroke="#291a43" stroke-width="3"/>
+<path d="M36 76 31 89 43 89 48 78M53 78 58 89 70 89 62 76" fill="#29243d"/>
+<path d="M72 46Q91 56 78 78" fill="none" stroke="#f0c86b" stroke-width="3"/>
+<path d="M78 78 74 69 83 72Z" fill="#fff0a1"/>
+<path d="M29 15 16 4 22 26M67 15 80 4 74 26" fill="#d3a6fa" stroke="#6a398e" stroke-width="2"/>
 </svg>
