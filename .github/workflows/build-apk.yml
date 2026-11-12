@@ -29,14 +29,16 @@ jobs:
                       f.write(line)
           "
           
-      - name: Fix Project Name & Android Structure
+      - name: Setup Android Build Properties
         run: |
-          flutter create . --platforms=android --org com.fadimatar --project-name archero_fm
+          if [ -f "android/app/build.gradle" ]; then
+            sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle
+          fi
           
       - name: Get Dependencies
         run: flutter pub get
           
-      - name: Build APK (Debug/Release Compatible)
+      - name: Build Debug APK
         run: flutter build apk --debug
           
       - name: Upload APK Artifact
