@@ -1374,7 +1374,7 @@ class FighterSpritePainter extends CustomPainter {
     final armor = Paint()..color = hero ? const Color(0xFF243C69) : Color.lerp(tint, Colors.black, 0.28)!;
     final light = Paint()..color = hero ? const Color(0xFFFFD36B) : Color.lerp(tint, Colors.white, 0.38)!;
     final skin = Paint()..color = hero ? const Color(0xFFFFD5B2) : (boss ? const Color(0xFF6D244F) : const Color(0xFF83A84A));
-    final cape = Paint()..color = hero ? const Color(0xFFE33E35) : (stalker ? const Color(0xFF39265F) : Color.lerp(tint, Colors.black, 0.48)!);
+    final cape = Paint()..color = hero ? const Color(0xFFE33E35) : (stalker ? const Color(0xFF39265F) : Color.lerp(tint, Colors.black, 0.48)!);\n    final motion = sin(phase * 1.7);\n    final breathe = 1 + sin(phase * 2) * 0.018;
 
     // ظل أرضي يعطي الشخصية عمقاً.
     canvas.drawOval(const Rect.fromLTWH(10, 54, 44, 8),
@@ -1452,7 +1452,7 @@ class FighterSpritePainter extends CustomPainter {
     final body = Path()
       ..moveTo(19, 25)..quadraticBezierTo(32, 18, 45, 25)
       ..lineTo(48, 46)..quadraticBezierTo(32, 53, 16, 46)..close();
-    canvas.drawPath(body, armor);
+    canvas.save();\n    canvas.translate(32, 36);\n    canvas.scale(1, breathe);\n    canvas.translate(-32, -36);\n    canvas.drawPath(body, armor);
     // حواف معدنية ولمعات تعطي الدرع طبقات وعمقاً بصرياً.
     final armorEdge = Paint()
       ..color = light.color.withOpacity(.72)
@@ -1476,10 +1476,10 @@ class FighterSpritePainter extends CustomPainter {
       const Rect.fromLTWH(29, 42, 7, 6), const Radius.circular(1.5)),
       Paint()..color = const Color(0xFFFFD36B));
     canvas.drawPath(Path()..moveTo(32, 27)..lineTo(42, 31)..lineTo(39, 45)..lineTo(32, 48)..close(), light);
-    canvas.drawCircle(const Offset(32, 37), 4, Paint()..color = hero ? const Color(0xFF54DDF5) : Color.lerp(tint, Colors.white, 0.55)!);
+    canvas.drawCircle(const Offset(32, 37), 4, Paint()..color = hero ? const Color(0xFF54DDF5) : Color.lerp(tint, Colors.white, 0.55)!);\n    if (hero) {\n      canvas.drawCircle(const Offset(32, 37), 7 + sin(phase * 2) * 1.2, Paint()..color = const Color(0xFF54DDF5).withOpacity(.10 + (sin(phase * 2) + 1) * .035)..style = PaintingStyle.stroke..strokeWidth = 1.4);\n    }
     // نقاط ضوء صغيرة على الدرع.
     canvas.drawCircle(const Offset(23, 31), 1.5, Paint()..color = Colors.white.withOpacity(.7));
-    canvas.drawCircle(const Offset(41, 31), 1.5, Paint()..color = Colors.white.withOpacity(.7));
+    canvas.drawCircle(const Offset(41, 31), 1.5, Paint()..color = Colors.white.withOpacity(.7));\n    canvas.restore();
     // الذراعان.
     canvas.save();
     canvas.translate(16, 31);
@@ -1503,7 +1503,7 @@ class FighterSpritePainter extends CustomPainter {
       canvas.drawPath(horn, light); canvas.restore();
     } else {
       final hair = Path()..moveTo(19, 16)..lineTo(13, 3)..lineTo(28, 8)..lineTo(39, 1)..lineTo(45, 14)..close();
-      canvas.drawPath(hair, Paint()..color = const Color(0xFFF4F5FF));
+      canvas.drawPath(hair, Paint()..color = const Color(0xFFFFC84A));\n      canvas.drawPath(Path()..moveTo(20, 14)..quadraticBezierTo(30, 3, 43, 13), Paint()..color = const Color(0xFFFFE18A)..style = PaintingStyle.stroke..strokeWidth = 2.2..strokeCap = StrokeCap.round);
       final scarf = Path()..moveTo(19, 28)..lineTo(43, 27)..lineTo(57, 43)..lineTo(42, 39)..lineTo(32, 34)..close();
       canvas.drawPath(scarf, Paint()..color = const Color(0xFFE43B35));
       if (variant == 2) {
