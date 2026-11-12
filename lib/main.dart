@@ -3,9 +3,16 @@ import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'progress_store.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final progress = await ProgressStore.load();
+  globalCoins = progress['coins']!;
+  heroHpUpgrade = progress['hpUpgrade']!;
+  heroAtkUpgrade = progress['atkUpgrade']!;
+  bestStage = progress['bestStage']!;
+  bestScore = progress['bestScore']!;
   runApp(const ArcheroSoundApp());
 }
 
@@ -16,6 +23,16 @@ void main() {
 int globalCoins = 150;
 int heroHpUpgrade = 0;
 int heroAtkUpgrade = 0;
+int bestStage = 1;
+int bestScore = 0;
+
+Future<void> saveProgress() => ProgressStore.save(
+  coins: globalCoins,
+  hpUpgrade: heroHpUpgrade,
+  atkUpgrade: heroAtkUpgrade,
+  bestStage: bestStage,
+  bestScore: bestScore,
+);
 
 final AudioPlayer globalAudioPlayer = AudioPlayer();
 
@@ -81,6 +98,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       globalCoins -= 50;
       heroHpUpgrade += 25;
     });
+    saveProgress();
     playRealSound('coin');
   }
 
@@ -93,6 +111,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       globalCoins -= 70;
       heroAtkUpgrade += 15;
     });
+    saveProgress();
     playRealSound('coin');
   }
 
@@ -385,6 +404,7 @@ class _GameScreenState extends State<GameScreen> {
   double playerHp = 100;
   double playerMaxHp = 100;
   double playerSpeed = 3.5;
+  DateTime? lastDamageAt;
   double attackPowerMultiplier = 1;
   int extraArrows = 0;
 
@@ -478,7 +498,13 @@ class _GameScreenState extends State<GameScreen> {
   void _shootArrows() {
     if (enemies.isEmpty) return;
 
-    final target = enemies.first;
+    final target = enemies.reduce((a, b) {
+      final da = pow((a['x'] as double) - playerX, 2) +
+          pow((a['y'] as double) - playerY, 2);
+      final db = pow((b['x'] as double) - playerX, 2) +
+          pow((b['y'] as double) - playerY, 2);
+      return da <= db ? a : b;
+    });
     final angle = atan2(
       (target['y'] as double) - playerY,
       (target['x'] as double) - playerX,
@@ -585,20 +611,29 @@ class _GameScreenState extends State<GameScreen> {
 
       final distance = sqrt(dx * dx + dy * dy);
       if (distance < 23 + (enemy['radius'] as double)) {
-        playerHp -= enemy['type'] == 'boss' ? 0.9 : 0.45;
+        final now = DateTime.now();
+        if (lastDamageAt == null ||
+            now.difference(lastDamageAt!).inMilliseconds >= 450) {
+          playerHp -= enemy['type'] == 'boss' ? 9.0 : 5.0;
+          lastDamageAt = now;
+        }
       }
     }
 
     // جمع العملات.
+    var collectedCoin = false;
     for (int i = coins.length - 1; i >= 0; i--) {
       final dx = playerX - (coins[i]['x'] as double);
       final dy = playerY - (coins[i]['y'] as double);
       if (sqrt(dx * dx + dy * dy) < 34) {
         globalCoins += 10;
+        collectedCoin = true;
         coins.removeAt(i);
         playRealSound('coin');
       }
     }
+
+    if (collectedCoin) saveProgress();
 
     if (playerHp <= 0) {
       playerHp = 0;
@@ -617,7 +652,9 @@ class _GameScreenState extends State<GameScreen> {
     if (stageTransitioning || enemies.isNotEmpty || gameOverShown) return;
     stageTransitioning = true;
     stage++;
+    bestStage = max(bestStage, stage);
     playerHp = min(playerMaxHp, playerHp + 35);
+    saveProgress();
 
     if (stage % 2 == 0) {
       setState(() => showMysteryChest = true);
@@ -678,6 +715,7 @@ class _GameScreenState extends State<GameScreen> {
       showMysteryChest = false;
       stageTransitioning = false;
     });
+    saveProgress();
     playRealSound('coin');
     _spawnEnemies();
   }
@@ -685,6 +723,9 @@ class _GameScreenState extends State<GameScreen> {
   Future<void> _endGame() async {
     if (gameOverShown) return;
     gameOverShown = true;
+    bestStage = max(bestStage, stage);
+    bestScore = max(bestScore, score);
+    saveProgress();
     gameLoop?.cancel();
     shootLoop?.cancel();
     cooldownLoop?.cancel();
