@@ -1528,8 +1528,8 @@ class FighterSpritePainter extends CustomPainter {
     canvas.drawCircle(const Offset(26, 19), 4, eyeGlow);
     canvas.drawCircle(const Offset(38, 19), 4, eyeGlow);
     final eye = Paint()..color = const Color(0xFF171525);
-    canvas.drawOval(const Rect.fromCenter(center: Offset(26, 19), width: 3.2, height: 2.8), eye);
-    canvas.drawOval(const Rect.fromCenter(center: Offset(38, 19), width: 3.2, height: 2.8), eye);
+    canvas.drawOval(Rect.fromCenter(center: const Offset(26, 19), width: 3.2, height: 2.8), eye);
+    canvas.drawOval(Rect.fromCenter(center: const Offset(38, 19), width: 3.2, height: 2.8), eye);
     canvas.drawCircle(const Offset(25.5, 18.5), .7, Paint()..color = Colors.white);
     canvas.drawCircle(const Offset(37.5, 18.5), .7, Paint()..color = Colors.white);
     canvas.drawArc(const Rect.fromLTWH(27, 21, 10, 5), 0, 3.14, false,
