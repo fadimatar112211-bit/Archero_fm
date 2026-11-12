@@ -3,17 +3,17 @@ import 'dart:async';
 import 'dart:math';
 
 void main() {
-  runApp(const ArcheroUltimateApp());
+  runApp(const ArcheroApp());
 }
 
-class ArcheroUltimateApp extends StatelessWidget {
-  const ArcheroUltimateApp({Key? key}) : super(key: key);
+class ArcheroApp extends StatelessWidget {
+  const ArcheroApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Archero Ultimate Edition',
+      title: 'Archero Game',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const CharacterSelectionScreen(),
     );
@@ -27,10 +27,10 @@ class CharacterSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List> heroes = [
-      {'name': 'الرامي الرشيق (Archer)', 'color': Colors.redAccent, 'special': 'سهام متعددة وسريعة', 'hp': 5},
-      {'name': 'الساحر القوي (Mage)', 'color': Colors.purpleAccent, 'special': 'كرة سحرية خارقة', 'hp': 4},
-      {'name': 'المحارب الصلب (Warrior)', 'color': Colors.orangeAccent, 'special': 'درع دفاعي وصحة عالية', 'hp': 8},
-      {'name': 'القاتل الخفي (Assassin)', 'color': Colors.cyanAccent, 'special': 'سرعة فائقة وهجوم خاطف', 'hp': 4},
+      {'name': 'الرامي الرشيق', 'color': Colors.redAccent, 'hp': 5},
+      {'name': 'الساحر القوي', 'color': Colors.purpleAccent, 'hp': 4},
+      {'name': 'المحارب الصلب', 'color': Colors.orangeAccent, 'hp': 8},
+      {'name': 'القاتل الخفي', 'color': Colors.cyanAccent, 'hp': 4},
     ];
 
     return Scaffold(
@@ -52,7 +52,6 @@ class CharacterSelectionScreen extends StatelessWidget {
             child: ListTile(
               leading: CircleAvatar(backgroundColor: hero['color'], radius: 25),
               title: Text(hero['name'], style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-              subtitle: Text('القدرة: ${hero['special']}', style: const TextStyle(color: Colors.white70)),
               trailing: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 onPressed: () {
@@ -88,7 +87,7 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   Offset playerPos = const Offset(180, 500);
   List<Offset> arrows = [];
-  List> monsters = [];
+  List<Offset> monsters = [];
   
   final List<Rect> obstacles = [
     const Rect.fromLTWH(100, 200, 80, 30),
@@ -97,13 +96,8 @@ class _GameScreenState extends State<GameScreen> {
 
   Timer? gameLoopTimer;
   int score = 0;
-  int xp = 0;
   late int health;
   bool isGameOver = false;
-  bool showSkillSelection = false;
-  
-  bool extraArrows = false;
-  bool fastAttack = false;
 
   final Random random = Random();
 
@@ -116,34 +110,33 @@ class _GameScreenState extends State<GameScreen> {
 
   void startGameLoop() {
     gameLoopTimer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
-      if (isGameOver || showSkillSelection) return;
+      if (isGameOver) return;
 
       setState(() {
-        // 1. تحريك السهام
-        List<Offset> nextArrows = [];
+        // 1. تحريك السهام للأعلى
+        List<Offset> newArrows = [];
         for (var arrow in arrows) {
           if (arrow.dy > 0) {
             Offset nextA = Offset(arrow.dx, arrow.dy - 14);
-            bool hitObstacle = false;
+            bool hitObs = false;
             for (var obs in obstacles) {
               if (obs.contains(nextA)) {
-                hitObstacle = true;
+                hitObs = true;
                 break;
               }
             }
-            if (!hitObstacle) {
-              nextArrows.add(nextA);
+            if (!hitObs) {
+              newArrows.add(nextA);
             }
           }
         }
-        arrows = nextArrows;
+        arrows = newArrows;
 
-        // 2. تحريك الوحوش والزعماء
-        List> updatedMonstersList = [];
+        // 2. تحريك الوحوش للأسفل
+        List<Offset> newMonsters = [];
         for (var monster in monsters) {
-          double speed = monster['isBoss'] ? 1.2 : 2.0;
-          double newY = monster['pos'].dy + speed;
-          Offset newPos = Offset(monster['pos'].dx, newY);
+          double newY = monster.dy + 2.0;
+          Offset newPos = Offset(monster.dx, newY);
 
           bool hitObs = false;
           for (var obs in obstacles) {
@@ -154,40 +147,26 @@ class _GameScreenState extends State<GameScreen> {
           }
 
           if ((newPos - playerPos).distance < 35) {
-            health -= monster['isBoss'] ? 2 : 1;
+            health -= 1;
             if (health <= 0) {
               isGameOver = true;
             }
           } else if (!hitObs && newY < 680) {
-            updatedMonstersList.add({
-              'pos': newPos,
-              'type': monster['type'],
-              'hp': monster['hp'],
-              'isBoss': monster['isBoss']
-            });
+            newMonsters.add(newPos);
           }
         }
-        monsters = updatedMonstersList;
+        monsters = newMonsters;
 
-        // 3. فحص السهام والضربات
+        // 3. فحص ضربات السهام بالوحوش
         List<Offset> survivingArrows = [];
         for (var arrow in arrows) {
           bool hit = false;
-          List> survivingMonsters = [];
+          List<Offset> survivingMonsters = [];
           for (var monster in monsters) {
-            if (!hit && (arrow - monster['pos']).distance < (monster['isBoss'] ? 40 : 25)) {
+            if (!hit && (arrow - monster).distance < 25) {
               hit = true;
-              monster['hp'] -= 1;
-              if (monster['hp'] <= 0) {
-                score += monster['isBoss'] ? 50 : 15;
-                xp += 10;
-                if (xp >= 50) {
-                  xp = 0;
-                  showSkillSelection = true;
-                }
-              }
-            }
-            if (monster['hp'] > 0) {
+              score += 15;
+            } else {
               survivingMonsters.add(monster);
             }
           }
@@ -198,26 +177,19 @@ class _GameScreenState extends State<GameScreen> {
         }
         arrows = survivingArrows;
 
-        // 4. إطلاق السهام
-        int shootRate = fastAttack ? 15 : 22;
-        if (random.nextInt(shootRate) == 0) {
+        // 4. إطلاق السهام تلقائياً
+        if (random.nextInt(20) == 0) {
           arrows.add(playerPos);
-          if (widget.heroName.contains('الرامي') || extraArrows) {
+          if (widget.heroName.contains('الرامي')) {
             arrows.add(Offset(playerPos.dx - 18, playerPos.dy));
             arrows.add(Offset(playerPos.dx + 18, playerPos.dy));
           }
         }
 
-        // 5. ظهور الوحوش
+        // 5. ظهور الوحوش عشوائياً
         if (random.nextInt(35) == 0) {
           double rx = random.nextInt(300).toDouble() + 40;
-          bool isBossChance = score > 100 && random.nextInt(5) == 0;
-          monsters.add({
-            'pos': Offset(rx, 0),
-            'type': isBossChance ? 'boss' : (random.nextBool() ? 'goblin' : 'orc'),
-            'hp': isBossChance ? 8 : 2,
-            'isBoss': isBossChance,
-          });
+          monsters.add(Offset(rx, 0));
         }
       });
     });
@@ -229,12 +201,8 @@ class _GameScreenState extends State<GameScreen> {
       arrows.clear();
       monsters.clear();
       score = 0;
-      xp = 0;
       health = widget.maxHp;
       isGameOver = false;
-      showSkillSelection = false;
-      extraArrows = false;
-      fastAttack = false;
     });
   }
 
@@ -276,7 +244,7 @@ class _GameScreenState extends State<GameScreen> {
           children: [
             CustomPaint(
               size: MediaQuery.of(context).size,
-              painter: UltimateGamePainter(
+              painter: GamePainter(
                 playerPos: playerPos,
                 heroColor: widget.heroColor,
                 arrows: arrows,
@@ -284,57 +252,6 @@ class _GameScreenState extends State<GameScreen> {
                 obstacles: obstacles,
               ),
             ),
-            if (showSkillSelection)
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  width: 320,
-                  decoration: BoxDecoration(
-                    color: Colors.blueGrey.shade900,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.amber, width: 3),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('اختر مهارة جديدة! ⭐', style: TextStyle(color: Colors.amber, fontSize: 22, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 15),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
-                        onPressed: () {
-                          setState(() {
-                            extraArrows = true;
-                            showSkillSelection = false;
-                          });
-                        },
-                        child: const Text('سهام جانبية إضافية', style: TextStyle(color: Colors.white)),
-                      ),
-                      const SizedBox(height: 10),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
-                        onPressed: () {
-                          setState(() {
-                            fastAttack = true;
-                            showSkillSelection = false;
-                          });
-                        },
-                        child: const Text('سرعة إطلاق نار خارقة', style: TextStyle(color: Colors.white)),
-                      ),
-                      const SizedBox(height: 10),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
-                        onPressed: () {
-                          setState(() {
-                            health += 2;
-                            showSkillSelection = false;
-                          });
-                        },
-                        child: const Text('زيادة نقاط الصحة (+2 HP)', style: TextStyle(color: Colors.white)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             if (isGameOver)
               Center(
                 child: Container(
@@ -367,14 +284,14 @@ class _GameScreenState extends State<GameScreen> {
   }
 }
 
-class UltimateGamePainter extends CustomPainter {
+class GamePainter extends CustomPainter {
   final Offset playerPos;
   final Color heroColor;
   final List<Offset> arrows;
-  final List> monsters;
+  final List<Offset> monsters;
   final List<Rect> obstacles;
 
-  UltimateGamePainter({
+  GamePainter({
     required this.playerPos,
     required this.heroColor,
     required this.arrows,
@@ -395,6 +312,7 @@ class UltimateGamePainter extends CustomPainter {
       canvas.drawRRect(RRect.fromRectAndRadius(obs, const Radius.circular(8)), obsPaint);
     }
 
+    // رسم اللاعب
     final bodyPaint = Paint()..color = heroColor;
     final headPaint = Paint()..color = Colors.amber.shade200;
     canvas.drawRect(Rect.fromCenter(center: playerPos, width: 22, height: 32), bodyPaint);
@@ -402,20 +320,16 @@ class UltimateGamePainter extends CustomPainter {
     final bowPaint = Paint()..color = Colors.brown..style = PaintingStyle.stroke..strokeWidth = 3;
     canvas.drawArc(Rect.fromCenter(center: playerPos, width: 38, height: 38), 0, pi, false, bowPaint);
 
-    for (var monster in monsters) {
-      Offset mPos = monster['pos'];
-      bool isBoss = monster['isBoss'];
-      
-      final mPaint = Paint()..color = isBoss ? Colors.red.shade900 : Colors.deepPurple;
-      double radius = isBoss ? 35 : 18;
-      
-      canvas.drawCircle(mPos, radius, mPaint);
-      
-      final hornP = Paint()..color = Colors.orange;
-      canvas.drawCircle(Offset(mPos.dx - (isBoss ? 15 : 8), mPos.dy - (isBoss ? 25 : 12)), isBoss ? 10 : 5, hornP);
-      canvas.drawCircle(Offset(mPos.dx + (isBoss ? 15 : 8), mPos.dy - (isBoss ? 25 : 12)), isBoss ? 10 : 5, hornP);
+    // رسم الوحوش
+    final monsterPaint = Paint()..color = Colors.deepPurple;
+    final hornPaint = Paint()..color = Colors.orange;
+    for (var mPos in monsters) {
+      canvas.drawCircle(mPos, 18, monsterPaint);
+      canvas.drawCircle(Offset(mPos.dx - 8, mPos.dy - 12), 5, hornPaint);
+      canvas.drawCircle(Offset(mPos.dx + 8, mPos.dy - 12), 5, hornPaint);
     }
 
+    // رسم السهام
     final arrowPaint = Paint()..color = Colors.yellowAccent..strokeWidth = 4..strokeCap = StrokeCap.round;
     for (var arrow in arrows) {
       canvas.drawLine(arrow, Offset(arrow.dx, arrow.dy - 18), arrowPaint);
@@ -423,5 +337,5 @@ class UltimateGamePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant UltimateGamePainter oldDelegate) => true;
+  bool shouldRepaint(covariant GamePainter oldDelegate) => true;
 }
