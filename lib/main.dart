@@ -1220,6 +1220,15 @@ class _GameScreenState extends State<GameScreen> {
                                             phase: animationTicks * .045,
                                             attacking: enemyAttacking,
                                           ),
+                                        )
+                                      else
+                                        CustomPaint(
+                                          painter: EnemyAuraPainter(
+                                            type: enemyType,
+                                            phase: enemyPhase,
+                                            attacking: enemyAttacking,
+                                            hit: enemyHit,
+                                          ),
                                         ),
                                       SpriteSheetFrame(
                                         asset: enemyType == 'boss'
@@ -1493,6 +1502,53 @@ class _GameScreenState extends State<GameScreen> {
         return Icons.person;
     }
   }
+}
+
+class EnemyAuraPainter extends CustomPainter {
+  final String type;
+  final double phase;
+  final bool attacking;
+  final bool hit;
+  const EnemyAuraPainter({required this.type, required this.phase, required this.attacking, required this.hit});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final pulse = .5 + sin(phase * (type == 'runner' ? 2.2 : 1.25)) * .5;
+    final color = switch (type) {
+      'runner' => const Color(0xFFFFA33B),
+      'tank' => const Color(0xFF75C8D8),
+      'stalker' => const Color(0xFFB77AFF),
+      _ => const Color(0xFFFF5B62),
+    };
+    final radius = size.shortestSide * (type == 'tank' ? .39 : .35);
+    final glow = Paint()
+      ..color = color.withOpacity(hit ? .42 : attacking ? .28 : .13 + pulse * .07)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    canvas.drawCircle(c, radius, glow);
+    final ring = Paint()
+      ..color = color.withOpacity(attacking ? .9 : .32 + pulse * .2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = type == 'tank' ? 2.6 : 1.5;
+    canvas.drawCircle(c, radius * (1 + pulse * .055), ring);
+    if (type == 'stalker' || type == 'runner') {
+      for (var i = 0; i < 3; i++) {
+        final a = phase * (type == 'runner' ? 2.8 : .65) + i * 2 * pi / 3;
+        final p = c + Offset(cos(a) * radius * 1.12, sin(a) * radius * .72);
+        canvas.drawCircle(p, attacking ? 2.7 : 1.7, Paint()..color = color.withOpacity(.85));
+      }
+    } else if (type == 'tank') {
+      for (var i = 0; i < 4; i++) {
+        final a = i * pi / 2 + pi / 4;
+        final p = c + Offset(cos(a) * radius * 1.04, sin(a) * radius * 1.04);
+        canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: p, width: 5, height: 5), const Radius.circular(1)), Paint()..color = color.withOpacity(.8));
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant EnemyAuraPainter old) =>
+      old.type != type || old.phase != phase || old.attacking != attacking || old.hit != hit;
 }
 
 class BossAuraPainter extends CustomPainter {
