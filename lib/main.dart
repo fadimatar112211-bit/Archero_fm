@@ -1319,7 +1319,8 @@ class CombatEffectPainter extends CustomPainter {
         center + Offset(cos(angle) * inner, sin(angle) * inner),
         center + Offset(cos(angle) * outer, sin(angle) * outer),
         Paint()..color = const Color(0xFFFFE7A1).withOpacity(1 - progress)
-          ..strokeWidth = boss ? 3 : 2..strokeCap = StrokeCap.round,
+          ..strokeWidth = boss ? 3 : 2
+          ..strokeCap = StrokeCap.round,
       );
     }
   }
@@ -1432,8 +1433,33 @@ class FighterSpritePainter extends CustomPainter {
       ..moveTo(19, 25)..quadraticBezierTo(32, 18, 45, 25)
       ..lineTo(48, 46)..quadraticBezierTo(32, 53, 16, 46)..close();
     canvas.drawPath(body, armor);
+    // حواف معدنية ولمعات تعطي الدرع طبقات وعمقاً بصرياً.
+    final armorEdge = Paint()
+      ..color = light.color.withOpacity(.72)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.35;
+    canvas.drawPath(body, armorEdge);
+    final chestPlate = Path()
+      ..moveTo(22, 27)..lineTo(32, 30)..lineTo(42, 27)
+      ..lineTo(39, 43)..lineTo(32, 47)..lineTo(25, 43)..close();
+    canvas.drawPath(chestPlate, Paint()..color = Colors.black.withOpacity(.16));
+    canvas.drawPath(chestPlate, Paint()
+      ..color = light.color.withOpacity(.55)
+      ..style = PaintingStyle.stroke..strokeWidth = 1.1);
+    canvas.drawLine(const Offset(23, 29), const Offset(19, 42),
+      Paint()..color = Colors.white.withOpacity(.28)..strokeWidth = 2);
+    // حزام ومشبك مركزي.
+    canvas.drawRRect(RRect.fromRectAndRadius(
+      const Rect.fromLTWH(19, 43, 26, 4), const Radius.circular(2)),
+      Paint()..color = const Color(0xFF392A32));
+    canvas.drawRRect(RRect.fromRectAndRadius(
+      const Rect.fromLTWH(29, 42, 7, 6), const Radius.circular(1.5)),
+      Paint()..color = const Color(0xFFFFD36B));
     canvas.drawPath(Path()..moveTo(32, 27)..lineTo(42, 31)..lineTo(39, 45)..lineTo(32, 48)..close(), light);
     canvas.drawCircle(const Offset(32, 37), 4, Paint()..color = hero ? const Color(0xFF54DDF5) : Color.lerp(tint, Colors.white, 0.55)!);
+    // نقاط ضوء صغيرة على الدرع.
+    canvas.drawCircle(const Offset(23, 31), 1.5, Paint()..color = Colors.white.withOpacity(.7));
+    canvas.drawCircle(const Offset(41, 31), 1.5, Paint()..color = Colors.white.withOpacity(.7));
     // الذراعان.
     canvas.save();
     canvas.translate(16, 31);
@@ -1476,9 +1502,16 @@ class FighterSpritePainter extends CustomPainter {
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
       }
     }
+    final eyeGlow = Paint()
+      ..color = (stalker || boss ? const Color(0xFFFF4CF0) : const Color(0xFF8DEBFF)).withOpacity(.32)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+    canvas.drawCircle(const Offset(26, 19), 4, eyeGlow);
+    canvas.drawCircle(const Offset(38, 19), 4, eyeGlow);
     final eye = Paint()..color = const Color(0xFF171525);
-    canvas.drawCircle(const Offset(26, 19), 2, eye);
-    canvas.drawCircle(const Offset(38, 19), 2, eye);
+    canvas.drawOval(const Rect.fromCenter(center: Offset(26, 19), width: 3.2, height: 2.8), eye);
+    canvas.drawOval(const Rect.fromCenter(center: Offset(38, 19), width: 3.2, height: 2.8), eye);
+    canvas.drawCircle(const Offset(25.5, 18.5), .7, Paint()..color = Colors.white);
+    canvas.drawCircle(const Offset(37.5, 18.5), .7, Paint()..color = Colors.white);
     canvas.drawArc(const Rect.fromLTWH(27, 21, 10, 5), 0, 3.14, false,
         Paint()..color = const Color(0xFF552D35)..strokeWidth = 1.5..style = PaintingStyle.stroke);
     // سلاح صغير واضح للشخصية.
