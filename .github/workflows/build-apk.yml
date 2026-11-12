@@ -29,6 +29,10 @@ jobs:
                       f.write(line)
           "
           
+      - name: Upgrade Project Gradle Structure
+        run: |
+          flutter create . --platforms=android --org com.fadimatar --project-name archero_fm
+          
       - name: Get Dependencies
         run: flutter pub get
           
