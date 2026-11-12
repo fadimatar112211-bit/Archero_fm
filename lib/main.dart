@@ -633,8 +633,15 @@ class _GameScreenState extends State<GameScreen> {
         final dy = (arrow['y'] as double) - (enemy['y'] as double);
         if (sqrt(dx * dx + dy * dy) <
             (enemy['radius'] as double) + 5) {
+          final hitType = switch (enemy['type']) {
+            'tank' => 'metalHit',
+            'stalker' => 'shadowHit',
+            'runner' => 'sparkHit',
+            'boss' => 'bossHit',
+            _ => 'impact',
+          };
           combatEffects.add({
-            'x': enemy['x'], 'y': enemy['y'], 'type': 'impact', 'life': 13,
+            'x': enemy['x'], 'y': enemy['y'], 'type': hitType, 'life': 16,
           });
           enemy['hp'] = (enemy['hp'] as double) -
               (35 * attackPowerMultiplier);
@@ -675,6 +682,13 @@ class _GameScreenState extends State<GameScreen> {
             now.difference(lastDamageAt!).inMilliseconds >= 450) {
           playerHp -= enemy['type'] == 'boss' ? 9.0 : 5.0;
           lastDamageAt = now;
+          combatEffects.add({
+            'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
+          });
+          combatEffects.add({
+            'x': enemy['x'], 'y': enemy['y'],
+            'type': 'enemyAttack', 'life': 12,
+          });
         }
       }
     }
@@ -1014,7 +1028,7 @@ class _GameScreenState extends State<GameScreen> {
                   ...combatEffects.map((effect) {
                     final life = effect['life'] as int;
                     final type = effect['type'] as String;
-                    final radius = type == 'bossBurst' ? 72.0 : (type == 'defeat' ? 42.0 : 25.0);
+                    final radius = type == 'bossBurst' ? 72.0 : ((type == 'defeat' || type == 'playerHit') ? 42.0 : 29.0);
                     return Positioned(
                       left: (effect['x'] as double) - radius,
                       top: (effect['y'] as double) - radius,
@@ -1022,7 +1036,7 @@ class _GameScreenState extends State<GameScreen> {
                         size: Size(radius * 2, radius * 2),
                         painter: CombatEffectPainter(
                           type: type,
-                          progress: 1 - life / (type == 'impact' ? 13 : 25),
+                          progress: 1 - life / ((type == 'impact' || type.endsWith('Hit') || type == 'enemyAttack') ? (type == 'enemyAttack' ? 12 : 16) : 25),
                         ),
                       ),
                     );
@@ -1219,16 +1233,39 @@ class CombatEffectPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final boss = type == 'bossBurst';
-    final impact = type == 'impact';
+    final boss = type == 'bossBurst' || type == 'bossHit';
+    final impact = type == 'impact' || type.endsWith('Hit') || type == 'enemyAttack';
+    final playerHit = type == 'playerHit';
+    final metal = type == 'metalHit';
+    final shadow = type == 'shadowHit';
     final radius = size.width * (.12 + progress * (impact ? .30 : .43));
-    final color = boss ? const Color(0xFFFF642F) : (impact ? const Color(0xFFFFE58A) : const Color(0xFF8DDAFF));
+    final color = boss ? const Color(0xFFFF642F)
+        : (playerHit ? const Color(0xFFFF365D)
+        : (metal ? const Color(0xFFB9D5E8)
+        : (shadow ? const Color(0xFFB66BFF)
+        : (type == 'sparkHit' ? const Color(0xFFFFC04D)
+        : (type == 'enemyAttack' ? const Color(0xFFFF7043)
+        : (type == 'impact' ? const Color(0xFFFFE58A) : const Color(0xFF8DDAFF))))));
     final glow = Paint()..color = color.withOpacity((1 - progress) * .45)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
     canvas.drawCircle(center, radius, glow);
     final ring = Paint()..color = color.withOpacity(1 - progress)
       ..style = PaintingStyle.stroke..strokeWidth = boss ? 4 : 2.5;
-    canvas.drawCircle(center, radius, ring);
+    if (playerHit) {
+      final slash = Paint()..color = color.withOpacity(1 - progress)
+        ..strokeWidth = 4..strokeCap = StrokeCap.round;
+      canvas.drawLine(center + Offset(-radius, -radius * .55),
+        center + Offset(radius, radius * .55), slash);
+      canvas.drawLine(center + Offset(radius * .7, -radius * .7),
+        center + Offset(-radius * .7, radius * .7), slash);
+    } else if (type == 'enemyAttack') {
+      final arc = Rect.fromCircle(center: center, radius: radius);
+      canvas.drawArc(arc, -pi * .75, pi * .5, false,
+        Paint()..color = color.withOpacity(1 - progress)
+          ..style = PaintingStyle.stroke..strokeWidth = 5..strokeCap = StrokeCap.round);
+    } else {
+      canvas.drawCircle(center, radius, ring);
+    }
     for (var i = 0; i < 8; i++) {
       final angle = i * pi / 4 + progress * 1.7;
       final inner = radius * .45;
