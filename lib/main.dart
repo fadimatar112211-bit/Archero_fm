@@ -773,7 +773,17 @@ class _GameScreenState extends State<GameScreen> {
       final impactFrame = type == 'boss' ? 12 : 8;
       if (attackTicks == impactFrame &&
           enemy['attackHitDone'] != true &&
-          distance <= impactDistance) {
+          distance <= impactDistance &&
+          playerMoveTicks > 0) {
+        enemy['attackHitDone'] = true;
+        combatEffects.add({
+          'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14,
+        });
+      }
+      if (attackTicks == impactFrame &&
+          enemy['attackHitDone'] != true &&
+          distance <= impactDistance &&
+          playerMoveTicks <= 0) {
         final now = DateTime.now();
         if (lastDamageAt == null ||
             now.difference(lastDamageAt!).inMilliseconds >= 220) {
