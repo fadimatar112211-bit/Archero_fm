@@ -429,6 +429,7 @@ class _GameScreenState extends State<GameScreen> {
   DateTime? lastDamageAt;
   double attackPowerMultiplier = 1;
   int extraArrows = 0;
+  int animationTicks = 0;
 
   int score = 0;
   int stage = 1;
@@ -602,6 +603,7 @@ class _GameScreenState extends State<GameScreen> {
 
   void _updateEngine() {
     if (!mounted || gameOverShown || stageTransitioning) return;
+    animationTicks++;
 
     // تحريك الأسهم وفحص اصطدامها بالأعداء.
     for (int i = arrows.length - 1; i >= 0; i--) {
@@ -985,6 +987,7 @@ class _GameScreenState extends State<GameScreen> {
                               painter: FighterSpritePainter(
                                 kind: enemyType,
                                 tint: enemyColor,
+                                phase: animationTicks * 0.13 + (enemy['x'] as double) * 0.03,
                               ),
                             ),
                           ),
@@ -1005,6 +1008,7 @@ class _GameScreenState extends State<GameScreen> {
                           kind: 'hero',
                           tint: _heroColor(),
                           variant: widget.heroType,
+                          phase: animationTicks * 0.13,
                         ),
                       ),
                     ),
@@ -1166,13 +1170,15 @@ class FighterSpritePainter extends CustomPainter {
   final String kind;
   final Color tint;
   final int variant;
-  const FighterSpritePainter({required this.kind, required this.tint, this.variant = 0});
+  final double phase;
+  const FighterSpritePainter({required this.kind, required this.tint, this.variant = 0, this.phase = 0});
 
   @override
   void paint(Canvas canvas, Size size) {
     final scale = size.shortestSide / 64;
     canvas.save();
     canvas.scale(scale);
+    canvas.translate(0, sin(phase * 2) * 1.15);
     final boss = kind == 'boss';
     final tank = kind == 'tank';
     final runner = kind == 'runner';
@@ -1217,10 +1223,19 @@ class FighterSpritePainter extends CustomPainter {
     }
     // الساقان والحذاء.
     final leg = Paint()..color = const Color(0xFF30283A);
-    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(20, 43, 10, 13), const Radius.circular(4)), leg);
-    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(35, 43, 10, 13), const Radius.circular(4)), leg);
-    canvas.drawOval(const Rect.fromLTWH(16, 51, 17, 7), dark);
-    canvas.drawOval(const Rect.fromLTWH(33, 51, 17, 7), dark);
+    final stride = sin(phase) * (boss ? 2.0 : 3.0);
+    canvas.save();
+    canvas.translate(25, 43);
+    canvas.rotate(stride * 0.035);
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(-5, 0, 10, 13), const Radius.circular(4)), leg);
+    canvas.drawOval(const Rect.fromLTWH(-9, 8, 17, 7), dark);
+    canvas.restore();
+    canvas.save();
+    canvas.translate(40, 43);
+    canvas.rotate(-stride * 0.035);
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(-5, 0, 10, 13), const Radius.circular(4)), leg);
+    canvas.drawOval(const Rect.fromLTWH(-8, 8, 17, 7), dark);
+    canvas.restore();
     // دروع كتف ثقيلة للدبابة.
     if (tank) {
       final plate = Paint()..color = const Color(0xFF8796A3);
@@ -1255,10 +1270,18 @@ class FighterSpritePainter extends CustomPainter {
     canvas.drawPath(Path()..moveTo(32, 27)..lineTo(42, 31)..lineTo(39, 45)..lineTo(32, 48)..close(), light);
     canvas.drawCircle(const Offset(32, 37), 4, Paint()..color = hero ? const Color(0xFF54DDF5) : Color.lerp(tint, Colors.white, 0.55)!);
     // الذراعان.
-    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(10, 28, 11, 19), const Radius.circular(5)), skin);
-    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(43, 28, 11, 19), const Radius.circular(5)), skin);
-    canvas.drawCircle(const Offset(15, 46), 5, light);
-    canvas.drawCircle(const Offset(49, 46), 5, light);
+    canvas.save();
+    canvas.translate(16, 31);
+    canvas.rotate(sin(phase) * 0.12);
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(-5, -3, 11, 19), const Radius.circular(5)), skin);
+    canvas.drawCircle(const Offset(0, 15), 5, light);
+    canvas.restore();
+    canvas.save();
+    canvas.translate(48, 31);
+    canvas.rotate(-sin(phase) * 0.12);
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(-5, -3, 11, 19), const Radius.circular(5)), skin);
+    canvas.drawCircle(const Offset(0, 15), 5, light);
+    canvas.restore();
     // الرأس والملامح.
     canvas.drawOval(const Rect.fromLTWH(19, 3, 26, 28), skin);
     canvas.drawOval(const Rect.fromLTWH(21, 4, 23, 11), hero ? (Paint()..color = const Color(0xFFE9F2FF)) : dark);
@@ -1313,7 +1336,7 @@ class FighterSpritePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant FighterSpritePainter oldDelegate) =>
-      oldDelegate.kind != kind || oldDelegate.tint != tint || oldDelegate.variant != variant;
+      oldDelegate.kind != kind || oldDelegate.tint != tint || oldDelegate.variant != variant || oldDelegate.phase != phase;
 }
 
 // -----------------------------------------------------------------------------
