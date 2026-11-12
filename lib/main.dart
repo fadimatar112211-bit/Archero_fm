@@ -1143,8 +1143,12 @@ class _GameScreenState extends State<GameScreen> {
                               ? 'assets/spritesheets/boss_death.svg'
                               : sprite['type'] == 'runner'
                                   ? 'assets/spritesheets/enemy_runner_death.svg'
-                                  : 'assets/spritesheets/enemy_death.svg',
-                          frameCount: 4,
+                                  : sprite['type'] == 'tank'
+                                      ? 'assets/spritesheets/enemy_tank_death.svg'
+                                      : sprite['type'] == 'stalker'
+                                          ? 'assets/spritesheets/enemy_stalker_death.svg'
+                                          : 'assets/spritesheets/enemy_death.svg',
+                           frameCount: 4,
                           frameIndex: ((24 - life) ~/ 6).clamp(0, 3),
                         ),
                       ),
