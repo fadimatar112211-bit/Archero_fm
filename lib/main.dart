@@ -448,6 +448,13 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
+  String get playerSpritePrefix => switch (widget.heroType) {
+    2 => 'assets/spritesheets/player_flame',
+    3 => 'assets/spritesheets/player_shadow',
+    4 => 'assets/spritesheets/player_storm',
+    _ => 'assets/spritesheets/player',
+  };
+
   final Random random = Random();
 
   double playerX = 180;
@@ -1317,10 +1324,10 @@ class _GameScreenState extends State<GameScreen> {
                               asset: playerDying
                                   ? 'assets/spritesheets/player_death.svg'
                                   : heroAttackTicks > 0
-                                      ? 'assets/spritesheets/player_attack.svg'
+                                      ? '${playerSpritePrefix}_attack.svg'
                                       : playerMoveTicks > 0
-                                          ? 'assets/spritesheets/player_walk.svg'
-                                          : 'assets/spritesheets/player_idle.svg',
+                                          ? '${playerSpritePrefix}_walk.svg'
+                                          : '${playerSpritePrefix}_idle.svg',
                               frameCount: 4,
                               frameIndex: playerDying
                                   ? (playerDeathTicks ~/ 6).clamp(0, 3)
