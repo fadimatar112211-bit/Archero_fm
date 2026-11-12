@@ -861,10 +861,8 @@ class _GameScreenState extends State<GameScreen> {
           style: TextStyle(color: Colors.redAccent),
         ),
         content: Text(
-          'المرحلة التي وصلت إليها: $stage
-'
-          'النقاط الإجمالية: $score
-'
+          'المرحلة التي وصلت إليها: $stage\n'
+          'النقاط الإجمالية: $score\n'
           'رصيد العملات: 🪙 $globalCoins',
         ),
         actions: [
@@ -1029,6 +1027,12 @@ class _GameScreenState extends State<GameScreen> {
                       'boss' => Icons.whatshot,
                       _ => Icons.pest_control,
                     };
+                    final enemyPhase = animationTicks * 0.13 + (enemy['x'] as double) * 0.03;
+                    final enemyAttacking = enemyType == 'runner'
+                        ? animationTicks % 105 < 18
+                        : enemyType == 'boss' && animationTicks % 180 < 28;
+                    final enemyHit = ((enemy['hitTicks'] as int?) ?? 0) > 0;
+                    final attackLean = enemyAttacking ? (enemyType == 'boss' ? -0.16 : -0.24) : 0.0;
                     final hpRatio = ((enemy['hp'] as double) /
                             (enemy['maxHp'] as double))
                         .clamp(0.0, 1.0);
@@ -1061,20 +1065,23 @@ class _GameScreenState extends State<GameScreen> {
                             width: radius * 2,
                             height: radius * 2,
                             child: Transform.translate(
-                              offset: Offset(0, sin(animationTicks * 0.13 + (enemy['x'] as double) * 0.03) * 2.0),
-                              child: Transform.scale(
-                                scale: 1 + sin(animationTicks * 0.13 + (enemy['y'] as double) * 0.02) * 0.025,
-                                child: Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    SvgPicture.asset(
-                                      enemyType == 'boss' ? 'assets/boss.svg' :
-                                      (enemyType == 'stalker' || enemyType == 'runner') ? 'assets/enemy_ranged.svg' : 'assets/enemy_melee.svg',
-                                      fit: BoxFit.contain,
-                                    ),
-                                    if (((enemy['hitTicks'] as int?) ?? 0) > 0)
-                                      DecoratedBox(decoration: BoxDecoration(color: Colors.white.withOpacity(.32))),
-                                  ],
+                              offset: Offset(enemyAttacking ? -3.5 : sin(enemyPhase).abs() * -2.0, sin(enemyPhase * 1.35) * 2.0),
+                              child: Transform.rotate(
+                                angle: enemyHit ? 0.10 * sin(enemyPhase * 5) : attackLean,
+                                child: Transform.scale(
+                                  scale: (1 + sin(enemyPhase) * 0.025) * (enemyAttacking ? 1.06 : 1.0) * (enemyHit ? 0.96 : 1.0),
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      SvgPicture.asset(
+                                        enemyType == 'boss' ? 'assets/boss.svg' :
+                                        (enemyType == 'stalker' || enemyType == 'runner') ? 'assets/enemy_ranged.svg' : 'assets/enemy_melee.svg',
+                                        fit: BoxFit.contain,
+                                      ),
+                                      if (enemyHit)
+                                        DecoratedBox(decoration: BoxDecoration(color: Colors.white.withOpacity(.32))),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -1110,10 +1117,13 @@ class _GameScreenState extends State<GameScreen> {
                       width: 58,
                       height: 58,
                       child: Transform.translate(
-                        offset: Offset(0, sin(animationTicks * 0.13) * 2.2),
-                        child: Transform.scale(
-                          scale: 1 + sin(animationTicks * 0.13) * 0.025,
-                          child: SvgPicture.asset('assets/player.svg', fit: BoxFit.contain),
+                        offset: Offset(heroAttackTicks > 0 ? 3.0 : 0.0, sin(animationTicks * 0.13).abs() * -2.4),
+                        child: Transform.rotate(
+                          angle: heroAttackTicks > 0 ? -0.10 - (heroAttackTicks / 12) * 0.13 : sin(animationTicks * 0.13) * 0.025,
+                          child: Transform.scale(
+                            scale: (1 + sin(animationTicks * 0.13) * 0.025) * (heroAttackTicks > 0 ? 1.045 : 1.0),
+                            child: SvgPicture.asset('assets/player.svg', fit: BoxFit.contain),
+                          ),
                         ),
                       ),
                     ),
