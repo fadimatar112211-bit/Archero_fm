@@ -668,7 +668,7 @@ class _GameScreenState extends State<GameScreen> {
           arrowRemoved = true;
 
           if ((enemy['hp'] as double) <= 0) {
-            defeatedSprites.add({'x': enemy['x'], 'y': enemy['y'], 'boss': enemy['type'] == 'boss', 'life': 24});
+            defeatedSprites.add({'x': enemy['x'], 'y': enemy['y'], 'type': enemy['type'], 'boss': enemy['type'] == 'boss', 'life': 24});
             combatEffects.add({
               'x': enemy['x'], 'y': enemy['y'],
               'type': enemy['type'] == 'boss' ? 'bossBurst' : 'defeat',
@@ -1127,7 +1127,9 @@ class _GameScreenState extends State<GameScreen> {
                         child: SpriteSheetFrame(
                           asset: sprite['boss'] == true
                               ? 'assets/spritesheets/boss_death.svg'
-                              : 'assets/spritesheets/enemy_death.svg',
+                              : sprite['type'] == 'runner'
+                                  ? 'assets/spritesheets/enemy_runner_death.svg'
+                                  : 'assets/spritesheets/enemy_death.svg',
                           frameCount: 4,
                           frameIndex: ((24 - life) ~/ 6).clamp(0, 3),
                         ),
