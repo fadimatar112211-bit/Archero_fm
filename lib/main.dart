@@ -440,6 +440,7 @@ class _GameScreenState extends State<GameScreen> {
   int animationTicks = 0;
   int heroAttackTicks = 0;
   final List<Map<String, dynamic>> combatEffects = [];
+  final List<Map<String, dynamic>> defeatedSprites = [];
 
   int score = 0;
   int stage = 1;
@@ -617,6 +618,12 @@ class _GameScreenState extends State<GameScreen> {
     animationTicks++;
     if (heroAttackTicks > 0) heroAttackTicks--;
 
+    // Update timed enemy defeat animations.
+    for (int i = defeatedSprites.length - 1; i >= 0; i--) {
+      defeatedSprites[i]['life'] = (defeatedSprites[i]['life'] as int) - 1;
+      if ((defeatedSprites[i]['life'] as int) <= 0) defeatedSprites.removeAt(i);
+    }
+
     // تحديث عمر المؤثرات القتالية.
     for (int i = combatEffects.length - 1; i >= 0; i--) {
       combatEffects[i]['life'] = (combatEffects[i]['life'] as int) - 1;
@@ -661,6 +668,7 @@ class _GameScreenState extends State<GameScreen> {
           arrowRemoved = true;
 
           if ((enemy['hp'] as double) <= 0) {
+            defeatedSprites.add({'x': enemy['x'], 'y': enemy['y'], 'boss': enemy['type'] == 'boss', 'life': 24});
             combatEffects.add({
               'x': enemy['x'], 'y': enemy['y'],
               'type': enemy['type'] == 'boss' ? 'bossBurst' : 'defeat',
@@ -1100,6 +1108,25 @@ class _GameScreenState extends State<GameScreen> {
                             ),
                           ),
                         ],
+                      ),
+                    );
+                  }),
+
+                  ...defeatedSprites.map((sprite) {
+                    final life = sprite['life'] as int;
+                    final size = sprite['boss'] == true ? 104.0 : 66.0;
+                    return Positioned(
+                      left: (sprite['x'] as double) - size / 2,
+                      top: (sprite['y'] as double) - size / 2,
+                      width: size,
+                      height: size,
+                      child: Opacity(
+                        opacity: (life / 24).clamp(0.0, 1.0),
+                        child: SpriteSheetFrame(
+                          asset: 'assets/spritesheets/enemy_death.svg',
+                          frameCount: 4,
+                          frameIndex: ((24 - life) ~/ 6).clamp(0, 3),
+                        ),
                       ),
                     );
                   }),
