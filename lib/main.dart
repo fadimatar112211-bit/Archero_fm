@@ -708,6 +708,22 @@ class _GameScreenState extends State<GameScreen> {
       final distance = sqrt(dx * dx + dy * dy);
       final angle = atan2(dy, dx);
       final type = enemy['type'] as String;
+      var attackTicks = (enemy['attackTicks'] as int?) ?? 0;
+      var attackCooldown = (enemy['attackCooldown'] as int?) ?? 0;
+      if (attackTicks > 0) attackTicks--;
+      if (attackCooldown > 0) attackCooldown--;
+      final attackRange = 23 + (enemy['radius'] as double) + 24;
+      if (distance <= attackRange && attackCooldown == 0) {
+        attackTicks = type == 'boss' ? 24 : 16;
+        attackCooldown = type == 'boss' ? 105 : 76;
+        combatEffects.add({
+          'x': enemy['x'], 'y': enemy['y'],
+          'type': type == 'boss' ? 'bossTell' : 'enemyAttack',
+          'life': type == 'boss' ? 22 : 12,
+        });
+      }
+      enemy['attackTicks'] = attackTicks;
+      enemy['attackCooldown'] = attackCooldown;
       var moveSpeed = enemy['speed'] as double;
       var moveAngle = angle;
 
@@ -1061,13 +1077,8 @@ class _GameScreenState extends State<GameScreen> {
                     };
                     final walkPhase = (enemy['walkPhase'] as double?) ?? 0.0;
                     final enemyPhase = walkPhase + (enemy['x'] as double) * 0.03;
-                    final enemyAttacking = enemyType == 'runner'
-                        ? animationTicks % 105 < 18
-                        : enemyType == 'boss'
-                            ? animationTicks % 180 < 28
-                            : enemyType == 'stalker'
-                                ? animationTicks % 132 < 16
-                                : enemyType == 'tank' && animationTicks % 156 < 20;
+                    final enemyAttacking =
+                        ((enemy['attackTicks'] as int?) ?? 0) > 0;
                     final enemyHit = ((enemy['hitTicks'] as int?) ?? 0) > 0;
                     // حركة مشي ناعمة مستمرة فوق إطارات الـSVG، مع اختلاف وزن كل فئة.
                     final gait = sin(walkPhase * 1.8);
