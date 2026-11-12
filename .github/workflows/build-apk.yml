@@ -1,7 +1,7 @@
 name: Build Flutter APK
 
 on:
-  workflow_dispatch: # يتيح لك تشغيل البناء يدوياً متى شئت
+  workflow_dispatch:
   push:
     branches: [ main ]
 
@@ -22,7 +22,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.x' # أو أحدث إصدار متوافق مع مشروعك
+          flutter-version: '3.22.x' # تم التحديث لإصدار متوافق وشامل
           channel: 'stable'
           cache: true
 
@@ -30,7 +30,7 @@ jobs:
         run: flutter pub get
 
       - name: Build APK Release
-        run: flutter build apk --release
+        run: flutter build apk --release --no-pub
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
