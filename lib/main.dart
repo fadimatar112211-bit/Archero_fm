@@ -449,6 +449,8 @@ class _GameScreenState extends State<GameScreen> {
   bool isPaused = false;
   bool showMysteryChest = false;
   bool gameOverShown = false;
+  bool playerDying = false;
+  int playerDeathTicks = 0;
   bool stageTransitioning = false;
 
   Timer? gameLoop;
@@ -480,6 +482,12 @@ class _GameScreenState extends State<GameScreen> {
 
     gameLoop = Timer.periodic(const Duration(milliseconds: 16), (_) {
       if (!mounted || isPaused || showMysteryChest || gameOverShown) return;
+    if (playerDying) {
+      playerDeathTicks++;
+      if (playerDeathTicks >= 24) _endGame();
+      if (mounted) setState(() {});
+      return;
+    }
       _updateEngine();
     });
 
@@ -775,7 +783,10 @@ class _GameScreenState extends State<GameScreen> {
 
     if (playerHp <= 0) {
       playerHp = 0;
-      _endGame();
+      playerDying = true;
+      playerDeathTicks = 0;
+      playRealSound('hit');
+      if (mounted) setState(() {});
       return;
     }
 
@@ -1195,9 +1206,17 @@ class _GameScreenState extends State<GameScreen> {
                           child: Transform.scale(
                             scale: (1 + sin(animationTicks * 0.13) * 0.025) * (heroAttackTicks > 0 ? 1.045 : 1.0),
                             child: SpriteSheetFrame(
-                              asset: heroAttackTicks > 0 ? 'assets/spritesheets/player_attack.svg' : 'assets/spritesheets/player_walk.svg',
+                              asset: playerDying
+                                  ? 'assets/spritesheets/player_death.svg'
+                                  : heroAttackTicks > 0
+                                      ? 'assets/spritesheets/player_attack.svg'
+                                      : 'assets/spritesheets/player_walk.svg',
                               frameCount: 4,
-                              frameIndex: heroAttackTicks > 0 ? (animationTicks ~/ 2) % 4 : (animationTicks ~/ 7) % 4,
+                              frameIndex: playerDying
+                                  ? (playerDeathTicks ~/ 6).clamp(0, 3)
+                                  : heroAttackTicks > 0
+                                      ? (animationTicks ~/ 2) % 4
+                                      : (animationTicks ~/ 7) % 4,
                             ),
                           ),
                         ),
