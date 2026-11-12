@@ -12,6 +12,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   audioplayers: ^6.0.0
   shared_preferences: ^2.5.3
+  flutter_svg: ^2.0.17
 
 dev_dependencies:
   flutter_test:
@@ -20,3 +21,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/player.svg
+    - assets/enemy_melee.svg
+    - assets/enemy_ranged.svg
+    - assets/boss.svg
