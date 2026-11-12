@@ -1045,7 +1045,11 @@ class _GameScreenState extends State<GameScreen> {
                     final enemyPhase = animationTicks * 0.13 + (enemy['x'] as double) * 0.03;
                     final enemyAttacking = enemyType == 'runner'
                         ? animationTicks % 105 < 18
-                        : enemyType == 'boss' && animationTicks % 180 < 28;
+                        : enemyType == 'boss'
+                            ? animationTicks % 180 < 28
+                            : enemyType == 'stalker'
+                                ? animationTicks % 132 < 16
+                                : enemyType == 'tank' && animationTicks % 156 < 20;
                     final enemyHit = ((enemy['hitTicks'] as int?) ?? 0) > 0;
                     final attackLean = enemyAttacking ? (enemyType == 'boss' ? -0.16 : -0.24) : 0.0;
                     final hpRatio = ((enemy['hp'] as double) /
@@ -1094,8 +1098,10 @@ class _GameScreenState extends State<GameScreen> {
                                             : enemyType == 'runner'
                                                 ? 'assets/spritesheets/enemy_runner.svg'
                                                 : enemyType == 'stalker'
-                                                    ? 'assets/spritesheets/enemy_ranged.svg'
-                                                    : 'assets/spritesheets/enemy_melee.svg',
+                                                    ? 'assets/spritesheets/enemy_stalker.svg'
+                                                    : enemyType == 'tank'
+                                                        ? 'assets/spritesheets/enemy_tank.svg'
+                                                        : 'assets/spritesheets/enemy_melee.svg',
                                         frameCount: 4,
                                         frameIndex: enemyAttacking
                                             ? (animationTicks ~/ 2) % 4
