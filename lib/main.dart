@@ -739,6 +739,8 @@ class _GameScreenState extends State<GameScreen> {
       final distance = sqrt(dx * dx + dy * dy);
       final angle = atan2(dy, dx);
       final type = enemy['type'] as String;
+      final bossEnraged = type == 'boss' &&
+          (enemy['hp'] as double) <= (enemy['maxHp'] as double) * 0.35;
       var attackTicks = (enemy['attackTicks'] as int?) ?? 0;
       var attackCooldown = (enemy['attackCooldown'] as int?) ?? 0;
       if (attackTicks > 0) attackTicks--;
@@ -751,7 +753,7 @@ class _GameScreenState extends State<GameScreen> {
           areaAttackTicks == 0 &&
           attackCooldown == 0) {
         areaAttackTicks = 32;
-        attackCooldown = 180;
+        attackCooldown = bossEnraged ? 132 : 180;
         enemy['areaHitDone'] = false;
         combatEffects.add({
           'x': enemy['x'], 'y': enemy['y'],
@@ -778,13 +780,13 @@ class _GameScreenState extends State<GameScreen> {
         final blastDx = playerX - (enemy['x'] as double);
         final blastDy = playerY - (enemy['y'] as double);
         final blastDistance = sqrt(blastDx * blastDx + blastDy * blastDy);
-        if (blastDistance <= 112) {
+        if (blastDistance <= (bossEnraged ? 132 : 112)) {
           if (playerMoveTicks > 0) {
             combatEffects.add({
               'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 18,
             });
           } else {
-            playerHp -= 15;
+            playerHp -= bossEnraged ? 20 : 15;
             combatEffects.add({
               'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 22,
             });
@@ -820,7 +822,7 @@ class _GameScreenState extends State<GameScreen> {
       } else if (type == 'boss') {
         final bossCycle = animationTicks % 180;
         if (bossCycle < 28) {
-          moveSpeed *= 2.65;
+          moveSpeed *= bossEnraged ? 3.15 : 2.65;
           if (bossCycle == 0) {
             combatEffects.add({
               'x': enemy['x'], 'y': enemy['y'],
