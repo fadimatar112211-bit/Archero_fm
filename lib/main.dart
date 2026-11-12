@@ -1156,7 +1156,8 @@ class _GameScreenState extends State<GameScreen> {
                     final walkPhase = (enemy['walkPhase'] as double?) ?? 0.0;
                     final enemyPhase = walkPhase + (enemy['x'] as double) * 0.03;
                     final enemyAttacking =
-                        ((enemy['attackTicks'] as int?) ?? 0) > 0;
+                        ((enemy['attackTicks'] as int?) ?? 0) > 0 ||
+                        (isBoss && ((enemy['areaAttackTicks'] as int?) ?? 0) > 0);
                     final enemyHit = ((enemy['hitTicks'] as int?) ?? 0) > 0;
                     // حركة مشي ناعمة مستمرة فوق إطارات الـSVG، مع اختلاف وزن كل فئة.
                     final gait = sin(walkPhase * 1.8);
@@ -1203,6 +1204,13 @@ class _GameScreenState extends State<GameScreen> {
                                   child: Stack(
                                     fit: StackFit.expand,
                                     children: [
+                                      if (isBoss)
+                                        CustomPaint(
+                                          painter: BossAuraPainter(
+                                            phase: animationTicks * .045,
+                                            attacking: enemyAttacking,
+                                          ),
+                                        ),
                                       SpriteSheetFrame(
                                         asset: enemyType == 'boss'
                                             ? (enemyAttacking ? 'assets/spritesheets/boss_attack.svg' : 'assets/spritesheets/boss_walk.svg')
@@ -1477,6 +1485,38 @@ class _GameScreenState extends State<GameScreen> {
   }
 }
 
+class BossAuraPainter extends CustomPainter {
+  final double phase;
+  final bool attacking;
+  const BossAuraPainter({required this.phase, required this.attacking});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final pulse = .5 + sin(phase) * .5;
+    final radius = size.shortestSide * (.39 + pulse * .035);
+    final glow = Paint()
+      ..color = const Color(0xFFFF6B39).withOpacity(attacking ? .3 : .16)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9);
+    canvas.drawCircle(center, radius, glow);
+    final ring = Paint()
+      ..color = const Color(0xFFFFB45B).withOpacity(attacking ? .85 : .42)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = attacking ? 2.5 : 1.4;
+    canvas.drawCircle(center, radius * (1 + pulse * .08), ring);
+    for (var i = 0; i < 4; i++) {
+      final angle = phase * (attacking ? 1.8 : .7) + i * pi / 2;
+      final point = center + Offset(cos(angle) * radius, sin(angle) * radius);
+      canvas.drawCircle(point, attacking ? 2.8 : 1.8,
+        Paint()..color = const Color(0xFFFFD98B).withOpacity(.9));
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant BossAuraPainter oldDelegate) =>
+      oldDelegate.phase != phase || oldDelegate.attacking != attacking;
+}
+
 class ArrowSpritePainter extends CustomPainter {
   const ArrowSpritePainter();
   @override
@@ -1535,6 +1575,25 @@ class CombatEffectPainter extends CustomPainter {
         center + Offset(radius, radius * .55), slash);
       canvas.drawLine(center + Offset(radius * .7, -radius * .7),
         center + Offset(-radius * .7, radius * .7), slash);
+      final sparks = Paint()..color = const Color(0xFFFFC3D0).withOpacity(1 - progress)
+        ..strokeWidth = 2.2..strokeCap = StrokeCap.round;
+      for (var i = 0; i < 6; i++) {
+        final angle = i * pi / 3 + progress * 1.8;
+        final start = center + Offset(cos(angle) * radius * .35, sin(angle) * radius * .35);
+        final end = center + Offset(cos(angle) * radius * .72, sin(angle) * radius * .72);
+        canvas.drawLine(start, end, sparks);
+      }
+    } else if (type == 'defeat') {
+      final burst = Paint()..color = const Color(0xFFFFD36B).withOpacity(1 - progress)
+        ..strokeWidth = 2.4..strokeCap = StrokeCap.round;
+      for (var i = 0; i < 10; i++) {
+        final angle = i * pi / 5 + progress * .8;
+        final inner = radius * (.25 + progress * .18);
+        final outer = radius * (.55 + progress * .5);
+        canvas.drawLine(
+          center + Offset(cos(angle) * inner, sin(angle) * inner),
+          center + Offset(cos(angle) * outer, sin(angle) * outer), burst);
+      }
     } else if (type == 'enemyAttack') {
       final arc = Rect.fromCircle(center: center, radius: radius);
       canvas.drawArc(arc, -pi * .75, pi * .5, false,
@@ -1614,9 +1673,13 @@ class FighterSpritePainter extends CustomPainter {
         Paint()..color = Colors.black.withOpacity(0.30));
     // هالة وقرون خاصة بالزعيم.
     if (boss) {
-      canvas.drawCircle(const Offset(32, 32), 29,
-        Paint()..color = const Color(0xFFFF542E).withOpacity(.18)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7));
+      final pulse = .13 + (sin(phase * 2.4) + 1) * .055;
+      canvas.drawCircle(const Offset(32, 32), 30 + sin(phase * 2) * 1.8,
+        Paint()..color = const Color(0xFFFF542E).withOpacity(pulse)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8));
+      canvas.drawCircle(const Offset(32, 32), 27 + sin(phase * 2) * 1.2,
+        Paint()..color = const Color(0xFFFF9B45).withOpacity(.5)
+          ..style = PaintingStyle.stroke..strokeWidth = 1.3);
       final horns = Path()
         ..moveTo(22, 13)..lineTo(7, -2)..lineTo(13, 20)..close()
         ..moveTo(42, 13)..lineTo(57, -2)..lineTo(51, 20)..close();
@@ -1658,12 +1721,20 @@ class FighterSpritePainter extends CustomPainter {
     // دروع كتف ثقيلة للدبابة.
     if (tank) {
       final plate = Paint()..color = const Color(0xFF8796A3);
-      canvas.drawRRect(RRect.fromRectAndRadius(
-        const Rect.fromLTWH(7, 25, 17, 15), const Radius.circular(5)), plate);
-      canvas.drawRRect(RRect.fromRectAndRadius(
-        const Rect.fromLTWH(40, 25, 17, 15), const Radius.circular(5)), plate);
+      final plateEdge = Paint()..color = const Color(0xFFD4E0E8)
+        ..style = PaintingStyle.stroke..strokeWidth = 1.2;
+      final leftPlate = RRect.fromRectAndRadius(
+        const Rect.fromLTWH(7, 25, 17, 15), const Radius.circular(5));
+      final rightPlate = RRect.fromRectAndRadius(
+        const Rect.fromLTWH(40, 25, 17, 15), const Radius.circular(5));
+      canvas.drawRRect(leftPlate, plate);
+      canvas.drawRRect(rightPlate, plate);
+      canvas.drawRRect(leftPlate, plateEdge);
+      canvas.drawRRect(rightPlate, plateEdge);
       canvas.drawCircle(const Offset(15, 32), 3, light);
       canvas.drawCircle(const Offset(49, 32), 3, light);
+      canvas.drawLine(const Offset(13, 28), const Offset(19, 36), plateEdge);
+      canvas.drawLine(const Offset(43, 28), const Offset(49, 36), plateEdge);
     }
     // غطاء رأس وظلال مضيئة للمتخفي.
     if (stalker) {
@@ -1672,14 +1743,23 @@ class FighterSpritePainter extends CustomPainter {
         ..quadraticBezierTo(50, -2, 47, 20)
         ..lineTo(42, 27)..lineTo(22, 27)..close();
       canvas.drawPath(hood, Paint()..color = const Color(0xFF241C3D));
+      canvas.drawPath(hood, Paint()..color = const Color(0xFF9B6BCE).withOpacity(.7)
+        ..style = PaintingStyle.stroke..strokeWidth = 1.2);
       canvas.drawOval(const Rect.fromLTWH(22, 16, 20, 7),
         Paint()..color = const Color(0xFFFF4CF0));
+      canvas.drawCircle(const Offset(32, 20), 5,
+        Paint()..color = const Color(0xFFFF4CF0).withOpacity(.16)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
     }
     if (runner) {
       final crest = Path()
         ..moveTo(23, 8)..lineTo(27, -2)..lineTo(31, 8)
         ..lineTo(37, -2)..lineTo(41, 9)..close();
       canvas.drawPath(crest, Paint()..color = const Color(0xFFFFD15C));
+      final speedMark = Paint()..color = const Color(0xFFFFD15C).withOpacity(.8)
+        ..strokeWidth = 2..strokeCap = StrokeCap.round;
+      canvas.drawLine(const Offset(7, 44), const Offset(15, 41), speedMark);
+      canvas.drawLine(const Offset(5, 49), const Offset(13, 46), speedMark);
     }
     // الجسم والدرع.
     final body = Path()
