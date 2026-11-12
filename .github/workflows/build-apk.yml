@@ -2,6 +2,7 @@ name: Build Release APK
 
 on:
   push:
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
 permissions:
@@ -40,3 +41,4 @@ jobs:
           name: archero-game-release
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
+          
