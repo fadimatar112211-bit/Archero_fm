@@ -179,6 +179,28 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    _panel(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Column(
+                            children: [
+                              const Icon(Icons.emoji_events, color: Colors.amber),
+                              const SizedBox(height: 4),
+                              Text('أفضل مرحلة: $bestStage'),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              const Icon(Icons.stars, color: Colors.lightBlueAccent),
+                              const SizedBox(height: 4),
+                              Text('أفضل نتيجة: $bestScore'),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 18),
                     _panel(
                       child: Column(
