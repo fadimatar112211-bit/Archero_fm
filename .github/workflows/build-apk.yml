@@ -18,8 +18,9 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
           
-      - name: Fix pubspec.yaml safely
+      - name: Auto-Fix Errors & Gradle Project
         run: |
+          echo "=== 1. Cleaning pubspec.yaml ==="
           python3 -c "
           with open('pubspec.yaml', 'r') as f:
               lines = f.readlines()
@@ -29,7 +30,16 @@ jobs:
                       f.write(line)
           "
           
-      - name: Clean Project & Get Dependencies
+          echo "=== 2. Fixing Unsupported Gradle Project Automatically ==="
+          # يقوم هذا الأمر بإنشاء هيكل أندرويد متوافق تلقائياً إذا كان المشروع قديماً
+          if [ ! -d "android/app" ]; then
+            flutter create . --platforms=android --org com.fadimatar --project-name archero_fm
+          else
+            # تحديث ملفات إعدادات الجرادل المستقلة لتتطابق مع فلاتر الحديث
+            flutter create . --platforms=android --org com.fadimatar --project-name archero_fm --force
+          fi
+          
+      - name: Clean & Get Dependencies
         run: |
           flutter clean
           flutter pub get
@@ -42,4 +52,3 @@ jobs:
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
-          
