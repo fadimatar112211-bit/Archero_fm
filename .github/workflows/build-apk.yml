@@ -34,7 +34,6 @@ jobs:
           rm -rf android
           flutter create . --platforms=android --org com.fadimatar --project-name archero_fm
           
-          # ضبط إصدار Gradle ليكون متوافقاً 100% مع Flutter 3.22 و Java 17
           mkdir -p android/gradle/wrapper
           echo "distributionBase=GRADLE_USER_HOME" > android/gradle/wrapper/gradle-wrapper.properties
           echo "distributionPath=wrapper/dists" >> android/gradle/wrapper/gradle-wrapper.properties
@@ -45,8 +44,8 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
           
-      - name: Build Debug APK with Stacktrace
-        run: flutter build apk --debug --stacktrace
+      - name: Build Debug APK
+        run: flutter build apk --debug
           
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
