@@ -18,4 +18,28 @@
    <path d="M39 58 48 64 57 58" fill="none" stroke="#ffe08a" stroke-width="2.5"/>
    <path d="M37 72 48 77 59 72" fill="none" stroke="#7e3429" stroke-width="3"/>
    <circle cx="48" cy="36" r="8" fill="none" stroke="#ffe08a" stroke-width="1.5" opacity=".85"/>
-   </g></svg>
+   </g><g transform="translate(0,0)" opacity="1">
+ <path d="M43 59 56 51 69 59 65 74 56 81 47 74Z" fill="#a94d1b" stroke="#ffb34e" stroke-width="2.2" opacity=".92"/>
+ <path d="M49 61 56 57 63 61 60 70 56 74 52 70Z" fill="#ffb34e" opacity=".92"/>
+ <path d="M50 19 56 11 62 19 56 25Z" fill="#ffb34e" stroke="#fff0c2" stroke-width="1.2"/>
+ <path d="M27 49 19 43M85 49 93 43" stroke="#ffb34e" stroke-width="2.8" stroke-linecap="round"/>
+ <circle cx="56" cy="65" r="2.1" fill="#fff6d5"/>
+ </g><g transform="translate(112,0)" opacity="1">
+ <path d="M43 59 56 51 69 59 65 74 56 81 47 74Z" fill="#a94d1b" stroke="#ffb34e" stroke-width="2.2" opacity=".92"/>
+ <path d="M49 61 56 57 63 61 60 70 56 74 52 70Z" fill="#ffb34e" opacity=".92"/>
+ <path d="M50 19 56 11 62 19 56 25Z" fill="#ffb34e" stroke="#fff0c2" stroke-width="1.2"/>
+ <path d="M27 49 19 43M85 49 93 43" stroke="#ffb34e" stroke-width="2.8" stroke-linecap="round"/>
+ <circle cx="56" cy="65" r="2.1" fill="#fff6d5"/>
+ </g><g transform="translate(224,0)" opacity="1">
+ <path d="M43 59 56 51 69 59 65 74 56 81 47 74Z" fill="#a94d1b" stroke="#ffb34e" stroke-width="2.2" opacity=".92"/>
+ <path d="M49 61 56 57 63 61 60 70 56 74 52 70Z" fill="#ffb34e" opacity=".92"/>
+ <path d="M50 19 56 11 62 19 56 25Z" fill="#ffb34e" stroke="#fff0c2" stroke-width="1.2"/>
+ <path d="M27 49 19 43M85 49 93 43" stroke="#ffb34e" stroke-width="2.8" stroke-linecap="round"/>
+ <circle cx="56" cy="65" r="2.1" fill="#fff6d5"/>
+ </g><g transform="translate(336,0)" opacity="1">
+ <path d="M43 59 56 51 69 59 65 74 56 81 47 74Z" fill="#a94d1b" stroke="#ffb34e" stroke-width="2.2" opacity=".92"/>
+ <path d="M49 61 56 57 63 61 60 70 56 74 52 70Z" fill="#ffb34e" opacity=".92"/>
+ <path d="M50 19 56 11 62 19 56 25Z" fill="#ffb34e" stroke="#fff0c2" stroke-width="1.2"/>
+ <path d="M27 49 19 43M85 49 93 43" stroke="#ffb34e" stroke-width="2.8" stroke-linecap="round"/>
+ <circle cx="56" cy="65" r="2.1" fill="#fff6d5"/>
+ </g></svg>
