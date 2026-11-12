@@ -1,26 +1,27 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 void main() {
-  runApp(const ArcheroMultiplayerApp());
+  runApp(const ArcheroProApp());
 }
 
-class ArcheroMultiplayerApp extends StatelessWidget {
-  const ArcheroMultiplayerApp({Key? key}) : super(key: key);
+class ArcheroProApp extends StatelessWidget {
+  const ArcheroProApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Archero RPG Pro',
+      title: 'Archero Pro - Ultimate',
       theme: ThemeData.dark(),
       home: const LobbyScreen(),
     );
   }
 }
 
-// 1. شاشة اللوبي مع المتجر وحفظ التقدم
+// 1. شاشة اللوبي واختيار الأبطال
 class LobbyScreen extends StatefulWidget {
   const LobbyScreen({Key? key}) : super(key: key);
 
@@ -29,10 +30,9 @@ class LobbyScreen extends StatefulWidget {
 }
 
 class _LobbyScreenState extends State<LobbyScreen> {
-  String selectedHero = 'archer';
-  final TextEditingController _roomController = TextEditingController(text: 'room123');
-  final TextEditingController _nameController = TextEditingController(text: 'Player1');
-
+  String selectedHero = 'archer'; // 'archer', 'swordsman', 'mage'
+  final TextEditingController _nameController = TextEditingController(text: 'HeroPlayer');
+  
   int savedGold = 0;
   int extraDamageLevel = 0;
   int extraHpLevel = 0;
@@ -73,41 +73,32 @@ class _LobbyScreenState extends State<LobbyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: const Color(0xFF090D16),
       body: Center(
         child: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text(
-                '🎮 Archero RPG & Shop',
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Color(0xFF38BDF8)),
+                '🛡️ ARCHERO: ULTIMATE EDITION ⚔️',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.amberAccent),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text('💰 رصيد الذهب: $savedGold', style: const TextStyle(fontSize: 18, color: Colors.yellow, fontWeight: FontWeight.bold)),
               const SizedBox(height: 15),
               
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(labelText: 'اسم اللاعب', labelStyle: TextStyle(color: Colors.grey)),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: _roomController,
-                      decoration: const InputDecoration(labelText: 'رقم أو اسم الغرفة', labelStyle: TextStyle(color: Colors.grey)),
-                    ),
-                  ],
+                child: TextField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(labelText: 'اسم البطل', labelStyle: TextStyle(color: Colors.grey)),
                 ),
               ),
               const SizedBox(height: 20),
               
-              // قسم سوق المعدات والترقيات الدائمة
+              // متجر الترقيات الدائمة
               Container(
-                width: 300,
+                width: 310,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E293B),
@@ -116,7 +107,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                 ),
                 child: Column(
                   children: [
-                    const Text('🛒 سوق التطويرات الدائمة', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                    const Text('🛒 متجر العتاد والترقيات الدائمة', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -145,19 +136,24 @@ class _LobbyScreenState extends State<LobbyScreen> {
               ),
 
               const SizedBox(height: 20),
-              const Text('اختر بطلك الأسطوري', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+              const Text('اختر بطل المعركة', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
               const SizedBox(height: 10),
 
-              _buildHeroCard('archer', '🏹 الرامي السريع', const Color(0xFF0284C7)),
-              _buildHeroCard('swordsman', '⚔️ السياف الفولاذي', const Color(0xFFD97706)),
-              _buildHeroCard('mage', '🔮 الساحر الأركاني', const Color(0xFF7C3AED)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildHeroCard('archer', '🏹 رامي القوس', 'assets/images/hero_archer.png'),
+                  _buildHeroCard('swordsman', '⚔️ السياف', 'assets/images/hero_sword.png'),
+                  _buildHeroCard('mage', '🔮 الساحر', 'assets/images/hero_mage.png'),
+                ],
+              ),
               
-              const SizedBox(height: 20),
+              const SizedBox(height: 25),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF10B981),
-                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: () {
                   Navigator.pushReplacement(
@@ -165,15 +161,14 @@ class _LobbyScreenState extends State<LobbyScreen> {
                     MaterialPageRoute(
                       builder: (context) => GameScreen(
                         heroType: selectedHero,
-                        roomName: _roomController.text,
                         playerName: _nameController.text,
-                        extraDamage: extraDamageLevel * 5,
-                        extraHp: extraHpLevel * 20,
+                        extraDamage: extraDamageLevel * 6,
+                        extraHp: extraHpLevel * 25,
                       ),
                     ),
                   );
                 },
-                child: const Text('دخول المعركة الجماعية', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                child: const Text('بدء الغارة القتالية', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
               ),
             ],
           ),
@@ -182,24 +177,32 @@ class _LobbyScreenState extends State<LobbyScreen> {
     );
   }
 
-  Widget _buildHeroCard(String id, String title, Color color) {
+  Widget _buildHeroCard(String id, String title, String assetPath) {
     bool isSelected = selectedHero == id;
     return GestureDetector(
       onTap: () => setState(() => selectedHero = id),
       child: Container(
-        width: 280,
-        margin: const EdgeInsets.symmetric(vertical: 3),
-        padding: const EdgeInsets.all(8),
+        width: 95,
+        height: 110,
+        margin: const EdgeInsets.symmetric(horizontal: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF1E293B) : const Color(0xFF111827),
-          border: Border.all(color: isSelected ? const Color(0xFF38BDF8) : Colors.grey.shade800, width: 2),
-          borderRadius: BorderRadius.circular(8),
+          color: isSelected ? const Color(0xFF334155) : const Color(0xFF1E293B),
+          border: Border.all(color: isSelected ? Colors.amber : Colors.grey.shade800, width: 2),
+          borderRadius: BorderRadius.circular(10),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
-            Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle))
+            // عرض صورة البطل أو أيقونة بديلة إن لم تتوفر الصورة بعد
+            Expanded(
+              child: Image.asset(
+                assetPath,
+                errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 40, color: Colors.blueAccent),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(title, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+            const SizedBox(height: 6),
           ],
         ),
       ),
@@ -207,15 +210,15 @@ class _LobbyScreenState extends State<LobbyScreen> {
   }
 }
 
-// النماذج البرمجية
+// نماذج البيانات
 class EnemyModel {
   Offset pos;
   double hp;
   double maxHp;
   double speed;
   bool isBoss;
-  Color color;
-  EnemyModel({required this.pos, required this.hp, required this.maxHp, required this.speed, this.isBoss = false, required this.color});
+  String type; // 'goblin', 'skeleton', 'boss'
+  EnemyModel({required this.pos, required this.hp, required this.maxHp, required this.speed, this.isBoss = false, required this.type});
 }
 
 class BulletModel {
@@ -235,17 +238,9 @@ class ParticleFX {
   ParticleFX({required this.pos, required this.velocity, required this.radius, required this.color, this.life = 15});
 }
 
-class RemotePlayer {
-  String name;
-  Offset pos;
-  String heroType;
-  RemotePlayer({required this.name, required this.pos, required this.heroType});
-}
-
-// 2. شاشة اللعب
+// 2. شاشة القتال المتقدمة
 class GameScreen extends StatefulWidget {
   final String heroType;
-  final String roomName;
   final String playerName;
   final int extraDamage;
   final int extraHp;
@@ -253,7 +248,6 @@ class GameScreen extends StatefulWidget {
   const GameScreen({
     Key? key,
     required this.heroType,
-    required this.roomName,
     required this.playerName,
     required this.extraDamage,
     required this.extraHp,
@@ -265,7 +259,8 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
   Offset playerPos = const Offset(200, 400);
   late double playerHp;
   late double playerMaxHp;
@@ -278,11 +273,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   List<EnemyModel> enemies = [];
   List<BulletModel> bullets = [];
   List<ParticleFX> particles = [];
-  List<RemotePlayer> otherPlayers = [];
 
   bool isMoving = false;
   int lastShotTick = 0;
-  int syncTick = 0;
   
   bool hasDoubleShot = false;
   bool hasFireArrows = false;
@@ -292,17 +285,23 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    playerMaxHp = 100.0 + widget.extraHp;
+    playerMaxHp = 120.0 + widget.extraHp;
     playerHp = playerMaxHp;
 
     Future.delayed(const Duration(milliseconds: 100), () {
       initRoom();
-      otherPlayers.add(RemotePlayer(name: 'صديقك (Peer)', pos: const Offset(150, 200), heroType: 'mage'));
     });
 
     _controller = AnimationController(vsync: this, duration: const Duration(seconds: 1))
       ..addListener(_updateGameLoop)
       ..repeat();
+  }
+
+  Future<void> _playSound(String soundName) async {
+    try {
+      // تشغيل المؤثرات الصوتية عند توفرها في assets/audio/
+      // await _audioPlayer.play(AssetSource('audio/$soundName.mp3'));
+    } catch (_) {}
   }
 
   Future<void> _saveGoldOnExit() async {
@@ -319,11 +318,11 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       enemies = [
         EnemyModel(
           pos: Offset(w * 0.5, h * 0.2),
-          hp: 350 + (roomNum * 25),
-          maxHp: 350 + (roomNum * 25),
-          speed: 0.6 + (roomNum * 0.02),
+          hp: 450 + (roomNum * 30),
+          maxHp: 450 + (roomNum * 30),
+          speed: 0.7 + (roomNum * 0.02),
           isBoss: true,
-          color: const Color(0xFFDC2626),
+          type: 'boss',
         ),
       ];
     } else {
@@ -331,12 +330,13 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       enemies = [];
       Random r = Random();
       for (int i = 0; i < enemyCount; i++) {
+        String type = i % 2 == 0 ? 'goblin' : 'skeleton';
         enemies.add(EnemyModel(
           pos: Offset(r.nextDouble() * (w - 100) + 50, r.nextDouble() * (h * 0.4) + 50),
-          hp: 40 + (roomNum * 10),
-          maxHp: 40 + (roomNum * 10),
-          speed: 0.8 + r.nextDouble() * 0.5,
-          color: i % 2 == 0 ? const Color(0xFFEF4444) : const Color(0xFFA855F7),
+          hp: 50 + (roomNum * 12),
+          maxHp: 50 + (roomNum * 12),
+          speed: 0.9 + r.nextDouble() * 0.4,
+          type: type,
         ));
       }
     }
@@ -360,11 +360,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   void _updateGameLoop() {
     if (!mounted || showSkillDialog || isGameOver) return;
     setState(() {
-      syncTick++;
-      if (otherPlayers.isNotEmpty) {
-        otherPlayers[0].pos += Offset(sin(syncTick * 0.05) * 1.5, cos(syncTick * 0.05) * 1.0);
-      }
-
       for (var enemy in enemies) {
         final direction = (playerPos - enemy.pos);
         final distance = direction.distance;
@@ -373,7 +368,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
         }
 
         if (distance < 30) {
-          playerHp -= 0.5;
+          playerHp -= 0.6;
           if (playerHp <= 0) {
             playerHp = 0;
             isGameOver = true;
@@ -393,7 +388,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           final target = enemies.first.pos;
           final currentAngle = atan2(bullets[i].velocity.dy, bullets[i].velocity.dx);
           final targetAngle = atan2(target.dy - bullets[i].pos.dy, target.dx - bullets[i].pos.dx);
-          double newAngle = currentAngle + (targetAngle - currentAngle) * 0.1;
+          double newAngle = currentAngle + (targetAngle - currentAngle) * 0.12;
           double speed = bullets[i].velocity.distance;
           bullets[i].velocity = Offset(cos(newAngle) * speed, sin(newAngle) * speed);
         }
@@ -408,16 +403,16 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
         for (int j = enemies.length - 1; j >= 0; j--) {
           double hitRadius = enemies[j].isBoss ? 35 : 20;
           if ((bullets[i].pos - enemies[j].pos).distance < hitRadius) {
-            double baseDmg = widget.heroType == 'swordsman' ? 45 : (bullets[i].isFire ? 35 : 20);
+            double baseDmg = widget.heroType == 'swordsman' ? 50 : (bullets[i].isFire ? 40 : 25);
             double damage = baseDmg + widget.extraDamage;
             
             enemies[j].hp -= damage;
-            createExplosion(bullets[i].pos, bullets[i].isFire ? Colors.redAccent : Colors.orangeAccent);
+            createExplosion(bullets[i].pos, bullets[i].isFire ? Colors.redAccent : Colors.amber);
 
             bullets.removeAt(i);
             if (enemies[j].hp <= 0) {
               xpCount += enemies[j].isBoss ? 100 : 25;
-              currentGold += enemies[j].isBoss ? 50 : 10;
+              currentGold += enemies[j].isBoss ? 60 : 12;
               createExplosion(enemies[j].pos, Colors.yellow);
               enemies.removeAt(j);
               
@@ -439,22 +434,24 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
       if (!isMoving && enemies.isNotEmpty) {
         lastShotTick++;
-        int fireRate = widget.heroType == 'swordsman' ? 35 : (widget.heroType == 'archer' ? 15 : 25);
+        int fireRate = widget.heroType == 'swordsman' ? 30 : (widget.heroType == 'archer' ? 14 : 22);
         if (lastShotTick > fireRate) {
           lastShotTick = 0;
           final target = enemies.first.pos;
           final baseAngle = atan2(target.dy - playerPos.dy, target.dx - playerPos.dx);
           bool isHomingMage = widget.heroType == 'mage';
 
+          _playSound('shoot');
+
           if (widget.heroType != 'swordsman') {
-            bullets.add(BulletModel(pos: playerPos, velocity: Offset(cos(baseAngle) * 11, sin(baseAngle) * 11), isHoming: isHomingMage, isFire: hasFireArrows));
+            bullets.add(BulletModel(pos: playerPos, velocity: Offset(cos(baseAngle) * 12, sin(baseAngle) * 12), isHoming: isHomingMage, isFire: hasFireArrows));
             if (hasDoubleShot) {
-              bullets.add(BulletModel(pos: playerPos, velocity: Offset(cos(baseAngle + 0.25) * 11, sin(baseAngle + 0.25) * 11), isHoming: isHomingMage, isFire: hasFireArrows));
+              bullets.add(BulletModel(pos: playerPos, velocity: Offset(cos(baseAngle + 0.25) * 12, sin(baseAngle + 0.25) * 12), isHoming: isHomingMage, isFire: hasFireArrows));
             }
           } else {
             for (var enemy in enemies) {
-              if ((playerPos - enemy.pos).distance < 70) {
-                enemy.hp -= (45 + widget.extraDamage);
+              if ((playerPos - enemy.pos).distance < 75) {
+                enemy.hp -= (50 + widget.extraDamage);
                 createExplosion(enemy.pos, Colors.orange);
               }
             }
@@ -472,13 +469,14 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   @override
   void dispose() {
     _controller.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF131B2E),
+      backgroundColor: const Color(0xFF0F172A),
       body: Stack(
         children: [
           GestureDetector(
@@ -499,7 +497,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                 enemies: enemies,
                 bullets: bullets,
                 particles: particles,
-                otherPlayers: otherPlayers,
               ),
             ),
           ),
@@ -513,7 +510,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('الغرفة: ${widget.roomName} | لفل: $currentLevel', style: const TextStyle(color: Color(0xFF4ADE80), fontSize: 13, fontWeight: FontWeight.bold)),
+                    Text('المرحلة (Room): $roomNum | لفل: $currentLevel', style: const TextStyle(color: Color(0xFF4ADE80), fontSize: 13, fontWeight: FontWeight.bold)),
                     Text('🪙 ذهب: $currentGold | XP: $xpCount/50', style: const TextStyle(color: Colors.yellow, fontSize: 13, fontWeight: FontWeight.bold)),
                   ],
                 ),
@@ -545,9 +542,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('💀 انتهت المعركة', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.redAccent)),
+                    const Text('💀 سقط البطل في المعركة', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.redAccent)),
                     const SizedBox(height: 10),
-                    Text('تم حفظ ربحك: $currentGold 🪙', style: const TextStyle(fontSize: 16, color: Colors.yellow)),
+                    Text('تم حفظ أرباحك: $currentGold 🪙', style: const TextStyle(fontSize: 16, color: Colors.yellow)),
                     const SizedBox(height: 20),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -560,4 +557,15 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                       child: const Text('العودة للقائمة الرئيسية', style: TextStyle(fontSize: 16)),
                     ),
                   ],
-           
+                ),
+              ),
+            ),
+
+          if (showSkillDialog)
+            Container(
+              color: Colors.black54,
+              child: Center(
+                child: Container(
+                  width: 320,
+                  padding: const EdgeInsets.all(20),
+                  dec
