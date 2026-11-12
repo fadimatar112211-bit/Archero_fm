@@ -1590,6 +1590,33 @@ class CombatEffectPainter extends CustomPainter {
         final end = center + Offset(cos(angle) * radius * .72, sin(angle) * radius * .72);
         canvas.drawLine(start, end, sparks);
       }
+    } else if (shadow || metal) {
+      // ضربات مميزة: شقوق ظل بنفسجية أو شرارات معدنية باردة.
+      final slashPaint = Paint()
+        ..color = color.withOpacity(1 - progress)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = metal ? 3.2 : 5.0
+        ..strokeCap = StrokeCap.round;
+      for (var i = 0; i < (shadow ? 3 : 5); i++) {
+        final offset = (i - (shadow ? 1 : 2)) * (metal ? 7.0 : 9.0);
+        final start = center + Offset(-radius * .58 + offset, radius * .42);
+        final end = center + Offset(radius * .48 + offset, -radius * .48);
+        canvas.drawLine(start, end, slashPaint);
+      }
+      if (shadow) {
+        final crescent = Rect.fromCircle(center: center, radius: radius * .72);
+        canvas.drawArc(crescent, -pi * .82 + progress, pi * .92, false,
+          Paint()..color = color.withOpacity((1 - progress) * .9)
+            ..style = PaintingStyle.stroke..strokeWidth = 3.5);
+      } else {
+        final glint = Paint()..color = const Color(0xFFEAF8FF).withOpacity(1 - progress)
+          ..strokeWidth = 2..strokeCap = StrokeCap.round;
+        for (var i = 0; i < 4; i++) {
+          final a = i * pi / 2 + progress;
+          final p = center + Offset(cos(a) * radius * .7, sin(a) * radius * .7);
+          canvas.drawLine(p + Offset(-3, -3), p + Offset(3, 3), glint);
+        }
+      }
     } else if (type == 'defeat') {
       final burst = Paint()..color = const Color(0xFFFFD36B).withOpacity(1 - progress)
         ..strokeWidth = 2.4..strokeCap = StrokeCap.round;
