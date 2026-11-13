@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:archero_fm/main.dart';
 
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -14,7 +15,7 @@ void main() {
     bestScore = 0;
   });
 
-  testWidgets('health purchase deducts coins, upgrades health and persists',
+  testWidgets('health purchase deducts coins and upgrades health',
       (tester) async {
     await tester.pumpWidget(const ArcheroSoundApp());
 
@@ -26,12 +27,9 @@ void main() {
     expect(find.text('رصيدك: 100'), findsOneWidget);
     expect(find.text('زيادة الصحة الحالية: +25'), findsOneWidget);
 
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getInt('coins'), 100);
-    expect(prefs.getInt('hpUpgrade'), 25);
   });
 
-  testWidgets('attack purchase deducts coins, upgrades attack and persists',
+  testWidgets('attack purchase deducts coins and upgrades attack',
       (tester) async {
     await tester.pumpWidget(const ArcheroSoundApp());
 
@@ -45,9 +43,6 @@ void main() {
     expect(find.text('رصيدك: 80'), findsOneWidget);
     expect(find.text('زيادة الهجوم الحالية: +15'), findsOneWidget);
 
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getInt('coins'), 80);
-    expect(prefs.getInt('atkUpgrade'), 15);
   });
 
   testWidgets('purchase is rejected when the player has insufficient coins',

@@ -37,6 +37,33 @@ void main() {
     });
   });
 
+  test('serializes overlapping saves as complete snapshots', () async {
+    final firstSave = ProgressStore.save(
+      coins: 200,
+      hpUpgrade: 25,
+      atkUpgrade: 15,
+      bestStage: 4,
+      bestScore: 400,
+    );
+    final secondSave = ProgressStore.save(
+      coins: 315,
+      hpUpgrade: 50,
+      atkUpgrade: 30,
+      bestStage: 9,
+      bestScore: 950,
+    );
+
+    await Future.wait([firstSave, secondSave]);
+
+    expect(await ProgressStore.load(), {
+      'coins': 315,
+      'hpUpgrade': 50,
+      'atkUpgrade': 30,
+      'bestStage': 9,
+      'bestScore': 950,
+    });
+  });
+
   test('normalizes invalid negative progression values', () async {
     SharedPreferences.setMockInitialValues({
       'coins': -40,
