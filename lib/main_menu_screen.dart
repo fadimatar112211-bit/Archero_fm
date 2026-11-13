@@ -1,6 +1,7 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';\nimport 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'game_progress.dart';
 import 'game_screen.dart';
@@ -23,7 +24,9 @@ class MainMenuScreen extends StatefulWidget {
 }
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
-  final ScrollController _menuScrollController = ScrollController();\n  final GlobalKey _shopSectionKey = GlobalKey();\n  final GlobalKey _equipmentSectionKey = GlobalKey();\n  bool _walletBusy = false;
+  final ScrollController _menuScrollController = ScrollController();
+  final GlobalKey _shopSectionKey = GlobalKey();
+  final GlobalKey _equipmentSectionKey = GlobalKey();\n  bool _walletBusy = false;
   RunCheckpoint? _activeCheckpoint;
 
   @override
@@ -32,7 +35,19 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     _loadRunCheckpoint();
   }
 
-  @override\n  void dispose() {\n    _menuScrollController.dispose();\n    super.dispose();\n  }\n\n  void _jumpToSection(GlobalKey key) {\n    final target = key.currentContext;\n    if (target == null) return;\n    Scrollable.ensureVisible(target, duration: const Duration(milliseconds: 520), curve: Curves.easeOutCubic, alignment: .08);\n  }\n\n  Future<void> _loadRunCheckpoint() async {
+  @override
+  void dispose() {
+    _menuScrollController.dispose();
+    super.dispose();
+  }
+
+  void _jumpToSection(GlobalKey key) {
+    final target = key.currentContext;
+    if (target == null) return;
+    Scrollable.ensureVisible(target, duration: const Duration(milliseconds: 520), curve: Curves.easeOutCubic, alignment: .08);
+  }
+
+  Future<void> _loadRunCheckpoint() async {
     try {
       var checkpoint = await RunCheckpointStore.load();
       if (checkpoint != null && restoreRunCheckpointState(checkpoint) == null) {
@@ -578,6 +593,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
+              controller: _menuScrollController,
               padding: const EdgeInsets.all(22),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
@@ -634,6 +650,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     ),
                     const SizedBox(height: 18),
                     _panel(
+                      key: _shopSectionKey,
                       child: Column(
                         children: [
                           const Text(
@@ -740,7 +757,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       ...WeaponCatalog.all.map((weapon){final selected=equippedWeaponId==weapon.id;return Padding(padding:const EdgeInsets.only(bottom:8),child:OutlinedButton(onPressed:selected?null:()=>_equipWeapon(weapon),style:OutlinedButton.styleFrom(alignment:Alignment.centerRight,side:BorderSide(color:selected?Colors.amber:Colors.white24),backgroundColor:selected?Colors.amber.withOpacity(0.12):Colors.transparent,padding:const EdgeInsets.symmetric(horizontal:14,vertical:11)),child:Row(children:[Icon(selected?Icons.check_circle:Icons.sports_martial_arts,color:selected?Colors.amber:Colors.white70),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(weapon.name,style:TextStyle(fontWeight:FontWeight.bold,color:selected?Colors.amber:Colors.white)),Text(weapon.description,style:const TextStyle(fontSize:11,color:Colors.white70))])),if(selected)const Text('مجهز',style:TextStyle(color:Colors.amber))])));}),
                     ])),
                     const SizedBox(height: 18),
-                    _panel(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                    _panel(key: _equipmentSectionKey, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                       const Text('🛡️ المعدات والآثار', style: TextStyle(color: Colors.lightBlueAccent, fontSize: 18, fontWeight: FontWeight.bold)),
                       const Text('جهّز درعاً وخوذة وخاتماً وأثراً. كل قطعة تمنح خصائص مختلفة وتبقى محفوظة.', style: TextStyle(fontSize: 12, color: Colors.white70)),
                       const SizedBox(height: 10),
