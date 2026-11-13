@@ -19,6 +19,7 @@ import 'enemy_projectile_motion.dart';
 import 'combat_collision.dart';
 import 'boss_projectiles.dart';
 import 'combat_damage.dart';
+import 'player_projectiles.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -876,13 +877,18 @@ class _GameScreenState extends State<GameScreen>
     // تحريك الأسهم وفحص اصطدامها بالأعداء.
     for (int i = arrows.length - 1; i >= 0; i--) {
       final arrow = arrows[i];
-      arrow['x'] = (arrow['x'] as double) + (arrow['vx'] as double);
-      arrow['y'] = (arrow['y'] as double) + (arrow['vy'] as double);
+      final movement = advancePlayerProjectile(
+        x: arrow['x'] as double,
+        y: arrow['y'] as double,
+        velocityX: arrow['vx'] as double,
+        velocityY: arrow['vy'] as double,
+        arenaWidth: arenaWidth,
+        arenaHeight: arenaHeight,
+      );
+      arrow['x'] = movement.x;
+      arrow['y'] = movement.y;
 
-      if ((arrow['x'] as double) < -20 ||
-          (arrow['x'] as double) > arenaWidth + 20 ||
-          (arrow['y'] as double) < -20 ||
-          (arrow['y'] as double) > arenaHeight + 20) {
+      if (movement.shouldRemove) {
         arrows.removeAt(i);
         continue;
       }
