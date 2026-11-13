@@ -85,6 +85,7 @@ class GameArenaView extends StatelessWidget {
             onArenaSizeChanged(width, height);
 
             return GestureDetector(
+              key: const ValueKey('game-arena-gesture'),
               behavior: HitTestBehavior.opaque,
               onPanUpdate: (details) =>
                   onPlayerDrag(details.delta, width, height),
