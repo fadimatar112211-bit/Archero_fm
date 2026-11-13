@@ -28,6 +28,7 @@ import 'combat_damage.dart';
 import 'player_attack.dart';
 import 'player_projectiles.dart';
 import 'game_run_lifecycle.dart';
+import 'game_run_session.dart';
 import 'game_run_state.dart';
 import 'room_flow.dart';
 import 'player_movement.dart';
@@ -598,8 +599,9 @@ class _GameScreenState extends State<GameScreen>
   final Random random = Random();
   late final AnimationController worldAnimationController;
 
-  late final GameRunState runState =
-      GameRunState(initialStage: widget.initialStage);
+  late final GameRunSession runSession =
+      GameRunSession(initialStage: widget.initialStage);
+  GameRunState get runState => runSession.state;
 
   double get arenaWidth => runState.arenaWidth;
   set arenaWidth(double value) => runState.arenaWidth = value;
@@ -648,7 +650,7 @@ class _GameScreenState extends State<GameScreen>
   int get playerDeathTicks => runState.playerDeathTicks;
   set playerDeathTicks(int value) => runState.playerDeathTicks = value;
 
-  final GameRunLifecycle runLifecycle = GameRunLifecycle();
+  GameRunLifecycle get runLifecycle => runSession.lifecycle;
   bool get isPaused => runLifecycle.isPaused;
   bool get showMysteryChest => runLifecycle.showMysteryChest;
   bool get gameOverShown => runLifecycle.isGameOver;
