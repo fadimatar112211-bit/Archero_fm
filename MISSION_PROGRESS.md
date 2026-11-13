@@ -235,7 +235,7 @@ Section 7 progress: persistent hero unlocks are now implemented. The starter her
 
 ### Follow-up — Section 7: persistent hero unlocks
 
-Implemented on the current PR #42 branch:
+Implemented in merged PR #42:
 - Added a validated four-hero ownership bitmask to `PlayerProgress` and `ProgressStore`, including legacy-safe defaults that keep the starter hero unlocked.
 - Added startup restoration and full-snapshot save support for unlocked heroes.
 - Added hero selection lock states and gem prices: 50 gems for the flame hero, 75 for the shadow hero, and 100 for the storm hero.
