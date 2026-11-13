@@ -54,6 +54,32 @@ void main() {
       expect(result.damageApplied, 6);
     });
 
+
+    test('never turns invalid or negative projectile damage into healing', () {
+      for (final invalidDamage in [-12.0, double.nan, double.infinity]) {
+        final result = resolveProjectileHit(
+          playerHp: 50,
+          projectileDamage: invalidDamage,
+          isDodging: false,
+          canTakeDamage: true,
+        );
+        expect(result.damageApplied, 6);
+        expect(result.updatedPlayerHp, 44);
+      }
+    });
+
+    test('uses zero damage when both projectile and fallback damage are invalid', () {
+      final result = resolveProjectileHit(
+        playerHp: 50,
+        projectileDamage: -1,
+        isDodging: false,
+        canTakeDamage: true,
+        fallbackDamage: double.nan,
+      );
+      expect(result.damageApplied, 0);
+      expect(result.updatedPlayerHp, 50);
+    });
+
     test('supports custom fallback damage', () {
       final result = resolveProjectileHit(
         playerHp: 50,

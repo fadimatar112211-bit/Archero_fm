@@ -40,7 +40,12 @@ ProjectileHitResolution resolveProjectileHit({
     );
   }
 
-  final damage = projectileDamage.isFinite ? projectileDamage : fallbackDamage;
+  final safeFallback = fallbackDamage.isFinite && fallbackDamage > 0
+      ? fallbackDamage
+      : 0.0;
+  final damage = projectileDamage.isFinite && projectileDamage > 0
+      ? projectileDamage
+      : safeFallback;
   return ProjectileHitResolution(
     status: ProjectileHitStatus.damaged,
     updatedPlayerHp: playerHp - damage,

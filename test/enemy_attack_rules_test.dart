@@ -112,6 +112,45 @@ void main() {
 
       expect(result.status, EnemyContactHitStatus.damaged);
       expect(result.damageApplied, 8);
+      expect(result.resolvedAt, now);
+    });
+
+
+    test('does not sample wall-clock time for a non-impact tick', () {
+      final result = resolveEnemyContactHit(
+        enemyType: 'runner',
+        attackTicks: 7,
+        impactFrame: 8,
+        hitAlreadyResolved: false,
+        distanceToPlayer: 20,
+        impactRange: 55,
+        playerIsDodging: false,
+        lastDamageAt: null,
+        damage: 4,
+      );
+      expect(result.status, EnemyContactHitStatus.notReady);
+      expect(result.resolvedAt, isNull);
+    });
+
+    test('rejects negative distances and negative ranges', () {
+      for (final values in [
+        {'distance': -1.0, 'range': 55.0},
+        {'distance': 20.0, 'range': -1.0},
+      ]) {
+        final result = resolveEnemyContactHit(
+          enemyType: 'runner',
+          attackTicks: 8,
+          impactFrame: 8,
+          hitAlreadyResolved: false,
+          distanceToPlayer: values['distance']!,
+          impactRange: values['range']!,
+          playerIsDodging: false,
+          lastDamageAt: null,
+          now: now,
+          damage: 4,
+        );
+        expect(result.status, EnemyContactHitStatus.notReady);
+      }
     });
 
     test('rejects ranged, distant, and already-resolved contacts', () {

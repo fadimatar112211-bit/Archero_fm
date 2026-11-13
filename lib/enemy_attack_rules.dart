@@ -57,10 +57,12 @@ class EnemyContactHitResolution {
   const EnemyContactHitResolution({
     required this.status,
     required this.damageApplied,
+    this.resolvedAt,
   });
 
   final EnemyContactHitStatus status;
   final double damageApplied;
+  final DateTime? resolvedAt;
 }
 
 /// Resolves the impact frame of a contact attack independently of the game UI.
@@ -76,7 +78,7 @@ EnemyContactHitResolution resolveEnemyContactHit({
   required double impactRange,
   required bool playerIsDodging,
   required DateTime? lastDamageAt,
-  required DateTime now,
+  DateTime? now,
   required double damage,
   int invulnerabilityMs = 220,
 }) {
@@ -84,7 +86,9 @@ EnemyContactHitResolution resolveEnemyContactHit({
       attackTicks != impactFrame ||
       hitAlreadyResolved ||
       !distanceToPlayer.isFinite ||
+      distanceToPlayer < 0 ||
       !impactRange.isFinite ||
+      impactRange < 0 ||
       distanceToPlayer > impactRange) {
     return const EnemyContactHitResolution(
       status: EnemyContactHitStatus.notReady,
@@ -99,8 +103,11 @@ EnemyContactHitResolution resolveEnemyContactHit({
     );
   }
 
+  // Resolve wall-clock time only for a genuine impact, not once per enemy
+  // on every simulation tick. The timestamp is returned for atomic state use.
+  final resolvedAt = now ?? DateTime.now();
   final canTakeDamage = lastDamageAt == null ||
-      now.difference(lastDamageAt).inMilliseconds >= invulnerabilityMs;
+      resolvedAt.difference(lastDamageAt).inMilliseconds >= invulnerabilityMs;
   if (!canTakeDamage) {
     return const EnemyContactHitResolution(
       status: EnemyContactHitStatus.invulnerable,
@@ -112,5 +119,6 @@ EnemyContactHitResolution resolveEnemyContactHit({
   return EnemyContactHitResolution(
     status: EnemyContactHitStatus.damaged,
     damageApplied: safeDamage,
+    resolvedAt: resolvedAt,
   );
 }

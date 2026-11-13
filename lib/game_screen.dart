@@ -680,7 +680,8 @@ class _GameScreenState extends State<GameScreen>
         impactRange: impactDistance,
         playerIsDodging: playerMoveTicks > 0,
         lastDamageAt: lastDamageAt,
-        now: DateTime.now(),
+        // The resolver samples the clock only after confirming an impact.
+        now: null,
         damage: EnemyAttackRules.contactDamage(
           enemyType: type,
           bossEnraged: bossEnraged,
@@ -697,7 +698,7 @@ class _GameScreenState extends State<GameScreen>
           });
         case EnemyContactHitStatus.damaged:
           playerHp -= contactHit.damageApplied;
-          lastDamageAt = DateTime.now();
+          lastDamageAt = contactHit.resolvedAt;
           enemy['attackHitDone'] = true;
           combatEffects.add({
             'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
