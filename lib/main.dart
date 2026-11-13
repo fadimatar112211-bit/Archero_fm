@@ -40,15 +40,21 @@ Future<void> main() async {
       heroAtkUpgrade = progress.atkUpgrade;
       bestStage = progress.bestStage;
       bestScore = progress.bestScore;
-      runApp(const ArcheroSoundApp());
     } catch (error, stackTrace) {
       GameDiagnostics.record(
         error,
         stackTrace,
         source: 'application_startup',
       );
-      rethrow;
+      // Storage failure must not prevent the player from entering the game.
+      // Start from safe defaults; a later successful save can restore progress.
+      globalCoins = 150;
+      heroHpUpgrade = 0;
+      heroAtkUpgrade = 0;
+      bestStage = 1;
+      bestScore = 0;
     }
+    runApp(const ArcheroSoundApp());
   }, (error, stackTrace) {
     GameDiagnostics.record(
       error,
