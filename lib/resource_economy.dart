@@ -144,6 +144,50 @@ Future<ResourceTransaction> purchaseChestKey({
   );
 }
 
+Future<ResourceTransaction> purchaseChestKeyWithGems({
+  required int coins,
+  required int gems,
+  required int keys,
+  required int equipmentShards,
+  required PersistResourceWallet persist,
+}) async {
+  const cost = 5;
+  if (gems < cost) {
+    return ResourceTransaction(
+      status: ResourceTransactionStatus.insufficientCoins,
+      coins: coins,
+      gems: gems,
+      keys: keys,
+      equipmentShards: equipmentShards,
+    );
+  }
+  final nextGems = gems - cost;
+  final nextKeys = keys + 1;
+  try {
+    await persist(
+      coins: coins,
+      gems: nextGems,
+      keys: nextKeys,
+      equipmentShards: equipmentShards,
+    );
+  } catch (_) {
+    return ResourceTransaction(
+      status: ResourceTransactionStatus.persistenceFailed,
+      coins: coins,
+      gems: gems,
+      keys: keys,
+      equipmentShards: equipmentShards,
+    );
+  }
+  return ResourceTransaction(
+    status: ResourceTransactionStatus.completed,
+    coins: coins,
+    gems: nextGems,
+    keys: nextKeys,
+    equipmentShards: equipmentShards,
+  );
+}
+
 Future<ResourceTransaction> openRewardChest({
   required ChestDefinition chest,
   required int coins,
