@@ -488,3 +488,9 @@ Current verification state: world/stage implementation is committed to the featu
 2. Require a fresh successful Dart analysis, full Flutter tests (including new widget test), Android project generation, and debug APK build on the exact current head.
 3. Merge PR #46 only after all required checks pass.
 4. Continue Section 8 by auditing the equipment/weapon selection and comparison experience, then HUD and win/loss progression; keep the original roadmap requirements open until verified.
+
+
+### CI correction
+- Fresh CI run `43501608553` on head `268218b32826bc89aaf3d6d9dd42e5d026c0d94c` failed during Dart analysis because `HapticFeedback` was not imported into `game_screen.dart`.
+- Corrected by importing `HapticFeedback` from Flutter's services library in commit `ab461ca5b88ae98326baa129f87d4474766bd159`.
+- A new full CI run on the corrected latest head is required; the failed run is not a validation pass.
