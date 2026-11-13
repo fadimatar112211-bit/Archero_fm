@@ -727,9 +727,23 @@ class _GameScreenState extends State<GameScreen> {
         if (playerMoveTicks > 0) {
           combatEffects.add({'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14});
         } else {
-          playerHp -= 7.0;
-          combatEffects.add({'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20});
-          playRealSound('hit');
+          // مهلة قصيرة بين الإصابات تمنع تكدّس المقذوفات في نفس اللحظة،
+          // من دون إلغاء فرصة إصابة اللاعب بمقذوفات لاحقة.
+          final now = DateTime.now();
+          final canTakeDamage = lastDamageAt == null ||
+              now.difference(lastDamageAt!).inMilliseconds >= 260;
+          if (canTakeDamage) {
+            playerHp -= 7.0;
+            lastDamageAt = now;
+            combatEffects.add({
+              'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
+            });
+            playRealSound('hit');
+          } else {
+            combatEffects.add({
+              'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 10,
+            });
+          }
         }
         enemyProjectiles.removeAt(i);
       } else if ((shot['life'] as int) <= 0 ||
