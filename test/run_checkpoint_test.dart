@@ -74,5 +74,17 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(RunCheckpoint.storageKey, 'not-json');
     expect(await RunCheckpointStore.load(), isNull);
+    expect(prefs.containsKey(RunCheckpoint.storageKey), isFalse);
+  });
+  test('discards a checkpoint stored with the wrong preference type', () async {
+    SharedPreferences.setMockInitialValues({
+      RunCheckpoint.storageKey: 12345,
+      'coins': 900,
+    });
+    expect(await RunCheckpointStore.load(), isNull);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.containsKey(RunCheckpoint.storageKey), isFalse);
+    expect(prefs.getInt('coins'), 900);
   });
 }
+
