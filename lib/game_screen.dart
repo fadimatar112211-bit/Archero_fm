@@ -870,6 +870,9 @@ class _GameScreenState extends State<GameScreen>
     );
     if (!mounted || gameOverShown) return;
 
+    final previousCoins = globalCoins;
+    final previousHp = playerHp;
+    final previousAttackMultiplier = attackPowerMultiplier;
     var challenge = false;
     switch (selected) {
       case SpecialRoomType.treasure:
@@ -911,8 +914,18 @@ class _GameScreenState extends State<GameScreen>
         break;
     }
 
+    final saved = await saveProgressSafely();
+    if (!saved) {
+      globalCoins = previousCoins;
+      playerHp = previousHp;
+      attackPowerMultiplier = previousAttackMultiplier;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تعذر حفظ مكافأة الغرفة؛ تمت استعادة الحالة السابقة.')),
+        );
+      }
+    }
     runLifecycle.completeSpecialRoomChoice();
-    unawaited(saveProgressSafely());
     _spawnEnemies(challenge: challenge);
     if (mounted) setState(() {});
   }
