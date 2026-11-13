@@ -1227,10 +1227,12 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
                   // خلفية زخرفية بسيطة.
                   Positioned.fill(
-                    child: CustomPaint(
-                      painter: ArenaPainter(
-                        theme: WorldTheme.forStage(stage),
-                        animation: worldAnimationController,
+                    child: RepaintBoundary(
+                      child: CustomPaint(
+                        painter: ArenaPainter(
+                          theme: WorldTheme.forStage(stage),
+                          animation: worldAnimationController,
+                        ),
                       ),
                     ),
                   ),
