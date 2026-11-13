@@ -43,6 +43,33 @@ void main() {
       );
     });
 
+    test('does not offer healing when health is already full', () {
+      final offers = SkillSystem.rollOffers(
+        stage: 8,
+        random: Random(4),
+        count: 8,
+        currentHp: 125,
+        maxHp: 125,
+      );
+
+      expect(offers, hasLength(7));
+      expect(offers.any((skill) => skill.id == SkillId.healing), isFalse);
+      expect(offers.map((skill) => skill.id).toSet(), hasLength(7));
+    });
+
+    test('keeps healing available while the player is injured', () {
+      final offers = SkillSystem.rollOffers(
+        stage: 8,
+        random: Random(4),
+        count: 8,
+        currentHp: 80,
+        maxHp: 125,
+      );
+
+      expect(offers, hasLength(8));
+      expect(offers.any((skill) => skill.id == SkillId.healing), isTrue);
+    });
+
     test('offers expose common, rare, and epic upgrade tiers', () {
       final all = SkillSystem.rollOffers(
         stage: 20,
