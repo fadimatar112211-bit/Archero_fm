@@ -312,7 +312,7 @@ Branch: `feature/mid-run-checkpoint-integrated`, based directly on PR #43 merge 
 
 Implemented in the current unvalidated batch:
 - Added a versioned JSON checkpoint model with defensive decoding and a dedicated SharedPreferences store.
-- Added a run-state adapter that captures/restores hero-independent combat state: stage, player stats/position, score, skill selections and synergies, enemies, player arrows, enemy projectiles, coins, combat effects, defeated sprites, wallet coins, and room-hazard cooldown.
+- Added a run-state adapter that captures/restores hero-independent combat state: stage, player stats/position, score, skill selections and synergies, enemies, player arrows, enemy projectiles, coins, combat effects, defeated sprites, room-hazard cooldown.
 - Added periodic five-second checkpoint saves while the run is active/paused, plus a save on app backgrounding.
 - Added a main-menu “resume saved run” action and a restore constructor path for GameRunSession.
 - Clear the checkpoint when a new run starts or a run ends; clear it at stage-reward transitions and write a fresh checkpoint after the reward choice resolves.
@@ -345,14 +345,14 @@ Verification status at the first checkpoint: implementation had not yet been val
 - PR #44, “Add persistent mid-run checkpoint save and resume”, is **open and not merged**.
 - PR #44 base: `feature/procedural-game-audio-v2`.
 - PR #44 head branch: `feature/mid-run-checkpoint-integrated`.
-- Latest verified PR #44 head SHA: `98fe7e8ba975b844cd32ba8d14abc33d0d6328f5`.
-- Latest GitHub Actions workflow run for that head: `43496064493` (Flutter CI, run number 817), status **in_progress** at the time this checkpoint was written. The previous run `43496064255` (run 816) was cancelled. Do not merge PR #44 while CI is running or unless all required checks pass.
+- Latest PR #44 head SHA after wallet-source-of-truth hardening: `7f991ef65dfaf4f1241cdd85a2e51e421e3e074c`.
+- Earlier run `43496064493` (run 817) was cancelled during the Android debug APK step after setup, dependency installation, Dart analysis, tests, and Android project generation had passed. A new workflow run `43497017111` (run 823) was created for head `7f991ef65dfaf4f1241cdd85a2e51e421e3e074c`; it was pending at the time this checkpoint was written. Do not merge PR #44 until this latest-head run completes successfully.
 - No successful CI conclusion has yet been confirmed for the latest PR #44 head. Physical-device gameplay validation has not been performed.
 
 ### PR #44 implementation contents
 - Versioned JSON checkpoint model and defensive decoding.
 - Serialized SharedPreferences save/load/clear operations to prevent stale writes racing with clears.
-- Snapshot adapter captures/restores player position and stats, stage/score, selected skills and synergies, enemies, arrows, enemy projectiles, pickups, effects, defeated sprites, wallet balance, and room hazard cooldown.
+- Snapshot adapter captures/restores player position and stats, stage/score, selected skills and synergies, enemies, arrows, enemy projectiles, pickups, effects, defeated sprites, room hazard cooldown.
 - Snapshot entity maps are copied so the saved checkpoint is not a live mutable view of gameplay collections.
 - Periodic five-second saves and app-background save.
 - Main-menu resume button, with checkpoint validation before offering resume.
@@ -370,8 +370,14 @@ Verification status at the first checkpoint: implementation had not yet been val
 - `test/game_run_checkpoint_adapter_test.dart`
 - `MISSION_PROGRESS.md`
 
+### Wallet consistency hardening (latest code change)
+- Removed wallet balance from the active-run checkpoint payload and restore path. The player progression store remains the single source of truth for persistent coins.
+- Updated `lib/game_run_checkpoint_adapter.dart`, `lib/game_screen.dart`, and `test/game_run_checkpoint_adapter_test.dart`.
+- Reason: a checkpoint can be older than a later saved shop purchase or wallet update; restoring its wallet value could roll back legitimate spending or overwrite newer persisted progression.
+- Commit: `7f991ef65dfaf4f1241cdd85a2e51e421e3e074c`.
+
 ### Exact next actions
-1. Poll workflow run `43496064493` until it completes and inspect every job/step, especially Dart analysis, Flutter tests, Android project generation, and Android debug APK build.
+1. Poll latest-head workflow run `43497017111` until it completes and inspect every job/step, especially Dart analysis, Flutter tests, Android project generation, and Android debug APK build.
 2. If any check fails, inspect logs, fix the underlying issue on `feature/mid-run-checkpoint-integrated`, and wait for a green run on the new head SHA.
 3. Review PR #44 diff and verify mergeability against the current base; merge only after all required checks pass.
 4. After merge, record exact merge commit and successful CI run IDs here.
