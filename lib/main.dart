@@ -2349,6 +2349,65 @@ class ArenaPainter extends CustomPainter {
       }
     }
 
+    if (theme.id == 1 && size.width > 80 && size.height > 150) {
+      // Moss-covered stones anchor the forest border and break up the flat wall.
+      final stoneFill = Paint()..color = const Color(0xFF52634A);
+      final stoneShade = Paint()..color = const Color(0xFF344A39);
+      final mossStroke = Paint()..color = const Color(0xFF8AA65A)
+        ..style = PaintingStyle.stroke..strokeWidth = 2.4
+        ..strokeCap = StrokeCap.round;
+      for (var i = 0; i < 5; i++) {
+        for (final side in [0, 1]) {
+          final x = side == 0 ? 29.0 + (i % 2) * 5 : size.width - 29.0 - (i % 2) * 5;
+          final y = 190.0 + i * ((size.height - 270).clamp(35.0, 90.0));
+          final stoneRect = Rect.fromCenter(
+            center: Offset(x, y), width: 19 + (i % 3) * 4, height: 12 + (i % 2) * 3);
+          canvas.drawOval(stoneRect, stoneShade);
+          canvas.drawOval(stoneRect.deflate(2), stoneFill);
+          canvas.drawArc(stoneRect.deflate(3), 3.4, 1.25, false, mossStroke);
+        }
+      }
+
+      // Fern fans and tiny blue flowers decorate the lower side borders.
+      final fernPaint = Paint()..color = const Color(0xFF6D9D55)
+        ..style = PaintingStyle.stroke..strokeWidth = 2
+        ..strokeCap = StrokeCap.round;
+      final flowerBlue = Paint()..color = const Color(0xFF9BD8D0);
+      for (final side in [0, 1]) {
+        final direction = side == 0 ? 1.0 : -1.0;
+        final base = Offset(side == 0 ? 24 : size.width - 24, size.height - 118);
+        canvas.drawLine(base, base.translate(direction * 9, -27), fernPaint);
+        for (var leafIndex = 0; leafIndex < 4; leafIndex++) {
+          final t = leafIndex / 4;
+          final point = Offset(base.dx + direction * 9 * t, base.dy - 27 * t);
+          canvas.drawLine(point, point.translate(direction * 10, -5), fernPaint);
+          canvas.drawLine(point, point.translate(-direction * 7, -7), fernPaint);
+        }
+        for (var dot = 0; dot < 3; dot++) {
+          final flowerCenter = Offset(
+            base.dx + direction * (17 + dot * 5),
+            base.dy + 9 + dot * 4);
+          canvas.drawCircle(flowerCenter, 2.2, flowerBlue);
+          canvas.drawCircle(flowerCenter.translate(0, 0), .8,
+              Paint()..color = const Color(0xFFFFE7A0));
+        }
+      }
+
+      // Fireflies are fixed painter details, softly glowing rather than flashing.
+      for (var i = 0; i < 11; i++) {
+        final side = i.isEven ? 0 : 1;
+        final x = side == 0
+            ? 42.0 + (i % 3) * 8
+            : size.width - 42.0 - (i % 3) * 8;
+        final y = 205.0 + (i * 47.0) % (size.height - 245);
+        final glow = Paint()..color = const Color(0xFFDAF69A).withOpacity(.16)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+        canvas.drawCircle(Offset(x, y), 4.5, glow);
+        canvas.drawCircle(Offset(x, y), 1.4,
+            Paint()..color = const Color(0xFFE6FFB0).withOpacity(.8));
+      }
+    }
+
     final vignette = Paint()
       ..shader = RadialGradient(colors: [Colors.transparent, Colors.black.withOpacity(.48)],
         stops: const [0.55, 1]).createShader(rect);
