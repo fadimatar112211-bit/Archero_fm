@@ -19,6 +19,7 @@ import 'enemy_projectile_motion.dart';
 import 'combat_collision.dart';
 import 'boss_projectiles.dart';
 import 'combat_damage.dart';
+import 'player_movement.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1392,14 +1393,19 @@ class _GameScreenState extends State<GameScreen>
               behavior: HitTestBehavior.opaque,
               onPanUpdate: (details) {
                 if (isPaused || showMysteryChest || gameOverShown) return;
+                final movement = resolvePlayerDrag(
+                  currentX: playerX,
+                  currentY: playerY,
+                  deltaX: details.delta.dx,
+                  deltaY: details.delta.dy,
+                  arenaWidth: width,
+                  arenaHeight: height,
+                  currentMoveTicks: playerMoveTicks,
+                );
                 setState(() {
-                  if (details.delta.distanceSquared > 0.25) playerMoveTicks = 8;
-                  playerX = (playerX + details.delta.dx)
-                      .clamp(22.0, width - 22.0)
-                      .toDouble();
-                  playerY = (playerY + details.delta.dy)
-                      .clamp(105.0, height - 35.0)
-                      .toDouble();
+                  playerX = movement.x;
+                  playerY = movement.y;
+                  playerMoveTicks = movement.moveTicks;
                 });
               },
               child: Stack(
