@@ -126,10 +126,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             ? 'وصلت إلى الحد الأقصى لترقية الصحة.'
             : 'وصلت إلى الحد الأقصى لترقية الهجوم.');
       case ShopPurchaseStatus.persistenceFailed:
-        GameDiagnostics.record(
-          result.error!,
-          source: 'shop.purchase',
-        );
         _message('تعذر حفظ عملية الشراء. لم يتم خصم العملات.');
     }
   }
