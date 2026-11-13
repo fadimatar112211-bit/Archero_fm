@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:archero_fm/main.dart';
@@ -18,7 +19,7 @@ void main() {
       (tester) async {
     await tester.pumpWidget(const ArcheroSoundApp());
 
-    await tester.tap(find.text('صحة +25 (50)'));
+    await tester.tap(find.text('صحة +25 · المستوى 0/20 · 50 عملة'));
     await tester.pumpAndSettle();
 
     expect(globalCoins, 100);
@@ -32,7 +33,7 @@ void main() {
       (tester) async {
     await tester.pumpWidget(const ArcheroSoundApp());
 
-    final attackButton = find.text('هجوم +15 (70)');
+    final attackButton = find.text('هجوم +15 · المستوى 0/15 · 70 عملة');
     await tester.ensureVisible(attackButton);
     await tester.tap(attackButton);
     await tester.pumpAndSettle();
@@ -49,13 +50,16 @@ void main() {
     globalCoins = 40;
     await tester.pumpWidget(const ArcheroSoundApp());
 
-    await tester.tap(find.text('صحة +25 (50)'));
-    await tester.pumpAndSettle();
+    final healthButton = find.text('صحة +25 · المستوى 0/20 · 50 عملة');
+    await tester.ensureVisible(healthButton);
+    final button = tester.widget<FilledButton>(
+      find.ancestor(of: healthButton, matching: find.byType(FilledButton)),
+    );
 
+    expect(button.onPressed, isNull);
     expect(globalCoins, 40);
     expect(heroHpUpgrade, 0);
     expect(find.text('رصيدك: 40'), findsOneWidget);
-    expect(find.text('عملاتك لا تكفي لشراء ترقية الصحة.'), findsOneWidget);
 
   });
 }
