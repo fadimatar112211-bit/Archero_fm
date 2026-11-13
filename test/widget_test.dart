@@ -65,8 +65,21 @@ void main() {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pump();
     expect(find.text('متابعة اللعب'), findsNothing);
-    expect(tester.takeException(), isNull);
 
+    // A pause initiated by the player must not be auto-dismissed by resume.
+    await tester.tap(find.byIcon(Icons.pause));
+    await tester.pump();
+    expect(find.text('متابعة اللعب'), findsOneWidget);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(find.text('متابعة اللعب'), findsOneWidget);
+    await tester.tap(find.text('متابعة اللعب'));
+    await tester.pump();
+
+    expect(find.text('متابعة اللعب'), findsNothing);
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
