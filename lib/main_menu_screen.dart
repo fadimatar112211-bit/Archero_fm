@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'game_progress.dart';
 import 'game_screen.dart';
 import 'run_checkpoint.dart';
+import 'game_run_checkpoint_adapter.dart';
 import 'hero_selection_screen.dart';
 import 'progress_store.dart';
 import 'shop_economy.dart';
@@ -32,7 +33,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   Future<void> _loadRunCheckpoint() async {
     try {
-      final checkpoint = await RunCheckpointStore.load();
+      var checkpoint = await RunCheckpointStore.load();
+      if (checkpoint != null && restoreRunCheckpointState(checkpoint) == null) {
+        await RunCheckpointStore.clear();
+        checkpoint = null;
+      }
       if (mounted) setState(() => _activeCheckpoint = checkpoint);
     } catch (_) {
       if (mounted) setState(() => _activeCheckpoint = null);
