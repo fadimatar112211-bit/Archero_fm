@@ -29,6 +29,28 @@ void main() {
     tester.view.resetDevicePixelRatio();
   });
 
+  testWidgets('combat arena lays out across phone and tablet viewports', (tester) async {
+    const sizes = <Size>[
+      Size(360, 640),
+      Size(390, 844),
+      Size(800, 1280),
+    ];
+
+    for (final size in sizes) {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      await tester.pumpWidget(
+        const MaterialApp(home: GameScreen(heroType: 1)),
+      );
+      await tester.pump(const Duration(milliseconds: 32));
+      expect(tester.takeException(), isNull, reason: 'Arena viewport $size');
+    }
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+
   testWidgets('critical character and enemy sprite sheets render all four frames',
       (tester) async {
     const assets = <String>[
