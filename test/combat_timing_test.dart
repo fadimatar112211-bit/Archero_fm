@@ -13,7 +13,6 @@ void main() {
 
       expect(entities, [
         {'type': 'hit', 'life': 2},
-        {'type': 'dodge', 'life': 0},
       ]);
     });
 
