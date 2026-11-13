@@ -174,7 +174,7 @@ class _GameScreenState extends State<GameScreen>
     criticalChance = heroStats.criticalChance;
 
     timers.periodic('game', const Duration(milliseconds: 16), () {
-      if (!mounted || !runLifecycle.canPerformActions) return;
+      if (!mounted || !runLifecycle.canAdvanceGameClock) return;
       if (playerDying) {
         playerDeathTicks++;
         if (playerDeathTicks >= 24) _endGame();

@@ -7,6 +7,7 @@ void main() {
       final lifecycle = GameRunLifecycle();
       expect(lifecycle.phase, GameRunPhase.active);
       expect(lifecycle.canPerformActions, isTrue);
+      expect(lifecycle.canAdvanceGameClock, isTrue);
       expect(lifecycle.togglePause(), isTrue);
       expect(lifecycle.isPaused, isTrue);
       expect(lifecycle.togglePause(), isTrue);
@@ -33,10 +34,12 @@ void main() {
       expect(lifecycle.beginPlayerDeath(), isTrue);
       expect(lifecycle.isPlayerDying, isTrue);
       expect(lifecycle.canPerformActions, isFalse);
+      expect(lifecycle.canAdvanceGameClock, isTrue);
       expect(lifecycle.togglePause(), isFalse);
       expect(lifecycle.beginStageReward(mysteryChest: false), isFalse);
       expect(lifecycle.finishRun(), isTrue);
       expect(lifecycle.isGameOver, isTrue);
+      expect(lifecycle.canAdvanceGameClock, isFalse);
       expect(lifecycle.finishRun(), isFalse);
     });
 
@@ -63,6 +66,7 @@ void main() {
       expect(lifecycle.canPerformActions, isTrue);
       lifecycle.pause();
       expect(lifecycle.canPerformActions, isFalse);
+      expect(lifecycle.canAdvanceGameClock, isFalse);
       lifecycle.resume();
       lifecycle.beginStageReward(mysteryChest: true);
       expect(lifecycle.canPerformActions, isFalse);

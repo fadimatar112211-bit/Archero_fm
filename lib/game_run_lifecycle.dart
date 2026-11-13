@@ -15,6 +15,11 @@ class GameRunLifecycle {
 
   /// Gameplay input and attacks are accepted only during the active phase.
   bool get canPerformActions => _phase == GameRunPhase.active;
+
+  /// The simulation clock must continue while the death animation is playing,
+  /// even though gameplay input and combat actions are disabled.
+  bool get canAdvanceGameClock =>
+      _phase == GameRunPhase.active || _phase == GameRunPhase.dying;
   bool get isPaused =>
       _phase == GameRunPhase.paused || _phase == GameRunPhase.skillReward;
   bool get showMysteryChest => _phase == GameRunPhase.chestReward;

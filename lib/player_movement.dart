@@ -33,14 +33,20 @@ PlayerMovementResolution resolvePlayerDrag({
   final safeHeight = arenaHeight.isFinite && arenaHeight > 0 ? arenaHeight : 140.0;
   final maxX = safeWidth - 22.0 < 22.0 ? 22.0 : safeWidth - 22.0;
   final maxY = safeHeight - 35.0 < 105.0 ? 105.0 : safeHeight - 35.0;
+  final safeMovementThreshold = movementThresholdSquared.isFinite &&
+          movementThresholdSquared >= 0
+      ? movementThresholdSquared
+      : 0.25;
+  final safeDodgeTicks = dodgeTicks < 0 ? 0 : dodgeTicks;
+  final safeCurrentMoveTicks = currentMoveTicks < 0 ? 0 : currentMoveTicks;
   final distanceSquared =
       safeDeltaX * safeDeltaX + safeDeltaY * safeDeltaY;
   final moved = distanceSquared.isFinite &&
-      distanceSquared > movementThresholdSquared;
+      distanceSquared > safeMovementThreshold;
 
   return PlayerMovementResolution(
     x: (safeX + safeDeltaX).clamp(22.0, maxX).toDouble(),
     y: (safeY + safeDeltaY).clamp(105.0, maxY).toDouble(),
-    moveTicks: moved ? dodgeTicks : currentMoveTicks,
+    moveTicks: moved ? safeDodgeTicks : safeCurrentMoveTicks,
   );
 }

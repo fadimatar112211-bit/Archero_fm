@@ -66,6 +66,39 @@ void main() {
       expect(result.y, 105);
     });
 
+    test('normalizes invalid thresholds and negative dodge counters', () {
+      final result = resolvePlayerDrag(
+        currentX: 180,
+        currentY: 430,
+        deltaX: 0,
+        deltaY: 0,
+        arenaWidth: 360,
+        arenaHeight: 640,
+        currentMoveTicks: -4,
+        movementThresholdSquared: -1,
+        dodgeTicks: -8,
+      );
+
+      expect(result.x, 180);
+      expect(result.y, 430);
+      expect(result.moveTicks, 0);
+    });
+
+    test('uses safe defaults for non-finite movement thresholds', () {
+      final result = resolvePlayerDrag(
+        currentX: 180,
+        currentY: 430,
+        deltaX: 0.2,
+        deltaY: 0.2,
+        arenaWidth: 360,
+        arenaHeight: 640,
+        currentMoveTicks: 2,
+        movementThresholdSquared: double.nan,
+      );
+
+      expect(result.moveTicks, 2);
+    });
+
     test('normalizes non-finite gesture and position values', () {
       final result = resolvePlayerDrag(
         currentX: double.nan,
