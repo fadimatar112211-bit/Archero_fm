@@ -1,5 +1,3 @@
-import 'dart:math';
-
 /// Pure movement decision for a boss actor, independent from regular enemy AI.
 class BossMovementDecision {
   const BossMovementDecision({required this.angle, required this.speedMultiplier});
