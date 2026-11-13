@@ -49,7 +49,9 @@ void main() {
     globalCoins = 40;
     await tester.pumpWidget(const ArcheroSoundApp());
 
-    await tester.tap(find.text('صحة +25 (50)'));
+    final healthButton = find.text('صحة +25 · المستوى 0/20 · 50 عملة');
+    await tester.ensureVisible(healthButton);
+    await tester.tap(healthButton);
     await tester.pumpAndSettle();
 
     expect(globalCoins, 40);
