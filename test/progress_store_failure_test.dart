@@ -6,6 +6,7 @@ class _FakeProgressPreferences implements ProgressPreferences {
   final Map<String, int> values = {};
   String? failKey;
   bool returnFalse = false;
+  bool writeBeforeFailure = false;
   bool hasFailed = false;
 
   @override
@@ -15,6 +16,7 @@ class _FakeProgressPreferences implements ProgressPreferences {
   Future<bool> setInt(String key, int value) async {
     if (key == failKey && !hasFailed) {
       hasFailed = true;
+      if (writeBeforeFailure) values[key] = value;
       if (returnFalse) return false;
       throw StateError('simulated storage failure');
     }
@@ -51,6 +53,25 @@ void main() {
 
     // Coins were written first and must be restored after the next key fails.
     expect(fake.values['coins'], 150);
+  });
+
+  test('rolls back a key written before the storage backend throws', () async {
+    fake.failKey = 'hpUpgrade';
+    fake.writeBeforeFailure = true;
+
+    await expectLater(
+      ProgressStore.save(
+        coins: 200,
+        hpUpgrade: 25,
+        atkUpgrade: 15,
+        bestStage: 2,
+        bestScore: 50,
+      ),
+      throwsA(isA<StateError>()),
+    );
+
+    expect(fake.values['coins'], 150);
+    expect(fake.values['hpUpgrade'], 0);
   });
 
   test('keeps the save queue usable after a failed write', () async {
