@@ -2359,7 +2359,7 @@ class ArenaPainter extends CustomPainter {
       for (var i = 0; i < 5; i++) {
         for (final side in [0, 1]) {
           final x = side == 0 ? 29.0 + (i % 2) * 5 : size.width - 29.0 - (i % 2) * 5;
-          final y = 190.0 + i * ((size.height - 270).clamp(35.0, 90.0));
+          final y = 190.0 + i * (size.height - 270).clamp(35.0, 90.0).toDouble();
           final stoneRect = Rect.fromCenter(
             center: Offset(x, y), width: 19 + (i % 3) * 4, height: 12 + (i % 2) * 3);
           canvas.drawOval(stoneRect, stoneShade);
