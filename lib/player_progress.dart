@@ -15,6 +15,11 @@ class PlayerProgress {
     this.keys = 0,
     this.equipmentShards = 0,
     this.unlockedHeroesMask = 1,
+    this.totalKills = 0,
+    this.totalBosses = 0,
+    this.totalChests = 0,
+    this.totalRuns = 0,
+    this.claimedAchievementsMask = 0,
   });
 
   final int coins;
@@ -29,6 +34,8 @@ class PlayerProgress {
   final int keys;
   final int equipmentShards;
   final int unlockedHeroesMask;
+  final int totalKills, totalBosses, totalChests, totalRuns;
+  final int claimedAchievementsMask;
 
 
   int get effectiveOwnedEquipmentMask {
@@ -68,6 +75,11 @@ class PlayerProgress {
       keys: (values['keys'] ?? 0).clamp(0, 999999).toInt(),
       equipmentShards: (values['equipmentShards'] ?? 0).clamp(0, 999999).toInt(),
       unlockedHeroesMask: ((values['unlockedHeroesMask'] ?? 1).clamp(0, 15).toInt() | 1),
+      totalKills: (values['totalKills'] ?? 0).clamp(0, 999999999).toInt(),
+      totalBosses: (values['totalBosses'] ?? 0).clamp(0, 999999999).toInt(),
+      totalChests: (values['totalChests'] ?? 0).clamp(0, 999999999).toInt(),
+      totalRuns: (values['totalRuns'] ?? 0).clamp(0, 999999999).toInt(),
+      claimedAchievementsMask: (values['claimedAchievementsMask'] ?? 0).clamp(0, 65535).toInt(),
     );
   }
 
@@ -87,6 +99,11 @@ class PlayerProgress {
     'keys': keys,
     'equipmentShards': equipmentShards,
     'unlockedHeroesMask': unlockedHeroesMask | 1,
+    'totalKills': totalKills,
+    'totalBosses': totalBosses,
+    'totalChests': totalChests,
+    'totalRuns': totalRuns,
+    'claimedAchievementsMask': claimedAchievementsMask,
   };
 
   PlayerProgress copyWith({
@@ -105,6 +122,11 @@ class PlayerProgress {
     int? keys,
     int? equipmentShards,
     int? unlockedHeroesMask,
+    int? totalKills,
+    int? totalBosses,
+    int? totalChests,
+    int? totalRuns,
+    int? claimedAchievementsMask,
   }) {
     return PlayerProgress(
       coins: coins ?? this.coins,
@@ -122,6 +144,11 @@ class PlayerProgress {
       keys: keys ?? this.keys,
       equipmentShards: equipmentShards ?? this.equipmentShards,
       unlockedHeroesMask: unlockedHeroesMask ?? this.unlockedHeroesMask,
+      totalKills: totalKills ?? this.totalKills,
+      totalBosses: totalBosses ?? this.totalBosses,
+      totalChests: totalChests ?? this.totalChests,
+      totalRuns: totalRuns ?? this.totalRuns,
+      claimedAchievementsMask: claimedAchievementsMask ?? this.claimedAchievementsMask,
     );
   }
 }
