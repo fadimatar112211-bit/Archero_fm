@@ -879,11 +879,7 @@ class _GameScreenState extends State<GameScreen>
           FilledButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const MainMenuScreen()),
-                (route) => false,
-              );
+              Navigator.popUntil(context, (route) => route.isFirst);
             },
             child: const Text('العودة للقائمة الرئيسية'),
           ),
@@ -1314,12 +1310,9 @@ class _GameScreenState extends State<GameScreen>
                               ),
                               TextButton(
                                 onPressed: () {
-                                  Navigator.pushAndRemoveUntil(
+                                  Navigator.popUntil(
                                     context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const MainMenuScreen(),
-                                    ),
-                                    (route) => false,
+                                    (route) => route.isFirst,
                                   );
                                 },
                                 child: const Text('الخروج إلى القائمة'),
