@@ -51,6 +51,7 @@ void main() {
         'equippedHelmetId': 0,
         'equippedRingId': 0,
         'equippedRelicId': 0,
+        'ownedEquipmentMask': 585,
     });
     expect(GameDiagnostics.entries, hasLength(1));
     expect(GameDiagnostics.entries.single.source, 'application_startup');
