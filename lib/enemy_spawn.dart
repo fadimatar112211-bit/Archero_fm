@@ -14,23 +14,34 @@ List<Map<String, dynamic>> createEnemyWave({
   required double enemySpeedMultiplier,
   required Random random,
 }) {
-  final difficultyStep = min(max(stage - 1, 0), 20).toDouble();
-  final worldRules = WorldRules.forStage(stage);
+  final safeStage = max(stage, 1);
+  final safeWidth = arenaWidth.isFinite && arenaWidth >= 48
+      ? arenaWidth
+      : 360.0;
+  final safeHeight = arenaHeight.isFinite && arenaHeight >= 140
+      ? arenaHeight
+      : 640.0;
+  final safeEnemySpeedMultiplier = enemySpeedMultiplier.isFinite &&
+          enemySpeedMultiplier >= 0
+      ? enemySpeedMultiplier
+      : 1.0;
+  final difficultyStep = min(max(safeStage - 1, 0), 20).toDouble();
+  final worldRules = WorldRules.forStage(safeStage);
 
-  if (RoomFlow.forStage(stage).isBoss) {
-    final bossProgress = min(max(stage - 5, 0), 45).toDouble();
+  if (RoomFlow.forStage(safeStage).isBoss) {
+    final bossProgress = min(max(safeStage - 5, 0), 45).toDouble();
     final bossHp =
         (360.0 + bossProgress * 22) * worldRules.enemyHealthMultiplier;
     return [
       {
-        'x': arenaWidth / 2,
-        'y': arenaHeight * 0.16,
+        'x': safeWidth / 2,
+        'y': safeHeight * 0.16,
         'hp': bossHp,
         'maxHp': bossHp,
         'type': 'boss',
         'radius': 36.0,
         'speed': (0.78 + min(difficultyStep, 16) * 0.012) *
-            enemySpeedMultiplier *
+            safeEnemySpeedMultiplier *
             worldRules.enemySpeedMultiplier,
         'bossPhase': 1,
         'bossVolleyCooldown': 90,
@@ -38,9 +49,9 @@ List<Map<String, dynamic>> createEnemyWave({
     ];
   }
 
-  final count = min(2 + (stage ~/ 2), 7);
+  final count = min(2 + (safeStage ~/ 2), 7);
   return List.generate(count, (index) {
-    final variant = (index + stage) % 4;
+    final variant = (index + safeStage) % 4;
     final String enemyType = switch (variant) {
       0 => 'runner',
       1 => 'tank',
@@ -65,14 +76,14 @@ List<Map<String, dynamic>> createEnemyWave({
     };
 
     return {
-      'x': 24.0 + random.nextDouble() * max(1.0, arenaWidth - 48.0),
-      'y': arenaHeight * (0.14 + random.nextDouble() * 0.26),
+      'x': 24.0 + random.nextDouble() * max(1.0, safeWidth - 48.0),
+      'y': safeHeight * (0.14 + random.nextDouble() * 0.26),
       'hp': hp,
       'maxHp': hp,
       'type': enemyType,
       'radius': enemyType == 'tank' ? 23.0 : 19.0,
       'speed': speed *
-          enemySpeedMultiplier *
+          safeEnemySpeedMultiplier *
           worldRules.enemySpeedMultiplier,
     };
   });

@@ -66,6 +66,23 @@ void main() {
       expect(enemies.every((enemy) => enemy['speed'] > 0), isTrue);
     });
 
+    test('normalizes invalid stage, arena, and speed multiplier inputs', () {
+      final enemies = createEnemyWave(
+        stage: -5,
+        arenaWidth: double.nan,
+        arenaHeight: double.infinity,
+        enemySpeedMultiplier: double.nan,
+        random: Random(9),
+      );
+      expect(enemies, hasLength(2));
+      for (final enemy in enemies) {
+        expect((enemy['x'] as double).isFinite, isTrue);
+        expect((enemy['y'] as double).isFinite, isTrue);
+        expect(enemy['hp'], greaterThan(0));
+        expect(enemy['speed'], greaterThan(0));
+      }
+    });
+
     test('scales boss health and speed with world and stage progression', () {
       final boss = createEnemyWave(
         stage: 15,

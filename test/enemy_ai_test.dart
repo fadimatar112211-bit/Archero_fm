@@ -55,6 +55,24 @@ void main() {
       expect(tank.speedMultiplier, 0.82);
     });
 
+    test('normalizes non-finite steering inputs and negative distances', () {
+      final ranged = decideEnemyMovement(
+        type: 'ranged', distanceToPlayer: double.nan, baseAngle: double.nan,
+        enemyX: double.infinity, animationTicks: 10, bossEnraged: false,
+        bossPhaseMovementMultiplier: double.nan,
+      );
+      final stalker = decideEnemyMovement(
+        type: 'stalker', distanceToPlayer: -10, baseAngle: double.infinity,
+        enemyX: double.nan, animationTicks: 0, bossEnraged: false,
+        bossPhaseMovementMultiplier: 1,
+      );
+
+      expect(ranged.angle, 0);
+      expect(ranged.speedMultiplier, 0.72);
+      expect(stalker.angle, isFinite);
+      expect(stalker.speedMultiplier, 0.72);
+    });
+
     test('boss movement scales by phase and enrage state', () {
       final normal = decideEnemyMovement(
         type: 'boss', distanceToPlayer: 150, baseAngle: 0,
