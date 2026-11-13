@@ -2408,6 +2408,118 @@ class ArenaPainter extends CustomPainter {
       }
     }
 
+    // Distinct environmental landmarks for the five remaining worlds.
+    // All decorations are clipped to narrow side rails, keeping combat clear.
+    if (size.width > 100 && size.height > 180 && theme.id >= 2 && theme.id <= 6) {
+      final railWidth = size.width * .105;
+      for (final side in [0, 1]) {
+        final left = side == 0;
+        final direction = left ? 1.0 : -1.0;
+        final railX = left ? 8.0 : size.width - 8.0;
+        final innerX = left ? railWidth : size.width - railWidth;
+        if (theme.id == 2) {
+          // Volcano: basalt shards and glowing lava seams.
+          final basalt = Paint()..color = const Color(0xFF34252A);
+          final lava = Paint()..color = const Color(0xFFFF6A24)
+            ..style = PaintingStyle.stroke..strokeWidth = 2.2
+            ..strokeCap = StrokeCap.round;
+          for (var i = 0; i < 6; i++) {
+            final y = 132.0 + i * (size.height - 190) / 6;
+            final shard = Path()
+              ..moveTo(railX, y + 15)
+              ..lineTo(railX + direction * 13, y - 5)
+              ..lineTo(railX + direction * 25, y + 19)
+              ..lineTo(railX + direction * 8, y + 29)..close();
+            canvas.drawPath(shard, basalt);
+            final seam = Path()
+              ..moveTo(innerX * (left ? 0.65 : 1) + (left ? 0 : 0), y + 22)
+              ..lineTo(railX + direction * 9, y + 14)
+              ..lineTo(railX + direction * 15, y + 19);
+            canvas.drawPath(seam, lava);
+            canvas.drawCircle(Offset(railX + direction * 17, y + 4), 2.2,
+              Paint()..color = const Color(0xFFFFB52E).withOpacity(.8));
+          }
+        } else if (theme.id == 3) {
+          // Ice kingdom: translucent crystal clusters and frost glints.
+          final crystal = Paint()..color = const Color(0xFFBCEEFF).withOpacity(.58);
+          final edge = Paint()..color = const Color(0xFFE5FAFF).withOpacity(.8)
+            ..style = PaintingStyle.stroke..strokeWidth = 1.2;
+          for (var i = 0; i < 5; i++) {
+            final x = railX + direction * (8 + (i % 2) * 5);
+            final y = 145.0 + i * (size.height - 205) / 5;
+            final h = 20.0 + (i % 3) * 7;
+            final crystalPath = Path()
+              ..moveTo(x, y - h)
+              ..lineTo(x + direction * 7, y - 3)
+              ..lineTo(x + direction * 3, y + 5)
+              ..lineTo(x - direction * 4, y - 2)..close();
+            canvas.drawPath(crystalPath, crystal);
+            canvas.drawPath(crystalPath, edge);
+            canvas.drawCircle(Offset(x + direction * 13, y - h - 3), 2,
+              Paint()..color = const Color(0xFFE7FFFF).withOpacity(.85));
+          }
+        } else if (theme.id == 4) {
+          // Desert: layered dunes, sandstone blocks and dry grass.
+          final dune = Paint()..color = const Color(0xFFD6B477).withOpacity(.48);
+          final duneShade = Paint()..color = const Color(0xFF755334).withOpacity(.45);
+          for (var i = 0; i < 4; i++) {
+            final y = 165.0 + i * (size.height - 220) / 4;
+            final dunePath = Path()
+              ..moveTo(railX, y + 25)
+              ..quadraticBezierTo(railX + direction * 18, y - 12,
+                  railX + direction * 35, y + 18)
+              ..lineTo(railX + direction * 35, y + 31)
+              ..close();
+            canvas.drawPath(dunePath, dune);
+            canvas.drawLine(Offset(railX, y + 27),
+              Offset(railX + direction * 27, y + 24), duneShade..strokeWidth = 2);
+            for (var dot = 0; dot < 3; dot++) {
+              canvas.drawCircle(Offset(railX + direction * (8 + dot * 7),
+                y + 35 + dot * 2), 1.3, duneShade);
+            }
+          }
+        } else if (theme.id == 5) {
+          // Shadow valley: dark monoliths and violet arcane wisps.
+          final monolith = Paint()..color = const Color(0xFF28213A);
+          final rune = Paint()..color = const Color(0xFFD6A0FF).withOpacity(.75)
+            ..style = PaintingStyle.stroke..strokeWidth = 1.5;
+          for (var i = 0; i < 5; i++) {
+            final x = railX + direction * 12;
+            final y = 150.0 + i * (size.height - 210) / 5;
+            final stone = Path()
+              ..moveTo(x - 5, y + 20)..lineTo(x - 3, y - 18)
+              ..lineTo(x + 3, y - 25)..lineTo(x + 8, y + 20)..close();
+            canvas.drawPath(stone, monolith);
+            canvas.drawCircle(Offset(x + direction * 2, y - 2), 5, rune);
+            canvas.drawLine(Offset(x - 2, y + 8), Offset(x + 4, y - 8), rune);
+            canvas.drawCircle(Offset(railX + direction * 29, y + 28), 2.4,
+              Paint()..color = const Color(0xFFC18BFF).withOpacity(.5)
+                ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
+          }
+        } else if (theme.id == 6) {
+          // Storm citadel: carved buttresses, cyan runes and lightning forks.
+          final stone = Paint()..color = const Color(0xFF344C59);
+          final rune = Paint()..color = const Color(0xFF75F4F0).withOpacity(.8)
+            ..style = PaintingStyle.stroke..strokeWidth = 1.7;
+          for (var i = 0; i < 5; i++) {
+            final y = 145.0 + i * (size.height - 205) / 5;
+            final buttress = Rect.fromLTWH(
+              left ? 5 : size.width - 25, y, 20, 34);
+            canvas.drawRRect(RRect.fromRectAndRadius(
+              buttress, const Radius.circular(3)), stone);
+            final bolt = Path()
+              ..moveTo(railX + direction * 10, y + 5)
+              ..lineTo(railX + direction * 2, y + 16)
+              ..lineTo(railX + direction * 11, y + 16)
+              ..lineTo(railX + direction * 4, y + 28);
+            canvas.drawPath(bolt, rune);
+            canvas.drawLine(Offset(railX, y + 33),
+              Offset(railX + direction * 8, y + 38), rune);
+          }
+        }
+      }
+    }
+
     final vignette = Paint()
       ..shader = RadialGradient(colors: [Colors.transparent, Colors.black.withOpacity(.48)],
         stops: const [0.55, 1]).createShader(rect);
