@@ -1,3 +1,5 @@
+import 'dart:math' show pi;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archero_fm/combat_targeting.dart';
 
