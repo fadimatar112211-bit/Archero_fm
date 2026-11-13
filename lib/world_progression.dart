@@ -13,7 +13,7 @@ class WorldStageProgression {
 
   final int bestStage;
 
-  int get maxUnlockedStage => bestStage.clamp(1, totalStages);
+  int get maxUnlockedStage => bestStage.clamp(1, totalStages).toInt();
 
   int get maxUnlockedWorld =>
       ((maxUnlockedStage - 1) ~/ stagesPerWorld) + 1;
