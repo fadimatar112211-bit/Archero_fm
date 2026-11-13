@@ -1,5 +1,3 @@
-import 'dart:math';
-
 class CoinPosition {
   const CoinPosition({required this.x, required this.y});
 
