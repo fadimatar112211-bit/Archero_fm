@@ -31,6 +31,7 @@ class ProgressStore {
     'equippedHelmetId': 0,
     'equippedRingId': 0,
     'equippedRelicId': 0,
+    'ownedEquipmentMask': 585,
   };
 
   // Serialize complete snapshots so overlapping saves cannot interleave.
@@ -60,6 +61,7 @@ class ProgressStore {
     final fallback = _defaults[key]!;
     final candidate = value ?? fallback;
     if (key == 'equippedWeaponId') return candidate >= 0 && candidate <= 3 ? candidate : 0;
+    if (key == 'ownedEquipmentMask') return candidate.clamp(0, 4095);
     if (key.startsWith('equipped')) return candidate >= 0 && candidate <= 2 ? candidate : 0;
     if (key == 'bestStage') return candidate < 1 ? 1 : candidate;
     return candidate < 0 ? 0 : candidate;
@@ -89,6 +91,7 @@ class ProgressStore {
       equippedHelmetId: progress.equippedHelmetId,
       equippedRingId: progress.equippedRingId,
       equippedRelicId: progress.equippedRelicId,
+      ownedEquipmentMask: progress.ownedEquipmentMask,
     );
   }
 
@@ -103,6 +106,7 @@ class ProgressStore {
     int equippedHelmetId = 0,
     int equippedRingId = 0,
     int equippedRelicId = 0,
+    int ownedEquipmentMask = 585,
   }) {
     final values = <String, int>{
       'coins': _validValue('coins', coins),
@@ -115,6 +119,7 @@ class ProgressStore {
       'equippedHelmetId': _validValue('equippedHelmetId', equippedHelmetId),
       'equippedRingId': _validValue('equippedRingId', equippedRingId),
       'equippedRelicId': _validValue('equippedRelicId', equippedRelicId),
+      'ownedEquipmentMask': _validValue('ownedEquipmentMask', ownedEquipmentMask),
     };
 
     final nextWrite = _pendingWrite.then((_) async {
