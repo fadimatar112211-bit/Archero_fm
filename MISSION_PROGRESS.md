@@ -433,3 +433,24 @@ Current verification state: world/stage implementation is committed to the featu
 ### Latest PR #45 CI history
 - An early run on the initial world-picker draft failed Dart analysis. The failure exposed a const-expression issue in the world-count model, a literal escaped newline in the world list expression, and use of unsupported test-view setup methods. These were corrected in follow-up commits.
 - Do not treat the earlier failed/cancelled runs as validation. Only the final workflow run for the exact latest head SHA can qualify the batch.
+
+
+## Session checkpoint — 2026-11-13 (PR #45 merged; Section 7 automated implementation complete)
+
+### Section 7 — world/stage selection and save recovery
+- PR #45, “Add world/stage selection and harden save recovery”, merged into `feature/procedural-game-audio-v2`.
+- Merge commit: `cd176d670f8c5ca92cca6375685eb3faf46e9516`.
+- Final tested head: `3152ce56db437407c1e0af9633a36be13e314a80`.
+- Final CI run: `43499311117` (run 864), conclusion **success** on that exact head.
+- Verified job steps: Flutter setup, dependency installation, Dart analysis, full Flutter tests, Android project generation, and Android debug APK build all passed.
+- The PR adds six-world/60-stage progression, Arabic world/stage selection, locked-stage interaction rules, independent recovery of wrong-typed progression values, and removal of malformed/wrong-typed optional run checkpoints without resetting valid wallet data.
+- Changed files in PR #45: `lib/world_progression.dart`, `lib/world_selection_screen.dart`, `lib/hero_selection_screen.dart`, `lib/progress_store.dart`, `lib/run_checkpoint.dart`, `test/world_progression_test.dart`, `test/world_selection_screen_test.dart`, `test/progress_store_test.dart`, `test/run_checkpoint_test.dart`, and `MISSION_PROGRESS.md`.
+- No physical Android device validation has been performed. World/stage selection and checkpoint resume are CI/build-validated only, not manually gameplay-verified.
+- Section 7's listed implementation work is now present and CI-validated. Keep the physical-device validation gap explicit; do not call it complete as a fully verified player experience until tested on Android.
+
+### Exact next actions
+1. Audit Section 8 against the actual integrated screens and HUD; do not assume the existing screens satisfy the listed requirements just because files exist.
+2. Prioritize the largest concrete missing Section 8 slice and implement it on a new feature branch from merge commit `cd176d670f8c5ca92cca6375685eb3faf46e9516`.
+3. Add focused widget/model tests, update this file, open a PR, and require successful analysis, full Flutter tests, Android project generation, and debug APK build on the exact final head before merging.
+4. Continue the remaining Section 8 and Section 9 requirements, then return for hands-on Android validation of checkpoint resume, world/stage selection, menus, combat, and progression.
+5. Keep all remaining requirements in Sections 1–6, 8, and 9 open until implemented and verified. The game is not complete.
