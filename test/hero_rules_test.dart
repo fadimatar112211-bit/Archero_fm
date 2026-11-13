@@ -16,7 +16,10 @@ void main() {
       for (final profile in HeroProfile.all) {
         expect(profile.activeSkillDescription, isNotEmpty);
         expect(profile.passiveSkillDescription, isNotEmpty);
+        expect(profile.activeSkillDamage, greaterThan(0));
       }
+      expect(HeroProfile.forType(3).triggersDodge, isTrue);
+      expect(HeroProfile.forType(1).triggersDodge, isFalse);
     });
 
     test('unknown hero ids safely use the balanced profile', () {
