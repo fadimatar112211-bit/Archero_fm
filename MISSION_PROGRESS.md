@@ -569,3 +569,11 @@ Verification status: code has been committed to the feature branch; CI/Flutter a
 - Workflow uploads emulator screenshot and logcat evidence as a 14-day artifact, including on failures when files were captured.
 - This is automated launch/UI smoke coverage, not yet automated full gameplay. Next extension: deterministic gameplay test hooks/scenarios for player movement, enemy approach/attacks, boss phases, and combat outcomes, then screenshot checkpoints for arena/loadout/shop.
 - Actual first workflow execution and artifact review are pending; do not claim emulator testing has passed until the run completes successfully.
+
+
+## Android Emulator QA — gameplay-route expansion
+
+- First automated run exposed a stale main-menu widget assertion: the test expected the old `ARCHERO: SOUND EDITION` title after the home-hub redesign. Updated it to the actual `ARCHERO · SOUND EDITION` title; no assertion was weakened.
+- Expanded `integration_test/app_smoke_test.dart` to launch the real app, open hero selection, choose the unlocked starter hero, enter world/stage selection, start stage 1, verify the live arena and pause control, perform a touch drag, activate the special-skill control, and assert no Flutter exception.
+- Changed the emulator workflow to capture a screenshot and logcat even when the integration test fails, preserving debugging evidence.
+- Emulator test execution still pending on the latest commits. It will not be marked passed until the new run completes.
