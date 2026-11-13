@@ -6,6 +6,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
+    ProgressStore.setWriteOverrideForTesting(null);
     SharedPreferences.setMockInitialValues({});
   });
 
@@ -98,5 +99,36 @@ void main() {
       'bestStage': 1,
       'bestScore': 0,
     });
+  });
+  test('propagates a failed write and recovers the serialized queue', () async {
+    var shouldFail = true;
+    ProgressStore.setWriteOverrideForTesting((key, value) async {
+      if (shouldFail) throw StateError('simulated storage failure');
+      return true;
+    });
+
+    await expectLater(
+      ProgressStore.save(
+        coins: 240,
+        hpUpgrade: 25,
+        atkUpgrade: 0,
+        bestStage: 2,
+        bestScore: 100,
+      ),
+      throwsA(isA<StateError>()),
+    );
+
+    shouldFail = false;
+    ProgressStore.setWriteOverrideForTesting((key, value) async => true);
+    await expectLater(
+      ProgressStore.save(
+        coins: 260,
+        hpUpgrade: 50,
+        atkUpgrade: 15,
+        bestStage: 3,
+        bestScore: 250,
+      ),
+      completes,
+    );
   });
 }
