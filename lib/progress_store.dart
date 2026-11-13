@@ -80,11 +80,22 @@ class ProgressStore {
     return candidate < 0 ? 0 : candidate;
   }
 
+  static int? _readStoredInt(ProgressPreferences preferences, String key) {
+    // SharedPreferences throws when an old/corrupted entry has a different
+    // runtime type. Isolate that failure to this key so valid progress in
+    // every other field can still be recovered.
+    try {
+      return preferences.getInt(key);
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Future<Map<String, int>> load() async {
     final prefs = await _preferencesProvider();
     return {
       for (final key in _defaults.keys)
-        key: _validValue(key, prefs.getInt(key)),
+        key: _validValue(key, _readStoredInt(prefs, key)),
     };
   }
 

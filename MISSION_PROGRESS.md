@@ -230,7 +230,7 @@ Files changed:
 
 Equipment shards now unlock equipment tiers as an alternative to coins (8 shards for tier 1, 20 for tier 2), with tier prerequisites and save-failure rollback. Remaining in Section 6: shard-based crafting/merging and duplicate conversion, gem sinks beyond keys, economy balancing against real run rewards, and further reward tables. Achievement-linked rewards are now implemented in the current follow-up branch. The new chest economy is an initial functional slice, not a complete economy.
 
-Section 7 progress: persistent hero unlocks are now implemented. The starter hero remains unlocked; the other three heroes can be unlocked for 50/75/100 gems. Unlocks and gem deductions are saved in the same complete progression snapshot, failed saves roll back the purchase, and locked heroes cannot start a run. Remaining in Section 7: save/restore the active run, achievement persistence/rewards (implemented in the current follow-up branch but awaiting merge), world/stage unlock gates, and stronger corruption recovery.
+Section 7 progress: persistent hero unlocks are now implemented. The starter hero remains unlocked; the other three heroes can be unlocked for 50/75/100 gems. Unlocks and gem deductions are saved in the same complete progression snapshot, failed saves roll back the purchase, and locked heroes cannot start a run. Section 7 update: achievement persistence/rewards and mid-run checkpoint save/restore are now merged and CI-validated; physical Android resume testing remains pending. World/stage unlock gates are being implemented in the current branch, and stronger corruption recovery remains open.
 
 
 ### Follow-up — Section 7: persistent hero unlocks
@@ -244,7 +244,7 @@ Implemented in merged PR #42:
 - Kept hero ownership intact through chest purchases, equipment actions, and health/attack shop upgrades.
 - Added tests for ownership-mask normalization, persistence, and the successful hero unlock UI flow.
 
-Remaining in Section 7: mid-run checkpoint save/restore, achievements and reward claims, world/stage unlock gates, and stronger save corruption recovery.
+Remaining in Section 7: physical-device verification of mid-run checkpoint resume, world/stage unlock gates (current implementation batch pending CI), and stronger save corruption recovery.
 
 
 ### Follow-up PR #43 — persistent achievements and reward claims
@@ -278,7 +278,7 @@ Changed files:
 - `test/progress_store_failure_test.dart`
 - `test/widget_test.dart`
 
-Remaining in Section 7: mid-run checkpoint save/restore, world/stage unlock gates, and stronger save corruption recovery. The achievement system is an initial persistent milestone set; more progression goals and reward tuning remain open.
+Remaining in Section 7: physical-device verification of mid-run checkpoint resume, world/stage unlock gates (current implementation batch pending CI), and stronger save corruption recovery. The achievement system is an initial persistent milestone set; more progression goals and reward tuning remain open.
 
 
 ## Session checkpoint — 2026-11-13 (latest verified state)
@@ -385,3 +385,51 @@ Verification status at the first checkpoint: implementation had not yet been val
 6. Continue Section 7 with world/stage unlock gates, then stronger save-corruption recovery.
 
 Keep all other roadmap requirements open until implemented and verified. Never treat PR creation, code presence, or an in-progress workflow as completion.
+
+
+## Session checkpoint — 2026-11-13 (PR #44 merged; world/stage progression UI in progress)
+
+### Section 7 — mid-run checkpoint save/restore: merged and CI-validated
+- PR #44, “Add persistent mid-run checkpoint save and resume”, has been merged into `feature/procedural-game-audio-v2`.
+- Merge commit: `d48b1219158d9ea2556adc87f4cbcf93388c5fc5`.
+- Final-head commit tested: `024e33ecc91d8157e595a4894dfbd5ba618fc23e`.
+- Final CI run `43497196443` (run 827) completed successfully. Verified steps: Flutter setup, dependency installation, Dart analysis, full Flutter tests, Android project generation, and Android debug APK build.
+- Manual Android device validation of pause/background/force-close/resume behavior remains outstanding; do not mark the feature as manually gameplay-verified.
+- The checkpoint does not overwrite persistent wallet coins; the player progression store remains the source of truth.
+
+### Section 7 — world/stage unlock gates: implementation branch
+- Branch: `feature/world-stage-progression`, created from the validated PR #44 head.
+- Added `WorldStageProgression` as a pure rules model for six worlds with ten stages each. It clamps saved progress to stages 1–60, unlocks each next stage only as progression advances, and opens the next world at its first stage after the previous world is cleared.
+- Added `WorldSelectionScreen`: all six world identities are visible; locked worlds/stages remain locked; only unlocked stages can be selected; the player's saved best stage is the default selection; starting a selected stage clears any previous run checkpoint before opening a fresh run.
+- Replaced the old “new run / continue at best stage” dialog after hero selection with the actual world/stage selection screen.
+- Added model boundary tests and widget tests for unlocked-world display, default stage selection, and rejection of a locked stage tap.
+
+Files added/changed in this batch:
+- `lib/world_progression.dart` (new)
+- `lib/world_selection_screen.dart` (new)
+- `lib/hero_selection_screen.dart`
+- `test/world_progression_test.dart` (new)
+- `test/world_selection_screen_test.dart` (new)
+- `MISSION_PROGRESS.md`
+
+Current verification state: world/stage implementation is committed to the feature branch but has not yet been validated by CI. Do not merge it until the new PR's Dart analysis, complete Flutter test suite, Android project generation, and Android debug APK build all pass. Physical Android UI/gameplay validation remains outstanding.
+
+### Exact next actions
+1. Open PR from `feature/world-stage-progression` into `feature/procedural-game-audio-v2`.
+2. Run and inspect all CI checks on the exact latest head; fix failures before merge.
+3. After CI passes, merge and record the merge SHA and run ID.
+4. Continue Section 7 with stronger save-corruption recovery (including invalid payload handling, safe defaults, and preserving valid progress where possible).
+5. Later, perform hands-on Android validation of checkpoint resume and world/stage selection; do not claim manual verification prematurely.
+6. Keep the nine-section roadmap open; the project is not complete.
+
+
+### Section 7 — save-corruption recovery hardening (added to PR #45)
+- Progression reads now isolate a wrong-typed/corrupt SharedPreferences entry to that one key instead of allowing it to throw out of the whole profile load. Valid coins, gems, stage progress, counters, and equipment data in other keys remain available.
+- Invalid optional run-checkpoint JSON and checkpoints stored under the wrong preference type are now discarded from the checkpoint key only. They do not affect the separately stored player progression.
+- Added regression tests proving that valid progression survives a wrong-typed best-stage key, malformed checkpoint text is removed, and a wrong-typed checkpoint entry is removed without touching the wallet.
+- Updated files: `lib/progress_store.dart`, `lib/run_checkpoint.dart`, `test/progress_store_test.dart`, `test/run_checkpoint_test.dart`.
+- These changes are implementation-only until the latest PR #45 CI run succeeds; no manual device validation has been performed.
+
+### Latest PR #45 CI history
+- An early run on the initial world-picker draft failed Dart analysis. The failure exposed a const-expression issue in the world-count model, a literal escaped newline in the world list expression, and use of unsupported test-view setup methods. These were corrected in follow-up commits.
+- Do not treat the earlier failed/cancelled runs as validation. Only the final workflow run for the exact latest head SHA can qualify the batch.

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'game_painters.dart';
 import 'game_progress.dart';
-import 'run_checkpoint.dart';
-import 'game_screen.dart';
+import 'world_selection_screen.dart';
 import 'hero_rules.dart';
 
 class HeroInfo {
@@ -106,35 +105,17 @@ class _HeroSelectionScreenState extends State<HeroSelectionScreen> {
 
   Future<void> _startHero(HeroInfo hero) async {
     if (!_isUnlocked(hero.id) || _savingUnlock) return;
-    try { await playRealSound('special'); } catch (_) {}
-    var selectedStage = 1;
-    if (bestStage > 1) {
-      final choice = await showDialog<int>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('اختر طريقة اللعب'),
-          content: Text('أفضل تقدم محفوظ لديك هو المرحلة $bestStage.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, 1),
-              child: const Text('مغامرة جديدة'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, bestStage),
-              child: Text('متابعة من المرحلة $bestStage'),
-            ),
-          ],
-        ),
-      );
-      if (!mounted || choice == null) return;
-      selectedStage = choice;
-    }
+    try {
+      await playRealSound('special');
+    } catch (_) {}
     if (!mounted) return;
-    try { await RunCheckpointStore.clear(); } catch (_) {}
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => GameScreen(heroType: hero.id, initialStage: selectedStage),
+        builder: (_) => WorldSelectionScreen(
+          heroType: hero.id,
+          heroName: hero.name,
+        ),
       ),
     );
   }
