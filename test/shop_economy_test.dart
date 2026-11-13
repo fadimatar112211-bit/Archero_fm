@@ -42,4 +42,46 @@ void main() {
     expect(ShopEconomy.health(75).level, 3);
     expect(ShopEconomy.attack(60).level, 4);
   });
+  group('commitUpgradePurchase', () {
+    test('persists the proposed purchase before returning success', () async {
+      var persistedCoins = -1;
+      var persistedUpgrade = -1;
+      final result = await commitUpgradePurchase(
+        upgrade: ShopEconomy.health(0), currentCoins: 100, currentUpgradeValue: 0,
+        persist: (coins, upgradeValue) async { persistedCoins = coins; persistedUpgrade = upgradeValue; },
+      );
+      expect(result.status, ShopPurchaseStatus.purchased);
+      expect(result.remainingCoins, 50);
+      expect(result.updatedUpgradeValue, 25);
+      expect(persistedCoins, 50);
+      expect(persistedUpgrade, 25);
+    });
+    test('leaves the purchase unapplied when persistence fails', () async {
+      var attempted = false;
+      const coins = 100;
+      const upgradeValue = 0;
+      final result = await commitUpgradePurchase(
+        upgrade: ShopEconomy.health(upgradeValue), currentCoins: coins, currentUpgradeValue: upgradeValue,
+        persist: (_, __) async { attempted = true; throw StateError('storage unavailable'); },
+      );
+      expect(attempted, isTrue);
+      expect(result.status, ShopPurchaseStatus.persistenceFailed);
+      expect(result.remainingCoins, coins);
+      expect(result.updatedUpgradeValue, upgradeValue);
+    });
+    test('does not call persistence for unaffordable or maxed upgrades', () async {
+      var calls = 0;
+      Future<void> persist(int _, int __) async { calls++; }
+      final poor = await commitUpgradePurchase(
+        upgrade: ShopEconomy.health(0), currentCoins: 10, currentUpgradeValue: 0, persist: persist,
+      );
+      final maxed = await commitUpgradePurchase(
+        upgrade: ShopEconomy.health(500), currentCoins: 10000, currentUpgradeValue: 500, persist: persist,
+      );
+      expect(poor.status, ShopPurchaseStatus.insufficientFunds);
+      expect(maxed.status, ShopPurchaseStatus.maxLevel);
+      expect(calls, 0);
+    });
+  });
+
 }
