@@ -40,6 +40,9 @@ void main() {
         'equippedRingId': 0,
         'equippedRelicId': 0,
         'ownedEquipmentMask': 585,
+        'gems': 0,
+        'keys': 0,
+        'equipmentShards': 0,
     });
   });
 
@@ -162,7 +165,7 @@ void main() {
   });
 
   test('rolls back a partially failed snapshot and keeps the queue usable', () async {
-    final initial = <String, int>{'coins': 200, 'hpUpgrade': 10, 'atkUpgrade': 5, 'bestStage': 3, 'bestScore': 90, 'equippedWeaponId': 0, 'equippedArmorId': 0, 'equippedHelmetId': 0, 'equippedRingId': 0, 'equippedRelicId': 0, 'ownedEquipmentMask': 585};
+    final initial = <String, int>{'coins': 200, 'hpUpgrade': 10, 'atkUpgrade': 5, 'bestStage': 3, 'bestScore': 90, 'equippedWeaponId': 0, 'equippedArmorId': 0, 'equippedHelmetId': 0, 'equippedRingId': 0, 'equippedRelicId': 0, 'ownedEquipmentMask': 585, 'gems': 0, 'keys': 0, 'equipmentShards': 0};
     final preferences = _FailingProgressPreferences(Map<String, int>.from(initial), failKey: 'atkUpgrade');
     ProgressStore.setPreferencesProviderForTesting(() async => preferences);
     await expectLater(
@@ -171,13 +174,13 @@ void main() {
     );
     expect(preferences.values, initial);
     await ProgressStore.save(coins: 250, hpUpgrade: 20, atkUpgrade: 15, bestStage: 4, bestScore: 150);
-    expect(preferences.values, {'coins': 250, 'hpUpgrade': 20, 'atkUpgrade': 15, 'bestStage': 4, 'bestScore': 150, 'equippedWeaponId': 0, 'equippedArmorId': 0, 'equippedHelmetId': 0, 'equippedRingId': 0, 'equippedRelicId': 0, 'ownedEquipmentMask': 585});
+    expect(preferences.values, {'coins': 250, 'hpUpgrade': 20, 'atkUpgrade': 15, 'bestStage': 4, 'bestScore': 150, 'equippedWeaponId': 0, 'equippedArmorId': 0, 'equippedHelmetId': 0, 'equippedRingId': 0, 'equippedRelicId': 0, 'ownedEquipmentMask': 585, 'gems': 0, 'keys': 0, 'equipmentShards': 0});
   });
 
   test('persists equipped weapon with the progression snapshot', () async {
-    await ProgressStore.save(coins:300,hpUpgrade:25,atkUpgrade:15,bestStage:4,bestScore:600,equippedWeaponId:2,equippedArmorId:1,equippedHelmetId:2,equippedRingId:1,equippedRelicId:2,ownedEquipmentMask:585 | (1<<1) | (1<<5) | (1<<7) | (1<<11));
+    await ProgressStore.save(coins:300,hpUpgrade:25,atkUpgrade:15,bestStage:4,bestScore:600,equippedWeaponId:2,equippedArmorId:1,equippedHelmetId:2,equippedRingId:1,equippedRelicId:2,ownedEquipmentMask:585 | (1<<1) | (1<<5) | (1<<7) | (1<<11), gems: 7, keys: 3, equipmentShards: 12);
     final p = await ProgressStore.loadPlayerProgress();
-    expect(p.equippedWeaponId,2); expect(p.equippedArmorId,1); expect(p.equippedHelmetId,2); expect(p.equippedRingId,1); expect(p.equippedRelicId,2); expect(p.ownedEquipmentMask,585 | (1<<1) | (1<<5) | (1<<7) | (1<<11));
+    expect(p.equippedWeaponId,2); expect(p.equippedArmorId,1); expect(p.equippedHelmetId,2); expect(p.equippedRingId,1); expect(p.equippedRelicId,2); expect(p.ownedEquipmentMask,585 | (1<<1) | (1<<5) | (1<<7) | (1<<11)); expect(p.gems,7); expect(p.keys,3); expect(p.equipmentShards,12);
   });
   test('persists and restores the unlocked equipment mask', () async {
     const mask = 585 | (1 << 1) | (1 << 5) | (1 << 7);
