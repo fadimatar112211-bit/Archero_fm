@@ -35,6 +35,7 @@ import 'enemy_hit_resolution.dart';
 import 'game_painters.dart';
 import 'game_actor_widgets.dart';
 import 'game_overlay_widgets.dart';
+import 'skill_selection_dialog.dart';
 
 typedef GameObject = Map<String, dynamic>;
 
@@ -784,45 +785,7 @@ class _GameScreenState extends State<GameScreen>
       currentHp: playerHp,
       maxHp: playerMaxHp,
     );
-    final choice = await showDialog<SkillId>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(
-          '✨ اختر مهارة للمرحلة القادمة',
-          style: TextStyle(color: Colors.amber),
-        ),
-        content: const Text(
-          'كل ترقية تمنحك ميزة تستمر خلال هذه الجولة. '
-          'تزداد فرصة ظهور المهارات النادرة مع تقدمك.',
-        ),
-        actions: offers.map((skill) {
-          final rarityLabel = switch (skill.rarity) {
-            SkillRarity.common => 'عادية',
-            SkillRarity.rare => 'نادرة',
-            SkillRarity.epic => 'ملحمية',
-          };
-          final rarityColor = switch (skill.rarity) {
-            SkillRarity.common => Colors.white70,
-            SkillRarity.rare => Colors.lightBlueAccent,
-            SkillRarity.epic => Colors.purpleAccent,
-          };
-          return TextButton(
-            onPressed: () => Navigator.pop(dialogContext, skill.id),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(skill.title),
-                Text(
-                  '$rarityLabel · ${skill.description}',
-                  style: TextStyle(color: rarityColor, fontSize: 11),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
+    final choice = await showSkillSelectionDialog(context, offers);
 
     if (!mounted || gameOverShown) return;
     final upgrade = applySkillUpgrade(
