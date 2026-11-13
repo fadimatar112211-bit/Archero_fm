@@ -17,6 +17,7 @@ int ownedEquipmentMask = 585;
 int globalGems = 0;
 int globalKeys = 0;
 int globalEquipmentShards = 0;
+int unlockedHeroesMask = 1;
 
 /// Loads saved progression, falling back to safe defaults if storage is
 /// unavailable so a transient persistence failure cannot block game startup.
@@ -57,6 +58,7 @@ Future<void> saveProgress() async {
         gems: globalGems,
         keys: globalKeys,
         equipmentShards: globalEquipmentShards,
+        unlockedHeroesMask: unlockedHeroesMask,
       ),
     );
   } catch (error, stackTrace) {
