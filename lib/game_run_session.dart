@@ -4,12 +4,14 @@ import 'game_timers.dart';
 
 /// Single owner for the data and lifecycle of one active game session.
 class GameRunSession {
-  GameRunSession({int initialStage = 1})
-      : state = GameRunState(initialStage: initialStage),
+  GameRunSession({int initialStage = 1, GameRunState? restoredState})
+      : state = restoredState ?? GameRunState(initialStage: initialStage),
+        isRestored = restoredState != null,
         lifecycle = GameRunLifecycle(),
         timers = GameTimerRegistry();
 
   final GameRunState state;
+  final bool isRestored;
   final GameRunLifecycle lifecycle;
   final GameTimerRegistry timers;
 
