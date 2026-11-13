@@ -33,8 +33,13 @@ void main() {
       (tester) async {
     await tester.pumpWidget(const ArcheroSoundApp());
 
-    final attackButton = find.text('هجوم +15 · المستوى 0/15 · 70 عملة');
+    final attackLabel = find.text('هجوم +15 · المستوى 0/15 · 70 عملة');
+    final attackButton = find.ancestor(
+      of: attackLabel,
+      matching: find.byType(FilledButton),
+    );
     await tester.ensureVisible(attackButton);
+    expect(tester.widget<FilledButton>(attackButton).onPressed, isNotNull);
     await tester.tap(attackButton);
     await tester.pumpAndSettle();
 
