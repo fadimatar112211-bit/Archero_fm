@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'world_theme.dart';
+import 'room_layout.dart';
 import 'game_render_rules.dart';
 
 class EnemyAuraPainter extends CustomPainter {
@@ -559,10 +560,12 @@ class FighterSpritePainter extends CustomPainter {
 class ArenaPainter extends CustomPainter {
   ArenaPainter({
     this.theme = WorldTheme.forest,
+    this.roomLayout,
     this.animation,
   }) : super(repaint: animation);
 
   final WorldTheme theme;
+  final RoomLayout? roomLayout;
   final Animation<double>? animation;
 
   @override
@@ -1018,6 +1021,97 @@ class ArenaPainter extends CustomPainter {
       }
     }
 
+    // Stage-specific room geometry and a visible, damaging environmental
+    // hazard make each encounter layout mechanically distinct.
+    final layout = roomLayout ?? RoomLayout.forStage(1);
+    final propShadow = Paint()
+      ..color = Colors.black.withOpacity(.32)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+    final propBase = Paint()..color = const Color(0xFF29343B);
+    final propTop = Paint()..color = theme.tileColor.withOpacity(.88);
+    final propEdge = Paint()
+      ..color = theme.accentColor.withOpacity(.62)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+    for (final prop in layout.props) {
+      final center = Offset(prop.centerX * size.width, prop.centerY * size.height);
+      final propRect = Rect.fromCenter(
+        center: center,
+        width: prop.width * size.width,
+        height: prop.height * size.height,
+      );
+      canvas.save();
+      canvas.translate(center.dx, center.dy);
+      canvas.rotate(prop.rotation);
+      final local = Rect.fromCenter(
+        center: Offset.zero,
+        width: propRect.width,
+        height: propRect.height,
+      );
+      final localRounded = RRect.fromRectAndRadius(local, const Radius.circular(9));
+      canvas.drawRRect(localRounded.shift(const Offset(0, 5)), propShadow);
+      canvas.drawRRect(localRounded, propBase);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          local.deflate(3).shift(const Offset(0, -2)),
+          const Radius.circular(7),
+        ),
+        propTop,
+      );
+      canvas.drawLine(
+        Offset(local.left + 7, local.top + 5),
+        Offset(local.right - 7, local.top + 5),
+        propEdge,
+      );
+      canvas.restore();
+    }
+
+    final hazard = layout.hazard;
+    final hazardCenter = Offset(
+      hazard.centerX * size.width,
+      hazard.centerY * size.height,
+    );
+    final hazardRect = Rect.fromCenter(
+      center: hazardCenter,
+      width: hazard.width * size.width,
+      height: hazard.height * size.height,
+    );
+    final hazardColor = switch (hazard.kind) {
+      RoomHazardKind.thorns => const Color(0xFFB6E36B),
+      RoomHazardKind.lava => const Color(0xFFFF542E),
+      RoomHazardKind.frost => const Color(0xFF9CEBFF),
+      RoomHazardKind.sand => const Color(0xFFE7C16C),
+      RoomHazardKind.shadow => const Color(0xFFB77AFF),
+      RoomHazardKind.storm => const Color(0xFF64E8F0),
+    };
+    final hazardGlow = Paint()
+      ..color = hazardColor.withOpacity(.25)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+    final hazardFill = Paint()..color = hazardColor.withOpacity(.22);
+    final hazardStroke = Paint()
+      ..color = hazardColor.withOpacity(.85)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    final hazardRRect = RRect.fromRectAndRadius(
+      hazardRect,
+      const Radius.circular(10),
+    );
+    canvas.drawRRect(hazardRRect, hazardGlow);
+    canvas.drawRRect(hazardRRect, hazardFill);
+    canvas.drawRRect(hazardRRect, hazardStroke);
+    final stripe = Paint()
+      ..color = hazardColor.withOpacity(.8)
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 4; i++) {
+      final x = hazardRect.left + 8 + i * (hazardRect.width - 16) / 3;
+      canvas.drawLine(
+        Offset(x, hazardRect.top + 5),
+        Offset(x + 7, hazardRect.bottom - 5),
+        stripe,
+      );
+    }
+
     final vignette = Paint()
       ..shader = RadialGradient(colors: [Colors.transparent, Colors.black.withOpacity(.48)],
         stops: const [0.55, 1]).createShader(rect);
@@ -1026,7 +1120,9 @@ class ArenaPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant ArenaPainter oldDelegate) =>
-      oldDelegate.theme.id != theme.id || oldDelegate.animation != animation;
+      oldDelegate.theme.id != theme.id ||
+      oldDelegate.roomLayout?.stage != roomLayout?.stage ||
+      oldDelegate.animation != animation;
 }
 
 /// Displays one cell from a horizontal vector sprite sheet.

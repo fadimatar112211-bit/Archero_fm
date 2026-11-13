@@ -4,6 +4,7 @@ import 'game_actor_widgets.dart';
 import 'game_overlay_widgets.dart';
 import 'game_painters.dart';
 import 'world_theme.dart';
+import 'room_layout.dart';
 
 /// Flutter-only presentation for an active arena.
 ///
@@ -21,6 +22,7 @@ class GameArenaView extends StatelessWidget {
     required this.playerMaxHp,
     required this.worldAnimation,
     required this.worldTheme,
+    required this.roomLayout,
     required this.coinActors,
     required this.playerArrows,
     required this.enemyProjectiles,
@@ -52,6 +54,7 @@ class GameArenaView extends StatelessWidget {
   final double playerMaxHp;
   final Animation<double> worldAnimation;
   final WorldTheme worldTheme;
+  final RoomLayout roomLayout;
   final List<Map<String, dynamic>> coinActors;
   final List<Map<String, dynamic>> playerArrows;
   final List<Map<String, dynamic>> enemyProjectiles;
@@ -108,6 +111,7 @@ class GameArenaView extends StatelessWidget {
                       child: CustomPaint(
                         painter: ArenaPainter(
                           theme: worldTheme,
+                          roomLayout: roomLayout,
                           animation: worldAnimation,
                         ),
                       ),

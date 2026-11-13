@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archero_fm/game_arena_view.dart';
 import 'package:archero_fm/world_theme.dart';
+import 'package:archero_fm/room_layout.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +34,7 @@ void main() {
       playerMaxHp: 100,
       worldAnimation: animation,
       worldTheme: WorldTheme.forest,
+      roomLayout: RoomLayout.forStage(3),
       coinActors: const [],
       playerArrows: const [],
       enemyProjectiles: const [],
