@@ -13,24 +13,50 @@ Target: deliver the most complete, stable, fully playable release possible by **
 - The comprehensive hands-on Android gameplay test is reserved for the end of the implementation cycle, as requested. Use automated analysis, unit/widget tests, and Android builds during development; these are not substitutes for final hands-on playtesting.
 - Fix discovered deficiencies promptly rather than merely recording them.
 
-## Accelerated execution strategy
+## Exactly five execution tracks — the complete game scope
 
-Work in large, coherent, parallelizable workstreams instead of waiting for every small subtask to finish before starting the next. Use independent branches where practical, avoid overlapping edits, integrate in safe batches, resolve conflicts, and run automated checks before merging. Keep pull requests ready for review (not draft); merge only after the relevant checks pass.
+The project is managed through **five tracks only**. The original 14 missions and 212 subtasks remain the authoritative checklist, but they are no longer treated as separate execution lanes. Every original subtask must be assigned to one primary track and retain its original ID for traceability. No task may be omitted, duplicated as separate work, renamed, or invented.
 
-### Workstreams
+### Track 1 — Architecture and technical foundation
+Owns the internal structure that makes the whole game maintainable and reliable:
+- code organization and separation of Flutter presentation from game/domain logic;
+- run/session state, lifecycle, timers, resource ownership, and transitions between systems;
+- shared systems, data models, diagnostics, logging, error handling, and safe failure recovery;
+- integration boundaries and technical foundations used by every other track.
 
-1. **Architecture and code organization** — separate presentation, run/session lifecycle, state, timers, diagnostics, and domain responsibilities.
-2. **Player and combat** — movement, aiming, attacks, projectiles, damage, hit feedback, and combat flow.
-3. **Enemies and bosses** — spawning, waves, AI, attacks, boss behavior, and defeat/reward flow.
-4. **Rooms, stages, and progression flow** — room transitions, stage completion, encounters, and run lifecycle.
-5. **Weapons, equipment, and skills** — preserve existing systems and ensure their effects integrate correctly.
-6. **Economy and shop** — coins, rewards, purchases, failure handling, and consistency.
-7. **Saving and permanent progression** — persistence, upgrades, player data, and safe recovery from failures.
-8. **UI and player experience** — menus, HUD, dialogs, navigation, feedback, and usability.
-9. **Audio and effects** — sound, visual effects, feedback, resource ownership, and performance.
-10. **Quality and release readiness** — automated regression checks, diagnostics, performance review, Android packaging, and final hands-on gameplay validation.
+### Track 2 — Gameplay, player, combat, enemies, and equipment
+Owns the moment-to-moment playable experience:
+- player controls, movement, aiming, attacks, projectiles, damage, health, and defeat;
+- enemy spawning, waves, behavior, attacks, bosses, and combat encounters;
+- weapons, equipment, skills, abilities, upgrades that affect combat, and balancing;
+- combat feedback and all gameplay mechanics needed for a complete playable run.
 
-These are execution lanes, not a replacement or renumbering of the original 14-mission / 212-subtask roadmap. Map every change back to the original subtask IDs.
+### Track 3 — World, rooms, stages, content, and progression flow
+Owns where the player goes and how a run unfolds:
+- room generation/layout, room rules, doors, transitions, and encounter sequencing;
+- stages, chapters, maps, progression gates, completion/failure flow, and replay flow;
+- chests, rewards and content placement where tied to room/stage progression;
+- end-to-end continuity from starting a run through completing or losing it.
+
+### Track 4 — Economy, saving, rewards, and permanent player progression
+Owns the game's resource and long-term progression loop:
+- coins, currencies, drops, rewards, costs, purchases, shops, and transaction failure handling;
+- player profile/data, save/load, persistence, recovery, and data integrity;
+- permanent upgrades, progression systems, unlocks, and reward accounting;
+- consistency between gameplay rewards, shop spending, and saved progression.
+
+### Track 5 — Interface, experience, audio/visuals, quality, and release
+Owns how the game is presented, understood, felt, and validated:
+- HUD, menus, dialogs, settings, navigation, onboarding, and usability;
+- music, sound effects, animation, particles, visual effects, and presentation polish;
+- accessibility/readability and player feedback;
+- automated tests, regression coverage, performance, crash fixes, Android packaging/builds, and final hands-on Android gameplay validation.
+
+### Rules for assigning the original 212 subtasks
+- Assign each original subtask to exactly one primary track according to its main deliverable; cross-track dependencies are recorded as references, not duplicate task entries.
+- Keep original mission/subtask IDs (for example, 1.1–1.16) unchanged in commits, PR descriptions, and this file.
+- Preserve all 14 original mission titles and all 212 descriptions verbatim in the canonical checklist. The currently available repository checkpoint contains the exact text of Mission 1 (16 subtasks), but not the complete verbatim text of Missions 2–14. Do not fabricate those descriptions or claim that a detailed 212-row mapping has been completed until the original source text is recovered and each ID is mapped.
+- The five tracks are the only execution/reporting lanes. The 14 missions and 212 subtasks remain the source checklist underneath them, not additional tracks.
 
 ## Priority order under the accelerated deadline
 
