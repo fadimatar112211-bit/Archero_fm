@@ -12,6 +12,7 @@ import 'world_theme.dart';
 import 'combat_stats.dart';
 import 'combat_targeting.dart';
 import 'combat_timing.dart';
+import 'combat_effects.dart';
 import 'coin_collection.dart';
 import 'enemy_ai.dart';
 import 'enemy_spawn.dart';
@@ -338,8 +339,8 @@ class _GameScreenState extends State<GameScreen>
     if (playerMoveTicks > 0) playerMoveTicks--;
 
     // Advance short-lived combat visuals through the standalone timing system.
-    tickTimedEntities(defeatedSprites);
-    tickTimedEntities(combatEffects);
+    CombatEffectManager.advance(defeatedSprites);
+    CombatEffectManager.advance(combatEffects);
 
     // تحريك مقذوفات الأعداء وفحص إصابة اللاعب.
     for (int i = enemyProjectiles.length - 1; i >= 0; i--) {
