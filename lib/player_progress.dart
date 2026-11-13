@@ -29,7 +29,7 @@ class PlayerProgress {
     final helmetId = gearId('equippedHelmetId');
     final ringId = gearId('equippedRingId');
     final relicId = gearId('equippedRelicId');
-    var ownedMask = (values['ownedEquipmentMask'] ?? 585).clamp(0, 4095);
+    var ownedMask = (values['ownedEquipmentMask'] ?? 585).clamp(0, 4095).toInt();
     ownedMask |= 1 << armorId;
     ownedMask |= 1 << (3 + helmetId);
     ownedMask |= 1 << (6 + ringId);
