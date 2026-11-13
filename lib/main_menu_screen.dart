@@ -57,6 +57,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         atkUpgrade: upgradeValue,
         bestStage: bestStage,
         bestScore: bestScore,
+        equippedWeaponId: equippedWeaponId,
       ),
     );
     debugPrint('[Shop] attack purchase result: ${purchase.status} remaining=${purchase.remainingCoins}');

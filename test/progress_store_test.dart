@@ -100,6 +100,7 @@ void main() {
       'atkUpgrade': 0,
       'bestStage': 1,
       'bestScore': 0,
+      'equippedWeaponId': 0,
     });
   });
 
@@ -118,6 +119,7 @@ void main() {
       'atkUpgrade': 0,
       'bestStage': 1,
       'bestScore': 0,
+      'equippedWeaponId': 0,
     });
   });
 
