@@ -8,8 +8,9 @@ import 'world_theme.dart';
 class WorldStageProgression {
   const WorldStageProgression({required this.bestStage});
 
+  static const int worldCount = 6;
   static const int stagesPerWorld = 10;
-  static const int totalStages = WorldRules.all.length * stagesPerWorld;
+  static const int totalStages = worldCount * stagesPerWorld;
 
   final int bestStage;
 
