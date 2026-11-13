@@ -1286,14 +1286,7 @@ class _GameScreenState extends State<GameScreen> {
                       'boss' => Colors.deepPurple,
                       _ => Colors.red,
                     };
-                    final enemyIcon = switch (enemyType) {
-                      'ranged' => Icons.bolt,
-                      'runner' => Icons.flash_on,
-                      'tank' => Icons.shield,
-                      'stalker' => Icons.visibility,
-                      'boss' => Icons.whatshot,
-                      _ => Icons.pest_control,
-                    };
+
                     final walkPhase = (enemy['walkPhase'] as double?) ?? 0.0;
                     final enemyPhase = walkPhase + (enemy['x'] as double) * 0.03;
                     final enemyAttacking =
@@ -1610,31 +1603,7 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  Color _heroColor() {
-    switch (widget.heroType) {
-      case 2:
-        return Colors.deepOrange;
-      case 3:
-        return Colors.purple;
-      case 4:
-        return Colors.teal;
-      default:
-        return Colors.blue;
-    }
-  }
 
-  IconData _heroIcon() {
-    switch (widget.heroType) {
-      case 2:
-        return Icons.local_fire_department;
-      case 3:
-        return Icons.speed;
-      case 4:
-        return Icons.bolt;
-      default:
-        return Icons.person;
-    }
-  }
 }
 
 class EnemyAuraPainter extends CustomPainter {
@@ -1776,7 +1745,7 @@ class RangedProjectilePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant RangedProjectilePainter oldDelegate) => oldDelegate.theme.id != theme.id;
+  bool shouldRepaint(covariant RangedProjectilePainter oldDelegate) => false;
 }
 
 class ArrowSpritePainter extends CustomPainter {
@@ -1788,7 +1757,7 @@ class ArrowSpritePainter extends CustomPainter {
     canvas.drawLine(const Offset(2, 6), const Offset(21, 6), glow);
     canvas.drawLine(const Offset(2, 6), const Offset(21, 6), shaft);
     final head = Path()..moveTo(24, 6)..lineTo(16, 1)..lineTo(17, 6)..lineTo(16, 11)..close();
-    canvas.drawPath(head, Paint()..color = theme.accentColor);
+    canvas.drawPath(head, Paint()..color = const Color(0xFFFFA52F));
     canvas.drawLine(const Offset(5, 6), const Offset(1, 2), shaft);
     canvas.drawLine(const Offset(5, 6), const Offset(1, 10), shaft);
   }
