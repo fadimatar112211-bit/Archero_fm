@@ -1,3 +1,5 @@
+import 'skill_system.dart';
+
 typedef GameRunEntity = Map<String, dynamic>;
 
 /// Mutable data owned by a single run, independent from Flutter widget state.
@@ -22,6 +24,8 @@ class GameRunState {
   int animationTicks = 0;
   int heroAttackTicks = 0;
   int playerMoveTicks = 0;
+  final List<SkillId> selectedSkills = [];
+  final Set<SkillSynergyId> activeSkillSynergies = {};
   final List<GameRunEntity> combatEffects = [];
   final List<GameRunEntity> defeatedSprites = [];
 

@@ -11,6 +11,32 @@ enum SkillId {
   swiftHands,
 }
 
+enum SkillSynergyId { stormVolley, shatterpoint, treasureHeart }
+
+String skillSynergyName(SkillSynergyId synergy) => switch (synergy) {
+  SkillSynergyId.stormVolley => 'وابل العاصفة',
+  SkillSynergyId.shatterpoint => 'نقطة الانهيار',
+  SkillSynergyId.treasureHeart => 'قلب الكنوز',
+};
+
+String skillSynergyDescription(SkillSynergyId synergy) => switch (synergy) {
+  SkillSynergyId.stormVolley => 'زيادة سرعة الإطلاق 10% عند جمع وابل السهام وسرعة الرامي.',
+  SkillSynergyId.shatterpoint => 'زيادة فرصة الضربة الحرجة 5% عند جمع الصقيع والضربة الحرجة.',
+  SkillSynergyId.treasureHeart => 'زيادة الصحة القصوى والحالية 15 عند جمع جاذب الكنوز وقلب العملاق.',
+};
+
+Set<SkillSynergyId> resolveSkillSynergies(Iterable<SkillId> skills) {
+  final selected = skills.toSet();
+  return {
+    if (selected.contains(SkillId.extraArrow) && selected.contains(SkillId.swiftHands))
+      SkillSynergyId.stormVolley,
+    if (selected.contains(SkillId.frostAura) && selected.contains(SkillId.criticalStrike))
+      SkillSynergyId.shatterpoint,
+    if (selected.contains(SkillId.coinMagnet) && selected.contains(SkillId.vitality))
+      SkillSynergyId.treasureHeart,
+  };
+}
+
 enum SkillRarity { common, rare, epic }
 
 class SkillOption {
@@ -136,6 +162,8 @@ class SkillRuntimeStats {
     required this.coinPickupRadius,
     required this.criticalChance,
     required this.attackSpeedMultiplier,
+    this.selectedSkills = const [],
+    this.activeSynergies = const {},
   });
 
   final int extraArrows;
@@ -146,6 +174,8 @@ class SkillRuntimeStats {
   final double coinPickupRadius;
   final double criticalChance;
   final double attackSpeedMultiplier;
+  final List<SkillId> selectedSkills;
+  final Set<SkillSynergyId> activeSynergies;
 }
 
 class SkillUpgradeResolution {
@@ -173,6 +203,8 @@ SkillUpgradeResolution applySkillUpgrade({
   var criticalChance = current.criticalChance;
   var attackSpeedMultiplier = current.attackSpeedMultiplier;
   var requiresAttackLoopRestart = false;
+  final selectedSkills = current.selectedSkills.toSet();
+  final previousSynergies = current.activeSynergies;
 
   switch (choice) {
     case SkillId.extraArrow:
@@ -198,6 +230,23 @@ SkillUpgradeResolution applySkillUpgrade({
       break;
   }
 
+  if (choice != null) selectedSkills.add(choice);
+  final activeSynergies = resolveSkillSynergies(selectedSkills);
+  final newlyActivated = activeSynergies.difference(previousSynergies);
+  for (final synergy in newlyActivated) {
+    switch (synergy) {
+      case SkillSynergyId.stormVolley:
+        attackSpeedMultiplier =
+            (attackSpeedMultiplier * 1.10).clamp(1.0, 2.2).toDouble();
+        requiresAttackLoopRestart = true;
+      case SkillSynergyId.shatterpoint:
+        criticalChance = (criticalChance + 0.05).clamp(0.0, 0.75).toDouble();
+      case SkillSynergyId.treasureHeart:
+        playerMaxHp += 15;
+        playerHp = (playerHp + 15).clamp(0.0, playerMaxHp).toDouble();
+    }
+  }
+
   return SkillUpgradeResolution(
     stats: SkillRuntimeStats(
       extraArrows: extraArrows,
@@ -208,6 +257,8 @@ SkillUpgradeResolution applySkillUpgrade({
       coinPickupRadius: coinPickupRadius,
       criticalChance: criticalChance,
       attackSpeedMultiplier: attackSpeedMultiplier,
+      selectedSkills: List<SkillId>.unmodifiable(selectedSkills),
+      activeSynergies: Set<SkillSynergyId>.unmodifiable(activeSynergies),
     ),
     requiresAttackLoopRestart: requiresAttackLoopRestart,
   );

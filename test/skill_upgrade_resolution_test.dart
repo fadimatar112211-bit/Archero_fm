@@ -10,6 +10,8 @@ SkillRuntimeStats baseline({
   double coinPickupRadius = 34,
   double criticalChance = 0,
   double attackSpeedMultiplier = 1,
+  List<SkillId> selectedSkills = const [],
+  Set<SkillSynergyId> activeSynergies = const {},
 }) => SkillRuntimeStats(
   extraArrows: extraArrows,
   attackPowerMultiplier: attackPowerMultiplier,
@@ -19,6 +21,8 @@ SkillRuntimeStats baseline({
   coinPickupRadius: coinPickupRadius,
   criticalChance: criticalChance,
   attackSpeedMultiplier: attackSpeedMultiplier,
+  selectedSkills: selectedSkills,
+  activeSynergies: activeSynergies,
 );
 
 void main() {
@@ -101,6 +105,57 @@ void main() {
       expect(result.stats.criticalChance, current.criticalChance);
       expect(result.stats.attackSpeedMultiplier, current.attackSpeedMultiplier);
       expect(result.requiresAttackLoopRestart, isFalse);
+    });
+
+    test('activates storm volley synergy once when extra arrow and swift hands combine', () {
+      final first = applySkillUpgrade(
+        current: baseline(selectedSkills: [SkillId.extraArrow]),
+        choice: SkillId.swiftHands,
+      );
+      expect(first.stats.activeSynergies, contains(SkillSynergyId.stormVolley));
+      expect(first.stats.attackSpeedMultiplier, closeTo(1.298, 0.0001));
+      expect(first.requiresAttackLoopRestart, isTrue);
+
+      final second = applySkillUpgrade(
+        current: first.stats,
+        choice: SkillId.extraArrow,
+      );
+      expect(second.stats.attackSpeedMultiplier, first.stats.attackSpeedMultiplier);
+      expect(second.stats.activeSynergies, contains(SkillSynergyId.stormVolley));
+    });
+
+    test('shatterpoint synergy adds critical chance without exceeding its cap', () {
+      final result = applySkillUpgrade(
+        current: baseline(
+          criticalChance: 0.3,
+          selectedSkills: [SkillId.frostAura],
+        ),
+        choice: SkillId.criticalStrike,
+      );
+      expect(result.stats.criticalChance, 0.5);
+      expect(result.stats.activeSynergies, contains(SkillSynergyId.shatterpoint));
+    });
+
+    test('treasure heart synergy increases maximum and current health', () {
+      final result = applySkillUpgrade(
+        current: baseline(
+          playerHp: 60,
+          playerMaxHp: 100,
+          selectedSkills: [SkillId.coinMagnet],
+        ),
+        choice: SkillId.vitality,
+      );
+      expect(result.stats.playerMaxHp, 140);
+      expect(result.stats.playerHp, 100);
+      expect(result.stats.activeSynergies, contains(SkillSynergyId.treasureHeart));
+    });
+
+    test('synergy resolver requires both distinct skills', () {
+      expect(resolveSkillSynergies([SkillId.extraArrow]), isEmpty);
+      expect(
+        resolveSkillSynergies([SkillId.extraArrow, SkillId.swiftHands]),
+        {SkillSynergyId.stormVolley},
+      );
     });
   });
 }

@@ -98,6 +98,8 @@ class _GameScreenState extends State<GameScreen>
   double get enemySpeedMultiplier => runState.enemySpeedMultiplier;
   set enemySpeedMultiplier(double value) => runState.enemySpeedMultiplier = value;
   double get coinPickupRadius => runState.coinPickupRadius;
+  List<SkillId> get selectedSkills => runState.selectedSkills;
+  Set<SkillSynergyId> get activeSkillSynergies => runState.activeSkillSynergies;
   set coinPickupRadius(double value) => runState.coinPickupRadius = value;
   int get animationTicks => runState.animationTicks;
   set animationTicks(int value) => runState.animationTicks = value;
@@ -798,10 +800,20 @@ class _GameScreenState extends State<GameScreen>
         coinPickupRadius: coinPickupRadius,
         criticalChance: criticalChance,
         attackSpeedMultiplier: attackSpeedMultiplier,
+        selectedSkills: selectedSkills,
+        activeSynergies: activeSkillSynergies,
       ),
       choice: choice,
     );
+    final newlyActivatedSynergies =
+        upgrade.stats.activeSynergies.difference(activeSkillSynergies.toSet());
     setState(() {
+      selectedSkills
+        ..clear()
+        ..addAll(upgrade.stats.selectedSkills);
+      activeSkillSynergies
+        ..clear()
+        ..addAll(upgrade.stats.activeSynergies);
       extraArrows = upgrade.stats.extraArrows;
       attackPowerMultiplier = upgrade.stats.attackPowerMultiplier;
       playerHp = upgrade.stats.playerHp;
@@ -813,6 +825,12 @@ class _GameScreenState extends State<GameScreen>
       runLifecycle.completeSkillSelection();
     });
     if (upgrade.requiresAttackLoopRestart) _restartShootLoop();
+    if (newlyActivatedSynergies.isNotEmpty && mounted) {
+      final names = newlyActivatedSynergies.map(skillSynergyName).join(' · ');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تآزر جديد: $names')),
+      );
+    }
     _spawnEnemies();
   }
 
