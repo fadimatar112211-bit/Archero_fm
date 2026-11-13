@@ -108,6 +108,7 @@ void main() {
         'gems': 0,
         'keys': 0,
         'equipmentShards': 0,
+        'unlockedHeroesMask': 1,
     });
   });
 
@@ -135,6 +136,7 @@ void main() {
         'gems': 0,
         'keys': 0,
         'equipmentShards': 0,
+        'unlockedHeroesMask': 1,
     });
   });
 
@@ -162,6 +164,7 @@ void main() {
         'gems': 0,
         'keys': 0,
         'equipmentShards': 0,
+        'unlockedHeroesMask': 1,
     });
   });
 
@@ -183,7 +186,7 @@ void main() {
   });
 
   test('rolls back a partially failed snapshot and keeps the queue usable', () async {
-    final initial = <String, int>{'coins': 200, 'hpUpgrade': 10, 'atkUpgrade': 5, 'bestStage': 3, 'bestScore': 90, 'equippedWeaponId': 0, 'equippedArmorId': 0, 'equippedHelmetId': 0, 'equippedRingId': 0, 'equippedRelicId': 0, 'ownedEquipmentMask': 585, 'gems': 0, 'keys': 0, 'equipmentShards': 0};
+    final initial = <String, int>{'coins': 200, 'hpUpgrade': 10, 'atkUpgrade': 5, 'bestStage': 3, 'bestScore': 90, 'equippedWeaponId': 0, 'equippedArmorId': 0, 'equippedHelmetId': 0, 'equippedRingId': 0, 'equippedRelicId': 0, 'ownedEquipmentMask': 585, 'gems': 0, 'keys': 0, 'equipmentShards': 0, 'unlockedHeroesMask': 1};
     final preferences = _FailingProgressPreferences(Map<String, int>.from(initial), failKey: 'atkUpgrade');
     ProgressStore.setPreferencesProviderForTesting(() async => preferences);
     await expectLater(
