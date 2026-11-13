@@ -774,6 +774,8 @@ class _GameScreenState extends State<GameScreen>
     final offers = SkillSystem.rollOffers(
       stage: stage,
       random: random,
+      currentHp: playerHp,
+      maxHp: playerMaxHp,
     );
     final choice = await showDialog<SkillId>(
       context: context,
