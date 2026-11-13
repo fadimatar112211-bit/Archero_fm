@@ -671,30 +671,33 @@ class _GameScreenState extends State<GameScreen>
       final impactFrame = EnemyAttackRules.attackImpactFrame(
         isBoss: type == 'boss',
       );
-      if (type != 'ranged' && attackTicks == impactFrame &&
-          enemy['attackHitDone'] != true &&
-          distance <= impactDistance &&
-          playerMoveTicks > 0) {
-        enemy['attackHitDone'] = true;
-        combatEffects.add({
-          'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14,
-        });
-      }
-      if (type != 'ranged' && attackTicks == impactFrame &&
-          enemy['attackHitDone'] != true &&
-          distance <= impactDistance &&
-          playerMoveTicks <= 0) {
-        final now = DateTime.now();
-        if (lastDamageAt == null ||
-            now.difference(lastDamageAt!).inMilliseconds >= 220) {
-          // ضرر مختلف لكل فئة: الدبابة بطيئة لكنها تضرب بقوة،
-          // والعدّاء أخف ضرراً مقابل اندفاعاته المتكررة.
-          final contactDamage = EnemyAttackRules.contactDamage(
-            enemyType: type,
-            bossEnraged: bossEnraged,
-          );
-          playerHp -= contactDamage;
-          lastDamageAt = now;
+      final contactHit = resolveEnemyContactHit(
+        enemyType: type,
+        attackTicks: attackTicks,
+        impactFrame: impactFrame,
+        hitAlreadyResolved: enemy['attackHitDone'] == true,
+        distanceToPlayer: distance,
+        impactRange: impactDistance,
+        playerIsDodging: playerMoveTicks > 0,
+        lastDamageAt: lastDamageAt,
+        now: DateTime.now(),
+        damage: EnemyAttackRules.contactDamage(
+          enemyType: type,
+          bossEnraged: bossEnraged,
+        ),
+      );
+      switch (contactHit.status) {
+        case EnemyContactHitStatus.notReady:
+        case EnemyContactHitStatus.invulnerable:
+          break;
+        case EnemyContactHitStatus.dodged:
+          enemy['attackHitDone'] = true;
+          combatEffects.add({
+            'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14,
+          });
+        case EnemyContactHitStatus.damaged:
+          playerHp -= contactHit.damageApplied;
+          lastDamageAt = DateTime.now();
           enemy['attackHitDone'] = true;
           combatEffects.add({
             'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
@@ -703,7 +706,6 @@ class _GameScreenState extends State<GameScreen>
             'x': enemy['x'], 'y': enemy['y'],
             'type': 'enemyAttack', 'life': 12,
           });
-        }
       }
     }
 

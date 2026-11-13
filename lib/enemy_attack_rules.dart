@@ -44,3 +44,73 @@ class EnemyAttackRules {
   static double impactRange({required double enemyRadius}) =>
       23 + enemyRadius + 14;
 }
+
+
+enum EnemyContactHitStatus {
+  notReady,
+  dodged,
+  invulnerable,
+  damaged,
+}
+
+class EnemyContactHitResolution {
+  const EnemyContactHitResolution({
+    required this.status,
+    required this.damageApplied,
+  });
+
+  final EnemyContactHitStatus status;
+  final double damageApplied;
+}
+
+/// Resolves the impact frame of a contact attack independently of the game UI.
+///
+/// Invulnerability leaves the attack unresolved so the existing game loop can
+/// retry the impact on the next tick. A dodge or successful hit consumes it.
+EnemyContactHitResolution resolveEnemyContactHit({
+  required String enemyType,
+  required int attackTicks,
+  required int impactFrame,
+  required bool hitAlreadyResolved,
+  required double distanceToPlayer,
+  required double impactRange,
+  required bool playerIsDodging,
+  required DateTime? lastDamageAt,
+  required DateTime now,
+  required double damage,
+  int invulnerabilityMs = 220,
+}) {
+  if (enemyType == 'ranged' ||
+      attackTicks != impactFrame ||
+      hitAlreadyResolved ||
+      !distanceToPlayer.isFinite ||
+      !impactRange.isFinite ||
+      distanceToPlayer > impactRange) {
+    return const EnemyContactHitResolution(
+      status: EnemyContactHitStatus.notReady,
+      damageApplied: 0,
+    );
+  }
+
+  if (playerIsDodging) {
+    return const EnemyContactHitResolution(
+      status: EnemyContactHitStatus.dodged,
+      damageApplied: 0,
+    );
+  }
+
+  final canTakeDamage = lastDamageAt == null ||
+      now.difference(lastDamageAt).inMilliseconds >= invulnerabilityMs;
+  if (!canTakeDamage) {
+    return const EnemyContactHitResolution(
+      status: EnemyContactHitStatus.invulnerable,
+      damageApplied: 0,
+    );
+  }
+
+  final safeDamage = damage.isFinite && damage > 0 ? damage : 0.0;
+  return EnemyContactHitResolution(
+    status: EnemyContactHitStatus.damaged,
+    damageApplied: safeDamage,
+  );
+}
