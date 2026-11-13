@@ -35,16 +35,16 @@ RunCheckpoint captureRunCheckpoint({
       'selectedSkills': run.selectedSkills.map((value) => value.name).toList(),
       'activeSkillSynergies':
           run.activeSkillSynergies.map((value) => value.name).toList(),
-      'combatEffects': run.combatEffects,
-      'defeatedSprites': run.defeatedSprites,
+      'combatEffects': _copyEntities(run.combatEffects),
+      'defeatedSprites': _copyEntities(run.defeatedSprites),
       'score': run.score,
       'specialCooldown': run.specialCooldown,
       'playerDeathTicks': run.playerDeathTicks,
       'challengeRoomRewardPending': run.challengeRoomRewardPending,
-      'enemies': run.enemies,
-      'arrows': run.arrows,
-      'enemyProjectiles': run.enemyProjectiles,
-      'coins': run.coins,
+      'enemies': _copyEntities(run.enemies),
+      'arrows': _copyEntities(run.arrows),
+      'enemyProjectiles': _copyEntities(run.enemyProjectiles),
+      'coins': _copyEntities(run.coins),
       'hazardCooldownTicks': hazardCooldownTicks,
     },
   );
@@ -151,3 +151,7 @@ void _restoreEntities(List<GameRunEntity> target, Object? raw) {
     target.add(Map<String, dynamic>.from(item));
   }
 }
+
+List<Map<String, Object?>> _copyEntities(List<GameRunEntity> entities) => [
+  for (final entity in entities) Map<String, Object?>.from(entity),
+];
