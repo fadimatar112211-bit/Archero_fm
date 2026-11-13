@@ -12,6 +12,7 @@ import 'shop_economy.dart';
 import 'audio_service.dart';
 import 'world_theme.dart';
 import 'combat_stats.dart';
+import 'combat_targeting.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -683,27 +684,37 @@ class _GameScreenState extends State<GameScreen>
   void _shootArrows() {
     if (enemies.isEmpty) return;
 
-    final target = enemies.reduce((a, b) {
-      final da = pow((a['x'] as double) - playerX, 2) +
-          pow((a['y'] as double) - playerY, 2);
-      final db = pow((b['x'] as double) - playerX, 2) +
-          pow((b['y'] as double) - playerY, 2);
-      return da <= db ? a : b;
-    });
-    final angle = atan2(
-      (target['y'] as double) - playerY,
-      (target['x'] as double) - playerX,
+    final origin = CombatPoint(playerX, playerY);
+    final targetIndex = nearestTargetIndex(
+      origin: origin,
+      targets: enemies
+          .map((enemy) => CombatPoint(
+                enemy['x'] as double,
+                enemy['y'] as double,
+              ))
+          .toList(growable: false),
     );
+    if (targetIndex == null) return;
+    final target = enemies[targetIndex];
 
     heroAttackTicks = 12;
     final totalShots = 1 + extraArrows;
     for (int i = 0; i < totalShots; i++) {
       final spread = i == 0 ? 0.0 : (i.isOdd ? 0.20 : -0.20);
+      final velocity = aimedProjectileVelocity(
+        origin: origin,
+        target: CombatPoint(
+          target['x'] as double,
+          target['y'] as double,
+        ),
+        speed: 8.5,
+        angleOffset: spread,
+      );
       arrows.add({
         'x': playerX,
         'y': playerY,
-        'vx': cos(angle + spread) * 8.5,
-        'vy': sin(angle + spread) * 8.5,
+        'vx': velocity.x,
+        'vy': velocity.y,
       });
     }
     playRealSound('shoot');
