@@ -1,13 +1,17 @@
+import 'combat_collision.dart';
+
 class PlayerProjectileStep {
   const PlayerProjectileStep({
     required this.x,
     required this.y,
     required this.shouldRemove,
+    required this.hitTargetIndex,
   });
 
   final double x;
   final double y;
   final bool shouldRemove;
+  final int? hitTargetIndex;
 }
 
 /// Advances a player arrow by one game tick and reports arena-bound expiry.
@@ -19,6 +23,8 @@ PlayerProjectileStep advancePlayerProjectile({
   required double arenaWidth,
   required double arenaHeight,
   double margin = 20,
+  List<CombatCircle> targets = const [],
+  double projectileRadius = 5,
 }) {
   final nextX = x + velocityX;
   final nextY = y + velocityY;
