@@ -1236,7 +1236,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
   void _collectChest() {
     setState(() {
-      globalCoins += (75 * WorldRules.forStage(stage).coinRewardMultiplier).round();
+      globalCoins += (75 * WorldRules.forStage(max(1, stage - 1)).coinRewardMultiplier).round();
       showMysteryChest = false;
       stageTransitioning = false;
     });
