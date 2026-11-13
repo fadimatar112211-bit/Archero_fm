@@ -605,7 +605,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
         'maxHp': bossHp,
         'type': 'boss',
         'radius': 36.0,
-        'speed': (0.78 + min(difficultyStep, 16) * 0.012) *\n            enemySpeedMultiplier * worldRules.enemySpeedMultiplier,
+        'speed': (0.78 + min(difficultyStep, 16) * 0.012) *
+            enemySpeedMultiplier * worldRules.enemySpeedMultiplier,
         'bossPhase': 1,
         'bossVolleyCooldown': 90,
       });
@@ -643,7 +644,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           'maxHp': hp,
           'type': enemyType,
           'radius': enemyType == 'tank' ? 23.0 : 19.0,
-          'speed': speed * enemySpeedMultiplier *\n              worldRules.enemySpeedMultiplier,
+          'speed': speed * enemySpeedMultiplier *
+              worldRules.enemySpeedMultiplier,
         });
       }
     }
@@ -1118,7 +1120,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       final dx = playerX - (coins[i]['x'] as double);
       final dy = playerY - (coins[i]['y'] as double);
       if (sqrt(dx * dx + dy * dy) < coinPickupRadius) {
-        globalCoins +=\n            (10 * WorldRules.forStage(stage).coinRewardMultiplier).round();
+        globalCoins +=
+            (10 * WorldRules.forStage(stage).coinRewardMultiplier).round();
         collectedCoin = true;
         coins.removeAt(i);
         playRealSound('coin');
@@ -1266,8 +1269,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           style: TextStyle(color: Colors.redAccent),
         ),
         content: Text(
-          'المرحلة التي وصلت إليها: $stage\n'
-          'النقاط الإجمالية: $score\n'
+          'المرحلة التي وصلت إليها: $stage
+'
+          'النقاط الإجمالية: $score
+'
           'رصيد العملات: 🪙 $globalCoins',
         ),
         actions: [
