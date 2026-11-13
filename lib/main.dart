@@ -13,6 +13,7 @@ import 'world_rules.dart';
 import 'shop_economy.dart';
 import 'procedural_audio.dart';
 import 'world_theme.dart';
+import 'combat_stats.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -530,6 +531,8 @@ class _GameScreenState extends State<GameScreen>
   DateTime? lastDamageAt;
   double attackPowerMultiplier = 1;
   int extraArrows = 0;
+  double criticalChance = 0;
+  double attackSpeedMultiplier = 1;
   double enemySpeedMultiplier = 1;
   double coinPickupRadius = 34;
   int animationTicks = 0;
@@ -591,16 +594,7 @@ class _GameScreenState extends State<GameScreen>
       _updateEngine();
     });
 
-    shootLoop = Timer.periodic(const Duration(milliseconds: 650), (_) {
-      if (!mounted ||
-          isPaused ||
-          showMysteryChest ||
-          gameOverShown ||
-          enemies.isEmpty) {
-        return;
-      }
-      _shootArrows();
-    });
+    _restartShootLoop();
   }
 
   void _spawnEnemies({bool notify = true}) {
@@ -728,6 +722,21 @@ class _GameScreenState extends State<GameScreen>
       });
     }
     playRealSound('shoot');
+  }
+
+  void _restartShootLoop() {
+    shootLoop?.cancel();
+    final intervalMs = CombatBalance.shootIntervalMs(attackSpeedMultiplier);
+    shootLoop = Timer.periodic(Duration(milliseconds: intervalMs), (_) {
+      if (!mounted ||
+          isPaused ||
+          showMysteryChest ||
+          gameOverShown ||
+          enemies.isEmpty) {
+        return;
+      }
+      _shootArrows();
+    });
   }
 
   void _useSpecialSkill() {
@@ -889,8 +898,22 @@ class _GameScreenState extends State<GameScreen>
             'x': enemy['x'], 'y': enemy['y'], 'type': hitType, 'life': 16,
           });
           enemy['hitTicks'] = 9;
-          enemy['hp'] = (enemy['hp'] as double) -
-              (35 * attackPowerMultiplier);
+          final isCritical = random.nextDouble() < criticalChance;
+          final arrowDamage = CombatBalance.arrowDamage(
+            baseDamage: 35,
+            attackMultiplier: attackPowerMultiplier,
+            criticalChance: criticalChance,
+            roll: isCritical ? 0 : 1,
+          );
+          enemy['hp'] = (enemy['hp'] as double) - arrowDamage;
+          if (isCritical) {
+            combatEffects.add({
+              'x': enemy['x'],
+              'y': enemy['y'],
+              'type': 'criticalHit',
+              'life': 22,
+            });
+          }
           arrows.removeAt(i);
           arrowRemoved = true;
 
@@ -1248,6 +1271,11 @@ class _GameScreenState extends State<GameScreen>
           enemySpeedMultiplier *= 0.9;
         case SkillId.coinMagnet:
           coinPickupRadius *= 1.45;
+        case SkillId.criticalStrike:
+          criticalChance = (criticalChance + 0.15).clamp(0.0, 0.75);
+        case SkillId.swiftHands:
+          attackSpeedMultiplier = (attackSpeedMultiplier * 1.18).clamp(1.0, 2.2);
+          _restartShootLoop();
         case null:
           break;
       }
