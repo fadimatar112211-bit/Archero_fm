@@ -37,6 +37,8 @@ import 'player_movement.dart';
 import 'enemy_hit_resolution.dart';
 import 'skill_selection_dialog.dart';
 import 'game_arena_view.dart';
+import 'special_room_system.dart';
+import 'special_room_dialog.dart';
 
 typedef GameObject = Map<String, dynamic>;
 
@@ -118,6 +120,8 @@ class _GameScreenState extends State<GameScreen>
   int get specialCooldown => runState.specialCooldown;
   set specialCooldown(int value) => runState.specialCooldown = value;
   int get playerDeathTicks => runState.playerDeathTicks;
+  bool get challengeRoomRewardPending => runState.challengeRoomRewardPending;
+  set challengeRoomRewardPending(bool value) => runState.challengeRoomRewardPending = value;
   set playerDeathTicks(int value) => runState.playerDeathTicks = value;
 
   GameRunLifecycle get runLifecycle => runSession.lifecycle;
@@ -192,7 +196,7 @@ class _GameScreenState extends State<GameScreen>
     _restartShootLoop();
   }
 
-  void _spawnEnemies({bool notify = true}) {
+  void _spawnEnemies({bool notify = true, bool challenge = false}) {
     enemies.clear();
     arrows.clear();
     enemyProjectiles.clear();
@@ -203,6 +207,21 @@ class _GameScreenState extends State<GameScreen>
       enemySpeedMultiplier: enemySpeedMultiplier,
       random: random,
     ));
+    if (challenge) {
+      final extraWave = createEnemyWave(
+        stage: stage + 2,
+        arenaWidth: arenaWidth,
+        arenaHeight: arenaHeight,
+        enemySpeedMultiplier: enemySpeedMultiplier * 1.12,
+        random: random,
+      ).take(2);
+      for (final enemy in extraWave) {
+        final hp = enemy['hp'];
+        if (hp is num) enemy['hp'] = hp.toDouble() * 1.2;
+        enemies.add(enemy);
+      }
+      challengeRoomRewardPending = true;
+    }
 
     if (notify && mounted) setState(() {});
   }
