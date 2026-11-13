@@ -32,8 +32,8 @@ void main() {
 
   testWidgets('locked stage cannot replace the selected unlocked stage',
       (tester) async {
-    await tester.view.physicalSize = const Size(900, 1600);
-    await tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(900, 1600);
+    tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
