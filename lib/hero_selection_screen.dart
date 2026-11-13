@@ -194,9 +194,11 @@ class _HeroSelectionScreenState extends State<HeroSelectionScreen> {
                 subtitle: Padding(
                   padding: const EdgeInsets.only(top: 5),
                   child: Text(
-                    '${hero.description}\n'
-                    'النشطة: ${profile.activeSkillName} — ${profile.activeSkillDescription}\n'
-                    'السلبية: ${profile.passiveSkillName} — ${profile.passiveSkillDescription}',
+                    unlocked
+                        ? '${hero.description}\n'
+                          'النشطة: ${profile.activeSkillName} — ${profile.activeSkillDescription}\n'
+                          'السلبية: ${profile.passiveSkillName} — ${profile.passiveSkillDescription}'
+                        : 'افتح هذا البطل مقابل $cost جوهرة لتفعيل مهاراته واستخدامه في المعارك.',
                     style: const TextStyle(fontSize: 12, height: 1.35),
                   ),
                 ),
