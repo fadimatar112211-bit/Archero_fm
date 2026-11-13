@@ -36,13 +36,19 @@ void main() {
     expect(find.byIcon(Icons.pause), findsOneWidget);
     expect(find.byKey(const ValueKey('game-arena-gesture')), findsOneWidget);
 
-    // Exercise touch movement and the active-skill control on the emulator.
+    // Measure the rendered actor position before and after a real touch drag.
+    final playerFinder = find.byKey(const ValueKey('player-actor'));
+    expect(playerFinder, findsOneWidget);
+    final playerCenterBefore = tester.getCenter(playerFinder);
     await tester.drag(
       find.byKey(const ValueKey('game-arena-gesture')),
       const Offset(72, -54),
       touchSlopY: 2,
     );
     await tester.pump(const Duration(milliseconds: 250));
+    final playerCenterAfter = tester.getCenter(playerFinder);
+    expect(playerCenterAfter.dx, greaterThan(playerCenterBefore.dx + 20));
+    expect(playerCenterAfter.dy, lessThan(playerCenterBefore.dy - 10));
     await tester.tap(find.text('المهارة الخاصة'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(tester.takeException(), isNull);
