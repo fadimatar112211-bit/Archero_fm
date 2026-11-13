@@ -6,13 +6,15 @@ class _FakeProgressPreferences implements ProgressPreferences {
   final Map<String, int> values = {};
   String? failKey;
   bool returnFalse = false;
+  bool hasFailed = false;
 
   @override
   int? getInt(String key) => values[key];
 
   @override
   Future<bool> setInt(String key, int value) async {
-    if (key == failKey) {
+    if (key == failKey && !hasFailed) {
+      hasFailed = true;
       if (returnFalse) return false;
       throw StateError('simulated storage failure');
     }
@@ -96,5 +98,6 @@ void main() {
       ),
       throwsA(isA<StateError>()),
     );
+    expect(fake.values['coins'], 150);
   });
 }
