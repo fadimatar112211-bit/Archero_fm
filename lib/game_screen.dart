@@ -33,6 +33,7 @@ import 'room_flow.dart';
 import 'player_movement.dart';
 import 'enemy_hit_resolution.dart';
 import 'game_painters.dart';
+import 'game_actor_widgets.dart';
 
 typedef GameObject = Map<String, dynamic>;
 
@@ -1030,247 +1031,40 @@ class _GameScreenState extends State<GameScreen>
                   ),
 
                   // العملات.
-                  ...coins.map((coin) => Positioned(
-                        left: (coin['x'] as double) - 10,
-                        top: (coin['y'] as double) - 10,
-                        child: const Text('🪙', style: TextStyle(fontSize: 20)),
-                      )),
+                  ...coins.map((coin) => CoinSpriteWidget(coin: coin)),
 
                   // الأسهم.
-                  ...arrows.map((arrow) => Positioned(
-                        left: (arrow['x'] as double) - 5,
-                        top: (arrow['y'] as double) - 5,
-                        child: Transform.rotate(
-                          angle: atan2(
-                            arrow['vy'] as double,
-                            arrow['vx'] as double,
-                          ),
-                          child: const CustomPaint(
-                            size: Size(25, 12),
-                            painter: ArrowSpritePainter(),
-                          ),
-                        ),
-                      )),
+                  ...arrows.map((arrow) => PlayerArrowSpriteWidget(arrow: arrow)),
 
                   // مقذوفات الأعداء بعيدة المدى.
-                  ...enemyProjectiles.map((shot) => Positioned(
-                        left: (shot['x'] as double) - 11,
-                        top: (shot['y'] as double) - 11,
-                        child: Transform.rotate(
-                          angle: animationTicks * .16,
-                          child: const CustomPaint(
-                            size: Size(22, 22),
-                            painter: RangedProjectilePainter(),
-                          ),
-                        ),
+                  ...enemyProjectiles.map((shot) => EnemyProjectileSpriteWidget(
+                        projectile: shot,
+                        animationTicks: animationTicks,
                       )),
 
                   // الأعداء وأشرطة صحتهم.
-                  ...enemies.map((enemy) {
-                    final radius = enemy['radius'] as double;
-                    final enemyType = enemy['type'] as String;
-                    final isBoss = enemyType == 'boss';
-                    final enemyColor = switch (enemyType) {
-                      'ranged' => Colors.cyan,
-                      'runner' => Colors.orange,
-                      'tank' => Colors.blueGrey,
-                      'stalker' => Colors.purple,
-                      'boss' => Colors.deepPurple,
-                      _ => Colors.red,
-                    };
+                  ...enemies.map((enemy) => EnemyActorWidget(
+                        enemy: enemy,
+                        animationTicks: animationTicks,
+                      )),
 
-                    final walkPhase = (enemy['walkPhase'] as double?) ?? 0.0;
-                    final enemyPhase = walkPhase + (enemy['x'] as double) * 0.03;
-                    final enemyAttacking =
-                        ((enemy['attackTicks'] as int?) ?? 0) > 0 ||
-                        (isBoss && ((enemy['areaAttackTicks'] as int?) ?? 0) > 0);
-                    final enemyHit = ((enemy['hitTicks'] as int?) ?? 0) > 0;
-                    // حركة مشي ناعمة مستمرة فوق إطارات الـSVG، مع اختلاف وزن كل فئة.
-                    final gait = sin(walkPhase * 1.8);
-                    final gaitBounce = cos(walkPhase * 3.6).abs();
-                    final gaitStrength = enemyType == 'tank' || enemyType == 'boss' ? 0.45 : 1.0;
-                    final attackLean = enemyAttacking ? (enemyType == 'boss' ? -0.16 : -0.24) : gait * 0.045 * gaitStrength;
-                    final hpRatio = ((enemy['hp'] as double) /
-                            (enemy['maxHp'] as double))
-                        .clamp(0.0, 1.0);
-
-                    return Positioned(
-                      left: (enemy['x'] as double) - radius,
-                      top: (enemy['y'] as double) - radius,
-                      child: Column(
-                        children: [
-                          Container(
-                            width: radius * 2,
-                            height: 5,
-                            margin: const EdgeInsets.only(bottom: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.black,
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            child: FractionallySizedBox(
-                              alignment: Alignment.centerLeft,
-                              widthFactor: hpRatio,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: isBoss ? Colors.purpleAccent : enemyColor,
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: radius * 2,
-                            height: radius * 2,
-                            child: Transform.translate(
-                              offset: Offset(enemyAttacking ? -3.5 : sin(enemyPhase).abs() * -2.0, (sin(enemyPhase * 1.35) * 1.5 - gaitBounce * 1.15 * gaitStrength) * (enemyAttacking ? 0.45 : 1.0)),
-                              child: Transform.rotate(
-                                angle: enemyHit ? 0.10 * sin(enemyPhase * 5) : attackLean,
-                                child: Transform.scale(
-                                  scale: (1 + gaitBounce * 0.018 * gaitStrength + sin(enemyPhase) * 0.012) * (enemyAttacking ? 1.06 : 1.0) * (enemyHit ? 0.96 : 1.0),
-                                  child: Stack(
-                                    fit: StackFit.expand,
-                                    children: [
-                                      if (isBoss)
-                                        CustomPaint(
-                                          painter: BossAuraPainter(
-                                            phase: animationTicks * .045,
-                                            attacking: enemyAttacking,
-                                          ),
-                                        )
-                                      else
-                                        CustomPaint(
-                                          painter: EnemyAuraPainter(
-                                            type: enemyType,
-                                            phase: enemyPhase,
-                                            attacking: enemyAttacking,
-                                            hit: enemyHit,
-                                          ),
-                                        ),
-                                      SpriteSheetFrame(
-                                        asset: enemyType == 'ranged'
-                                            ? 'assets/spritesheets/enemy_ranged.svg'
-                                            : enemyType == 'boss'
-                                            ? (enemyAttacking ? 'assets/spritesheets/boss_attack.svg' : 'assets/spritesheets/boss_walk.svg')
-                                            : enemyAttacking && enemyType == 'runner'
-                                                ? 'assets/spritesheets/enemy_runner_attack.svg'
-                                                : enemyAttacking && enemyType != 'stalker' && enemyType != 'tank' && enemyType != 'ranged'
-                                                    ? 'assets/spritesheets/enemy_melee_attack.svg'
-                                                    : enemyAttacking && enemyType == 'stalker'
-                                                ? 'assets/spritesheets/enemy_stalker_attack.svg'
-                                                : enemyAttacking && enemyType == 'tank'
-                                                    ? 'assets/spritesheets/enemy_tank_attack.svg'
-                                                    : enemyType == 'runner'
-                                                        ? 'assets/spritesheets/enemy_runner.svg'
-                                                        : enemyType == 'stalker'
-                                                            ? 'assets/spritesheets/enemy_stalker.svg'
-                                                            : enemyType == 'tank'
-                                                                ? 'assets/spritesheets/enemy_tank.svg'
-                                                                : 'assets/spritesheets/enemy_melee.svg',
-                                        frameCount: 4,
-                                        frameIndex: enemyAttacking
-                                            ? (animationTicks ~/ 2) % 4
-                                            : (walkPhase * 1.8).floor() % 4,
-                                      ),
-                                      if (enemyHit)
-                                        DecoratedBox(decoration: BoxDecoration(color: Colors.white.withOpacity(.32))),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-
-                  ...defeatedSprites.map((sprite) {
-                    final life = sprite['life'] as int;
-                    final size = sprite['boss'] == true ? 104.0 : 66.0;
-                    return Positioned(
-                      left: (sprite['x'] as double) - size / 2,
-                      top: (sprite['y'] as double) - size / 2,
-                      width: size,
-                      height: size,
-                      child: Opacity(
-                        opacity: (life / 24).clamp(0.0, 1.0),
-                        child: SpriteSheetFrame(
-                          asset: sprite['boss'] == true
-                              ? 'assets/spritesheets/boss_death.svg'
-                              : sprite['type'] == 'runner'
-                                  ? 'assets/spritesheets/enemy_runner_death.svg'
-                                  : sprite['type'] == 'tank'
-                                      ? 'assets/spritesheets/enemy_tank_death.svg'
-                                      : sprite['type'] == 'stalker'
-                                          ? 'assets/spritesheets/enemy_stalker_death.svg'
-                                          : 'assets/spritesheets/enemy_death.svg',
-                           frameCount: 4,
-                          frameIndex: ((24 - life) ~/ 6).clamp(0, 3),
-                        ),
-                      ),
-                    );
-                  }),
+                  ...defeatedSprites.map((sprite) =>
+                      DefeatedEnemySpriteWidget(sprite: sprite)),
 
                   // ومضات الاصطدام وانفجارات هزيمة الوحوش.
-                  ...combatEffects.map((effect) {
-                    final life = effect['life'] as int;
-                    final type = effect['type'] as String;
-                    final radius = type == 'bossTell' || type == 'bossBurst'
-                        ? 112.0
-                        : ((type == 'defeat' || type == 'playerHit') ? 42.0 : 29.0);
-                    return Positioned(
-                      left: (effect['x'] as double) - radius,
-                      top: (effect['y'] as double) - radius,
-                      child: CustomPaint(
-                        size: Size(radius * 2, radius * 2),
-                        painter: CombatEffectPainter(
-                          type: type,
-                          progress: (1 - life / (
-                            type == 'bossTell' ? 32 :
-                            type == 'bossBurst' ? 24 :
-                            (type == 'impact' || type.endsWith('Hit') || type == 'enemyAttack')
-                                ? (type == 'enemyAttack' ? 12 : 16)
-                                : 25
-                          )).clamp(0.0, 1.0),
-                        ),
-                      ),
-                    );
-                  }),
+                  ...combatEffects.map((effect) =>
+                      CombatEffectSpriteWidget(effect: effect)),
 
                   // اللاعب.
-                  Positioned(
-                    left: playerX - 21,
-                    top: playerY - 21,
-                    child: SizedBox(
-                      width: 58,
-                      height: 58,
-                      child: Transform.translate(
-                        offset: Offset(heroAttackTicks > 0 ? 3.0 : 0.0, sin(animationTicks * 0.13).abs() * -2.4),
-                        child: Transform.rotate(
-                          angle: heroAttackTicks > 0 ? -0.10 - (heroAttackTicks / 12) * 0.13 : sin(animationTicks * 0.13) * 0.025,
-                          child: Transform.scale(
-                            scale: (1 + sin(animationTicks * 0.13) * 0.025) * (heroAttackTicks > 0 ? 1.045 : 1.0),
-                            child: SpriteSheetFrame(
-                              asset: playerDying
-                                  ? '${playerSpritePrefix}_death.svg'
-                                  : heroAttackTicks > 0
-                                      ? '${playerSpritePrefix}_attack.svg'
-                                      : playerMoveTicks > 0
-                                          ? '${playerSpritePrefix}_walk.svg'
-                                          : '${playerSpritePrefix}_idle.svg',
-                              frameCount: 4,
-                              frameIndex: playerDying
-                                  ? (playerDeathTicks ~/ 6).clamp(0, 3)
-                                  : heroAttackTicks > 0
-                                      ? (animationTicks ~/ 2) % 4
-                                      : playerMoveTicks > 0
-                                          ? (animationTicks ~/ 7) % 4
-                                          : 0,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                  PlayerActorSpriteWidget(
+                    x: playerX,
+                    y: playerY,
+                    heroSpritePrefix: playerSpritePrefix,
+                    animationTicks: animationTicks,
+                    heroAttackTicks: heroAttackTicks,
+                    playerMoveTicks: playerMoveTicks,
+                    playerDying: playerDying,
+                    playerDeathTicks: playerDeathTicks,
                   ),
 
                   // زر المهارة الخاصة.
