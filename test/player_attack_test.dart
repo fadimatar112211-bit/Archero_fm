@@ -15,8 +15,8 @@ void main() {
 
       expect(volley, hasLength(1));
       expect(volley.single.origin, const CombatPoint(100, 200));
-      expect(volley.single.velocity.dx, closeTo(0, 0.000001));
-      expect(volley.single.velocity.dy, closeTo(-8.5, 0.000001));
+      expect(volley.single.velocity.x, closeTo(0, 0.000001));
+      expect(volley.single.velocity.y, closeTo(-8.5, 0.000001));
     });
 
     test('creates the configured count and alternating spread angles', () {
