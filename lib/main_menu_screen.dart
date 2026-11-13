@@ -18,6 +18,7 @@ class MainMenuScreen extends StatefulWidget {
 }
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
+  bool _walletBusy = false;
   Future<void> _buyHealth() async {
     final purchase = await commitUpgradePurchase(
       upgrade: ShopEconomy.health(heroHpUpgrade),
@@ -118,51 +119,63 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   );
 
   Future<void> _buyChestKey() async {
-    final result = await purchaseChestKey(
-      coins: globalCoins,
-      gems: globalGems,
-      keys: globalKeys,
-      equipmentShards: globalEquipmentShards,
-      persist: _persistWallet,
-    );
-    if (!result.completed) {
-      _message(result.status == ResourceTransactionStatus.insufficientCoins
-          ? 'تحتاج إلى 180 عملة لشراء مفتاح.'
-          : 'تعذر حفظ شراء المفتاح؛ لم يتم خصم العملات.');
-      return;
+    if (_walletBusy) return;
+    setState(() => _walletBusy = true);
+    try {
+      final result = await purchaseChestKey(
+        coins: globalCoins,
+        gems: globalGems,
+        keys: globalKeys,
+        equipmentShards: globalEquipmentShards,
+        persist: _persistWallet,
+      );
+      if (!result.completed) {
+        _message(result.status == ResourceTransactionStatus.insufficientCoins
+            ? 'تحتاج إلى 180 عملة لشراء مفتاح.'
+            : 'تعذر حفظ شراء المفتاح؛ لم يتم خصم العملات.');
+        return;
+      }
+      globalCoins = result.coins;
+      globalKeys = result.keys;
+      try { await playRealSound('coin'); } catch (_) {}
+      if (mounted) _message('اشتريت مفتاحاً جديداً للصناديق.');
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
     }
-    globalCoins = result.coins;
-    globalKeys = result.keys;
-    if (mounted) setState(() {});
-    try { await playRealSound('coin'); } catch (_) {}
-    if (mounted) _message('اشتريت مفتاحاً جديداً للصناديق.');
   }
 
   Future<void> _openChest(ChestDefinition chest) async {
-    final result = await openRewardChest(
-      chest: chest,
-      coins: globalCoins,
-      gems: globalGems,
-      keys: globalKeys,
-      equipmentShards: globalEquipmentShards,
-      random: Random(),
-      persist: _persistWallet,
-    );
-    if (!result.completed) {
-      _message(result.status == ResourceTransactionStatus.insufficientKeys
-          ? 'لا تملك مفاتيح كافية لهذا الصندوق.'
-          : 'تعذر حفظ الصندوق؛ لم يتم استهلاك المفتاح.');
-      return;
-    }
-    globalCoins = result.coins;
-    globalGems = result.gems;
-    globalKeys = result.keys;
-    globalEquipmentShards = result.equipmentShards;
-    if (mounted) setState(() {});
-    try { await playRealSound('special'); } catch (_) {}
-    final reward = result.reward!;
-    if (mounted) {
-      _message('مكافأة الصندوق: +${reward.coins} عملة، +${reward.gems} جوهرة، +${reward.equipmentShards} شظية معدات.');
+    if (_walletBusy || globalKeys < chest.keyCost) return;
+    setState(() => _walletBusy = true);
+    try {
+      final result = await openRewardChest(
+        chest: chest,
+        coins: globalCoins,
+        gems: globalGems,
+        keys: globalKeys,
+        equipmentShards: globalEquipmentShards,
+        random: Random(),
+        persist: _persistWallet,
+      );
+      if (!result.completed) {
+        _message(result.status == ResourceTransactionStatus.insufficientKeys
+            ? 'لا تملك مفاتيح كافية لهذا الصندوق.'
+            : 'تعذر حفظ الصندوق؛ لم يتم استهلاك المفتاح.');
+        return;
+      }
+      globalCoins = result.coins;
+      globalGems = result.gems;
+      globalKeys = result.keys;
+      globalEquipmentShards = result.equipmentShards;
+      try { await playRealSound('special'); } catch (_) {}
+      final reward = result.reward!;
+      if (mounted) {
+        _message('مكافأة الصندوق: +${reward.coins} عملة، +${reward.gems} جوهرة، +${reward.equipmentShards} شظية معدات.');
+      }
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
     }
   }
 
@@ -415,7 +428,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       ),
                     ),
                     const SizedBox(height: 18),
-                    const SizedBox(height: 18),
                     _panel(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -437,15 +449,15 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                           ),
                           const SizedBox(height: 12),
                           FilledButton.icon(
-                            onPressed: _buyChestKey,
+                            onPressed: _walletBusy ? null : _buyChestKey,
                             icon: const Icon(Icons.key),
-                            label: const Text('شراء مفتاح · 180 عملة'),
+                            label: Text(_walletBusy ? 'جارٍ حفظ العملية…' : 'شراء مفتاح · 180 عملة'),
                           ),
                           const SizedBox(height: 8),
                           ...chestDefinitions.map((chest) => Padding(
                             padding: const EdgeInsets.only(bottom: 7),
                             child: OutlinedButton.icon(
-                              onPressed: globalKeys >= chest.keyCost ? () => _openChest(chest) : null,
+                              onPressed: !_walletBusy && globalKeys >= chest.keyCost ? () => _openChest(chest) : null,
                               icon: Icon(chest.type == RewardChestType.relic ? Icons.diamond : Icons.inventory_2),
                               label: Text('${chest.name} · ${chest.keyCost} مفتاح'),
                             ),
