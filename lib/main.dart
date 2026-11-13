@@ -21,6 +21,7 @@ import 'boss_projectiles.dart';
 import 'combat_damage.dart';
 import 'game_run_lifecycle.dart';
 import 'game_run_state.dart';
+import 'room_flow.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -652,7 +653,7 @@ class _GameScreenState extends State<GameScreen>
     final difficultyStep = min(max(stage - 1, 0), 20).toDouble();
     final worldRules = WorldRules.forStage(stage);
 
-    if (stage % 5 == 0) {
+    if (RoomFlow.forStage(stage).type == GameRoomType.boss) {
       final bossProgress = min(max(stage - 5, 0), 45).toDouble();
       final bossHp = (360.0 + bossProgress * 22) *
           worldRules.enemyHealthMultiplier;
@@ -1241,11 +1242,12 @@ class _GameScreenState extends State<GameScreen>
 
   void _checkStageComplete() {
     if (stageTransitioning || enemies.isNotEmpty || gameOverShown) return;
-    final advance = StageFlow.complete(stage);
+    final transition = RoomFlow.complete(stage);
+    final advance = transition.stageAdvance;
     runLifecycle.beginStageReward(
       mysteryChest: advance.reward == StageRewardType.mysteryChest,
     );
-    stage = advance.nextStage;
+    stage = transition.nextRoom.stage;
     bestStage = max(bestStage, stage);
     playerHp = min(playerMaxHp, playerHp + 35);
     saveProgress();
