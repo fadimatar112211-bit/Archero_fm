@@ -149,6 +149,9 @@ void main() {
 
   testWidgets('hero selection explains each active and passive ability',
       (tester) async {
+    final previousMask = unlockedHeroesMask;
+    unlockedHeroesMask = 15;
+    addTearDown(() => unlockedHeroesMask = previousMask);
     await tester.pumpWidget(
       const MaterialApp(home: HeroSelectionScreen()),
     );
