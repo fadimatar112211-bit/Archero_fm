@@ -159,8 +159,8 @@ void main() {
       );
       expect(volley, hasLength(5));
       expect(volley.every((shot) => shot.damage == 8), isTrue);
-      expect(volley.first.velocityX, lessThan(0));
-      expect(volley.last.velocityX, greaterThan(0));
+      expect(volley.first.velocityX, greaterThan(0));
+      expect(volley.last.velocityX, lessThan(0));
     });
   });
 }
