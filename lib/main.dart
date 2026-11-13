@@ -16,6 +16,7 @@ import 'combat_targeting.dart';
 import 'combat_timing.dart';
 import 'enemy_ai.dart';
 import 'enemy_projectile_motion.dart';
+import 'combat_collision.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -876,13 +877,17 @@ class _GameScreenState extends State<GameScreen>
         continue;
       }
 
-      bool arrowRemoved = false;
-      for (int j = enemies.length - 1; j >= 0; j--) {
-        final enemy = enemies[j];
-        final dx = (arrow['x'] as double) - (enemy['x'] as double);
-        final dy = (arrow['y'] as double) - (enemy['y'] as double);
-        if (sqrt(dx * dx + dy * dy) <
-            (enemy['radius'] as double) + 5) {
+      final hitIndex = firstOverlappingTargetIndex(
+        projectileX: arrow['x'] as double,
+        projectileY: arrow['y'] as double,
+        targets: enemies.map((enemy) => CombatCircle(
+          x: enemy['x'] as double,
+          y: enemy['y'] as double,
+          radius: enemy['radius'] as double,
+        )).toList(growable: false),
+      );
+      if (hitIndex == null) continue;
+      final enemy = enemies[hitIndex];
           final hitType = switch (enemy['type']) {
             'tank' => 'metalHit',
             'stalker' => 'shadowHit',
@@ -926,9 +931,8 @@ class _GameScreenState extends State<GameScreen>
             playRealSound('hit');
           }
           break;
-        }
       }
-      if (arrowRemoved) continue;
+
     }
 
     // إطفاء ومضة الإصابة تدريجياً حتى لا تبقى الشخصية مضيئة.
