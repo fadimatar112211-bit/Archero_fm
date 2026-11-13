@@ -831,8 +831,6 @@ class _GameScreenState extends State<GameScreen>
         );
       }
     }
-    // Persist kill/boss counters at each cleared room rather than writing on every frame.
-    unawaited(saveProgressSafely());
     final transition = RoomFlow.complete(stage);
     final completion = resolveStageCompletion(
       currentStage: stage,
@@ -995,6 +993,7 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _collectChest() {
+    totalChests++;
     setState(() {
       globalCoins += (75 * WorldRules.forStage(max(1, stage - 1)).coinRewardMultiplier).round();
       runLifecycle.collectChest();
