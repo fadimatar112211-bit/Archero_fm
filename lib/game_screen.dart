@@ -916,150 +916,56 @@ class _GameScreenState extends State<GameScreen>
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth;
-            final height = constraints.maxHeight;
-            _syncArenaSize(width, height);
-
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onPanUpdate: (details) {
-                if (!runLifecycle.canPerformActions) return;
-                final movement = resolvePlayerDrag(
-                  currentX: playerX,
-                  currentY: playerY,
-                  deltaX: details.delta.dx,
-                  deltaY: details.delta.dy,
-                  arenaWidth: width,
-                  arenaHeight: height,
-                  currentMoveTicks: playerMoveTicks,
-                );
-                setState(() {
-                  playerX = movement.x;
-                  playerY = movement.y;
-                  playerMoveTicks = movement.moveTicks;
-                });
-              },
-              child: Stack(
-                clipBehavior: Clip.hardEdge,
-                children: [
-                  const Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFF202638), Color(0xFF10131C)],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // خلفية زخرفية بسيطة.
-                  Positioned.fill(
-                    child: RepaintBoundary(
-                      child: CustomPaint(
-                        painter: ArenaPainter(
-                          theme: WorldTheme.forStage(stage),
-                          animation: worldAnimationController,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // لوحة معلومات المرحلة والصحة.
-                  GameHudWidget(
-                    stage: stage,
-                    score: score,
-                    coins: globalCoins,
-                    isPaused: isPaused,
-                    playerHp: playerHp,
-                    playerMaxHp: playerMaxHp,
-                    onPause: _togglePause,
-                  ),
-
-                  // العملات.
-                  ...coins.map((coin) => CoinSpriteWidget(coin: coin)),
-
-                  // الأسهم.
-                  ...arrows.map((arrow) => PlayerArrowSpriteWidget(arrow: arrow)),
-
-                  // مقذوفات الأعداء بعيدة المدى.
-                  ...enemyProjectiles.map((shot) => EnemyProjectileSpriteWidget(
-                        projectile: shot,
-                        animationTicks: animationTicks,
-                      )),
-
-                  // الأعداء وأشرطة صحتهم.
-                  ...enemies.map((enemy) => EnemyActorWidget(
-                        enemy: enemy,
-                        animationTicks: animationTicks,
-                      )),
-
-                  ...defeatedSprites.map((sprite) =>
-                      DefeatedEnemySpriteWidget(sprite: sprite)),
-
-                  // ومضات الاصطدام وانفجارات هزيمة الوحوش.
-                  ...combatEffects.map((effect) =>
-                      CombatEffectSpriteWidget(effect: effect)),
-
-                  // اللاعب.
-                  PlayerActorSpriteWidget(
-                    x: playerX,
-                    y: playerY,
-                    heroSpritePrefix: playerSpritePrefix,
-                    animationTicks: animationTicks,
-                    heroAttackTicks: heroAttackTicks,
-                    playerMoveTicks: playerMoveTicks,
-                    playerDying: playerDying,
-                    playerDeathTicks: playerDeathTicks,
-                  ),
-
-                  // زر المهارة الخاصة.
-                  Positioned(
-                    right: 15,
-                    bottom: 20,
-                    child: FilledButton.icon(
-                      onPressed: _useSpecialSkill,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: specialCooldown == 0
-                            ? Colors.deepPurple
-                            : Colors.grey.shade800,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                      ),
-                      icon: const Icon(Icons.auto_awesome),
-                      label: Text(
-                        specialCooldown == 0
-                            ? 'المهارة الخاصة'
-                            : 'انتظر $specialCooldown',
-                      ),
-                    ),
-                  ),
-
-                  // طبقة الإيقاف المؤقت.
-                  if (isPaused)
-                    GamePauseOverlay(onResume: _togglePause),
-
-                  // صندوق المكافأة.
-                  if (showMysteryChest)
-                    MysteryChestOverlay(onCollect: _collectChest),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
+  void _handlePlayerDrag(Offset delta, double width, double height) {
+    if (!runLifecycle.canPerformActions) return;
+    final movement = resolvePlayerDrag(
+      currentX: playerX,
+      currentY: playerY,
+      deltaX: delta.dx,
+      deltaY: delta.dy,
+      arenaWidth: width,
+      arenaHeight: height,
+      currentMoveTicks: playerMoveTicks,
     );
+    setState(() {
+      playerX = movement.x;
+      playerY = movement.y;
+      playerMoveTicks = movement.moveTicks;
+    });
   }
 
+  @override
+  Widget build(BuildContext context) => GameArenaView(
+        stage: stage,
+        score: score,
+        coins: globalCoins,
+        isPaused: isPaused,
+        playerHp: playerHp,
+        playerMaxHp: playerMaxHp,
+        worldAnimation: worldAnimationController,
+        worldTheme: WorldTheme.forStage(stage),
+        coinActors: coins,
+        playerArrows: arrows,
+        enemyProjectiles: enemyProjectiles,
+        enemies: enemies,
+        defeatedSprites: defeatedSprites,
+        combatEffects: combatEffects,
+        playerX: playerX,
+        playerY: playerY,
+        heroSpritePrefix: playerSpritePrefix,
+        animationTicks: animationTicks,
+        heroAttackTicks: heroAttackTicks,
+        playerMoveTicks: playerMoveTicks,
+        playerDying: playerDying,
+        playerDeathTicks: playerDeathTicks,
+        specialCooldown: specialCooldown,
+        showMysteryChest: showMysteryChest,
+        onArenaSizeChanged: _syncArenaSize,
+        onPlayerDrag: _handlePlayerDrag,
+        onPause: _togglePause,
+        onSpecialSkill: _useSpecialSkill,
+        onCollectChest: _collectChest,
+      );
 
 }
 
