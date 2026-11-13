@@ -38,8 +38,6 @@ void main() {
       expect(EnemyAttackRules.impactRange(enemyRadius: 18), 55);
     });
   });
-}
-
 
   group('resolveEnemyContactHit', () {
     final now = DateTime.utc(2026, 1, 1);
@@ -138,3 +136,4 @@ void main() {
       }
     });
   });
+}
