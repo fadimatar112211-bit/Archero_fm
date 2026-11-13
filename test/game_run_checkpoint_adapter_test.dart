@@ -16,7 +16,8 @@ void main() {
       ..playerMaxHp = 125
       ..score = 840
       ..animationTicks = 550
-      ..challengeRoomRewardPending = true;
+      ..challengeRoomRewardPending = true
+      ..roomHazardCooldownTicks = 12;
     run.selectedSkills.addAll([SkillId.extraArrow, SkillId.vitality]);
     run.activeSkillSynergies.add(SkillSynergyId.treasureHeart);
     run.enemies.add({
@@ -32,7 +33,6 @@ void main() {
     final checkpoint = captureRunCheckpoint(
       heroType: 4,
       run: run,
-      hazardCooldownTicks: 12,
     );
     final decoded = RunCheckpoint.decode(checkpoint.encode())!;
     final restored = restoreRunCheckpointState(decoded)!;
