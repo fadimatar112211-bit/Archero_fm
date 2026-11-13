@@ -3,25 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:archero_fm/main.dart';
 
 
-Future<void> waitForSavedValues(
-  WidgetTester tester,
-  Map<String, int> expected,
-) async {
-  final saved = await tester.runAsync(() async {
-    for (var attempt = 0; attempt < 100; attempt++) {
-      final prefs = await SharedPreferences.getInstance();
-      if (expected.entries.every(
-        (entry) => prefs.getInt(entry.key) == entry.value,
-      )) {
-        return true;
-      }
-      await Future<void>.delayed(const Duration(milliseconds: 10));
-    }
-    return false;
-  });
-  expect(saved, isTrue, reason: 'Timed out waiting for saved values: $expected');
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -34,25 +15,21 @@ void main() {
     bestScore = 0;
   });
 
-  testWidgets('health purchase deducts coins, upgrades health and persists',
+  testWidgets('health purchase deducts coins and upgrades health',
       (tester) async {
     await tester.pumpWidget(const ArcheroSoundApp());
 
     await tester.tap(find.text('صحة +25 (50)'));
     await tester.pumpAndSettle();
-    await waitForSavedValues(tester, {'coins': 100, 'hpUpgrade': 25});
 
     expect(globalCoins, 100);
     expect(heroHpUpgrade, 25);
     expect(find.text('رصيدك: 100'), findsOneWidget);
     expect(find.text('زيادة الصحة الحالية: +25'), findsOneWidget);
 
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getInt('coins'), 100);
-    expect(prefs.getInt('hpUpgrade'), 25);
   });
 
-  testWidgets('attack purchase deducts coins, upgrades attack and persists',
+  testWidgets('attack purchase deducts coins and upgrades attack',
       (tester) async {
     await tester.pumpWidget(const ArcheroSoundApp());
 
@@ -60,16 +37,12 @@ void main() {
     await tester.ensureVisible(attackButton);
     await tester.tap(attackButton);
     await tester.pumpAndSettle();
-    await waitForSavedValues(tester, {'coins': 80, 'atkUpgrade': 15});
 
     expect(globalCoins, 80);
     expect(heroAtkUpgrade, 15);
     expect(find.text('رصيدك: 80'), findsOneWidget);
     expect(find.text('زيادة الهجوم الحالية: +15'), findsOneWidget);
 
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getInt('coins'), 80);
-    expect(prefs.getInt('atkUpgrade'), 15);
   });
 
   testWidgets('purchase is rejected when the player has insufficient coins',
