@@ -550,3 +550,11 @@ Changed files:
 - `MISSION_PROGRESS.md`
 
 Verification status: code has been committed to the feature branch; CI/Flutter analysis, full tests, Android build, and device visual review are still pending. This is a first integrated hub redesign slice, **not** completion of the requested visual overhaul. The next visual batch must replace/upgrade the in-game player/enemy/boss art and connect the existing sprite animation assets, then improve biome floor tiles, props, projectiles, equipment display, and combat VFX. Keep all gameplay systems intact.
+
+
+### Hero grounding / anti-floating pass
+- Updated `PlayerActorSpriteWidget` to anchor the hero at the arena position and remove continuous idle bobbing, idle rotation, and idle scale pulsing that made the character appear to hover.
+- Walking now uses a very small bottom-aligned step bounce only while the movement window is active; attack motion remains subtle and bottom-aligned.
+- Switched the player sprite frame to a 4-tick cadence while walking so the walk cycle is more visible during short touch drags.
+- Commit: `147fc81d2d545fd204354259ebf4a86c1144c8be`.
+- Flutter CI run `43512851070` was queued on this exact commit at checkpoint time. Device-side visual verification remains pending.
