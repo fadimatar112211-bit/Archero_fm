@@ -21,7 +21,18 @@ void main() {
       (tester) async {
     await tester.pumpWidget(const ArcheroSoundApp());
 
-    await tester.tap(find.text('صحة +25 · المستوى 0/20 · 50 عملة'));
+    final healthLabel = find.text('صحة +25 · المستوى 0/20 · 50 عملة');
+    final healthButton = find.ancestor(
+      of: healthLabel,
+      matching: find.byType(FilledButton),
+    );
+    await tester.ensureVisible(healthButton);
+    final healthOnPressed = tester.widget<FilledButton>(healthButton).onPressed;
+    expect(healthOnPressed, isNotNull);
+    await tester.runAsync(() async {
+      healthOnPressed!();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    });
     await tester.pumpAndSettle();
 
     expect(globalCoins, 100);
@@ -41,8 +52,12 @@ void main() {
       matching: find.byType(FilledButton),
     );
     await tester.ensureVisible(attackButton);
-    expect(tester.widget<FilledButton>(attackButton).onPressed, isNotNull);
-    await tester.tap(attackButton);
+    final attackOnPressed = tester.widget<FilledButton>(attackButton).onPressed;
+    expect(attackOnPressed, isNotNull);
+    await tester.runAsync(() async {
+      attackOnPressed!();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    });
     await tester.pumpAndSettle();
 
     expect(globalCoins, 80);
