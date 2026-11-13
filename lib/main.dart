@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'progress_store.dart';
+import 'world_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1185,7 +1186,7 @@ class _GameScreenState extends State<GameScreen> {
 
                   // خلفية زخرفية بسيطة.
                   Positioned.fill(
-                    child: CustomPaint(painter: ArenaPainter()),
+                    child: CustomPaint(painter: ArenaPainter(theme: WorldTheme.forStage(stage))),
                   ),
 
                   // لوحة معلومات المرحلة.
@@ -1775,7 +1776,7 @@ class RangedProjectilePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant RangedProjectilePainter oldDelegate) => false;
+  bool shouldRepaint(covariant RangedProjectilePainter oldDelegate) => oldDelegate.theme.id != theme.id;
 }
 
 class ArrowSpritePainter extends CustomPainter {
@@ -1787,7 +1788,7 @@ class ArrowSpritePainter extends CustomPainter {
     canvas.drawLine(const Offset(2, 6), const Offset(21, 6), glow);
     canvas.drawLine(const Offset(2, 6), const Offset(21, 6), shaft);
     final head = Path()..moveTo(24, 6)..lineTo(16, 1)..lineTo(17, 6)..lineTo(16, 11)..close();
-    canvas.drawPath(head, Paint()..color = const Color(0xFFFFB52E));
+    canvas.drawPath(head, Paint()..color = theme.accentColor);
     canvas.drawLine(const Offset(5, 6), const Offset(1, 2), shaft);
     canvas.drawLine(const Offset(5, 6), const Offset(1, 10), shaft);
   }
@@ -2158,7 +2159,7 @@ class FighterSpritePainter extends CustomPainter {
     // سلاح صغير واضح للشخصية.
     final weapon = Paint()..color = const Color(0xFFFFD76A)..strokeWidth = 3..strokeCap = StrokeCap.round;
     if (attacking) {
-      final slash = Paint()..color = const Color(0xFFFFF0A1).withOpacity(.82)
+      final slash = Paint()..color = Colors.white.withOpacity(.82)
         ..style = PaintingStyle.stroke..strokeWidth = 3.2..strokeCap = StrokeCap.round;
       canvas.drawArc(const Rect.fromLTWH(35, 3, 34, 34), -1.1, 1.45, false, slash);
     }
@@ -2188,7 +2189,9 @@ class FighterSpritePainter extends CustomPainter {
 // -----------------------------------------------------------------------------
 
 class ArenaPainter extends CustomPainter {
-  const ArenaPainter();
+  const ArenaPainter({this.theme = WorldTheme.forest});
+
+  final WorldTheme theme;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -2197,13 +2200,13 @@ class ArenaPainter extends CustomPainter {
       ..shader = const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFF172B35), Color(0xFF35513D), Color(0xFF182D2B)],
+        colors: [theme.topColor, theme.midColor, theme.bottomColor],
       ).createShader(rect));
 
     // Outer mossy stone walls and corner towers.
     final wall = Paint()..color = const Color(0xFF59616A);
     final wallDark = Paint()..color = const Color(0xFF303D43);
-    final moss = Paint()..color = const Color(0xFF547A4A);
+    final moss = Paint()..color = theme.groundColor;
     canvas.drawRRect(RRect.fromRectAndRadius(
       Rect.fromLTWH(5, 72, size.width - 10, size.height - 80),
       const Radius.circular(24)), wallDark);
@@ -2212,7 +2215,7 @@ class ArenaPainter extends CustomPainter {
       const Radius.circular(20)), moss);
 
     // Irregular stone courtyard tiles.
-    final tile = Paint()..color = const Color(0xFF89917A);
+    final tile = Paint()..color = theme.tileColor;
     final tileEdge = Paint()..color = const Color(0xFF46584D)
       ..style = PaintingStyle.stroke..strokeWidth = 1.4;
     const tileW = 54.0, tileH = 38.0;
@@ -2235,7 +2238,7 @@ class ArenaPainter extends CustomPainter {
     }
 
     // Grass patches, tiny flowers and scattered stones.
-    final grass = Paint()..color = const Color(0xFF244D37);
+    final grass = Paint()..color = theme.vegetationColor;
     final flower = Paint()..color = const Color(0xFFFFC5D7);
     final gold = Paint()..color = const Color(0xFFFFD36B);
     for (var i = 0; i < 34; i++) {
@@ -2256,7 +2259,7 @@ class ArenaPainter extends CustomPainter {
         const Radius.circular(4)), wallDark);
       canvas.drawRect(Rect.fromCenter(center: Offset(x, baseY), width: 34, height: 42), wall);
       canvas.drawRect(Rect.fromCenter(center: Offset(x, baseY - 22), width: 46, height: 9), wall);
-      canvas.drawCircle(Offset(x, baseY - 30), 8, Paint()..color = const Color(0xFFFF8B27)
+      canvas.drawCircle(Offset(x, baseY - 30), 8, Paint()..color = theme.accentColor
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12));
       final flame = Path()
         ..moveTo(x, baseY - 19)..quadraticBezierTo(x - 14, baseY - 42, x, baseY - 53)
