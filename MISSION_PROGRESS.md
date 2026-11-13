@@ -514,3 +514,20 @@ Current verification state: world/stage implementation is committed to the featu
 4. Then continue Section 9: world-specific music, enemy/boss sounds, combat/death/explosion/skill/upgrade effects, and audio timing/variety.
 5. Require successful analysis, full Flutter tests, Android project generation, and debug APK build on each final PR head before merging.
 6. Physical Android gameplay validation remains outstanding across settings, haptics, checkpoint resume, world/stage selection, menus, combat, and progression. The game remains incomplete until all nine roadmap sections and final device validation are done.
+
+
+## Android APK distribution pipeline — 2026-11-13
+- Updated `.github/workflows/build-apk.yml` on `feature/procedural-game-audio-v2` in commit `afdabcbbe02ab0d793ea848f982d97dfa87d3238`.
+- The workflow now runs on pushes to the integrated development branch, on manual `workflow_dispatch`, and on version tags matching `v*`.
+- Each successful run installs Flutter/Java, regenerates the Android project, resolves dependencies, runs Dart analysis and the full Flutter test suite, installs the required Android NDK, builds a **release APK**, and uploads it as a GitHub Actions artifact for 30 days.
+- Pushing a version tag such as `v0.1.0` additionally publishes a GitHub Release and attaches `app-release.apk` to it.
+- This is an unsigned development APK (no production signing key has been configured). It can be sideloaded for testing; production Play Store distribution and seamless signed upgrades need a protected signing setup later.
+- PR #47 remains open and its loadout-screen tests were failing on the last observed run. The APK pipeline is intentionally attached to the validated integration branch, not the unmerged PR branch, so it does not package that unvalidated feature.
+- **Verification pending:** the new workflow has not yet completed on the latest integration head. Do not share a download as ready until a fresh run succeeds and its artifact/release asset is confirmed.
+- Physical Android gameplay validation remains outstanding; successful APK build is not a substitute for device testing.
+
+### Exact resume point
+1. Trigger/check the new `Build Android APK` workflow on `feature/procedural-game-audio-v2`; verify analysis, tests, NDK installation, release APK build, and artifact upload all pass on the exact current head.
+2. If successful, retrieve the artifact from Actions (or publish the first version tag after reviewing the build) and provide the user the direct download path.
+3. Continue repairing PR #47 independently; do not include its changes in the downloadable integrated build until CI passes and it is merged.
+4. Keep the nine-section game roadmap and hands-on Android validation open; this distribution workflow does not mean the game is complete.
