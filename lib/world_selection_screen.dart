@@ -85,7 +85,8 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                itemCount: WorldStageProgression.totalStages ~/\n                    WorldStageProgression.stagesPerWorld,
+                itemCount: WorldStageProgression.totalStages ~/
+                    WorldStageProgression.stagesPerWorld,
                 itemBuilder: (context, index) {
                   final worldId = index + 1;
                   final theme = _progression.themeForWorld(worldId);
