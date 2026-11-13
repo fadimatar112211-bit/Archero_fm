@@ -818,7 +818,8 @@ class _GameScreenState extends State<GameScreen>
     if (challengeRoomRewardPending) {
       challengeRoomRewardPending = false;
       globalCoins += 150;
-      unawaited(saveProgressSafely());
+      // The normal stage-completion save below persists this reward together
+      // with the stage/best-stage update as one ordered snapshot.
       playRealSound('coin');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
