@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import 'game_progress.dart';
@@ -6,6 +8,7 @@ import 'progress_store.dart';
 import 'shop_economy.dart';
 import 'weapon_system.dart';
 import 'equipment_system.dart';
+import 'resource_economy.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -30,6 +33,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         equippedArmorId: equippedArmorId, equippedHelmetId: equippedHelmetId,
         equippedRingId: equippedRingId, equippedRelicId: equippedRelicId,
         ownedEquipmentMask: ownedEquipmentMask,
+        gems: globalGems,
+        keys: globalKeys,
+        equipmentShards: globalEquipmentShards,
       ),
     );
     if (!purchase.purchased) {
@@ -85,11 +91,92 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     await playRealSound('coin');
   }
 
+
+  Future<void> _persistWallet({
+    required int coins,
+    required int gems,
+    required int keys,
+    required int equipmentShards,
+  }) => ProgressStore.save(
+    coins: coins,
+    hpUpgrade: heroHpUpgrade,
+    atkUpgrade: heroAtkUpgrade,
+    bestStage: bestStage,
+    bestScore: bestScore,
+    equippedWeaponId: equippedWeaponId,
+    equippedArmorId: equippedArmorId,
+    equippedHelmetId: equippedHelmetId,
+    equippedRingId: equippedRingId,
+    equippedRelicId: equippedRelicId,
+    ownedEquipmentMask: ownedEquipmentMask,
+    gems: gems,
+    keys: keys,
+    equipmentShards: equipmentShards,
+  );
+
+  Future<void> _buyChestKey() async {
+    final result = await purchaseChestKey(
+      coins: globalCoins,
+      gems: globalGems,
+      keys: globalKeys,
+      equipmentShards: globalEquipmentShards,
+      persist: _persistWallet,
+    );
+    if (!result.completed) {
+      _message(result.status == ResourceTransactionStatus.insufficientCoins
+          ? 'تحتاج إلى 180 عملة لشراء مفتاح.'
+          : 'تعذر حفظ شراء المفتاح؛ لم يتم خصم العملات.');
+      return;
+    }
+    globalCoins = result.coins;
+    globalKeys = result.keys;
+    if (mounted) setState(() {});
+    try { await playRealSound('coin'); } catch (_) {}
+    if (mounted) _message('اشتريت مفتاحاً جديداً للصناديق.');
+  }
+
+  Future<void> _openChest(ChestDefinition chest) async {
+    final result = await openRewardChest(
+      chest: chest,
+      coins: globalCoins,
+      gems: globalGems,
+      keys: globalKeys,
+      equipmentShards: globalEquipmentShards,
+      random: Random(),
+      persist: _persistWallet,
+    );
+    if (!result.completed) {
+      _message(result.status == ResourceTransactionStatus.insufficientKeys
+          ? 'لا تملك مفاتيح كافية لهذا الصندوق.'
+          : 'تعذر حفظ الصندوق؛ لم يتم استهلاك المفتاح.');
+      return;
+    }
+    globalCoins = result.coins;
+    globalGems = result.gems;
+    globalKeys = result.keys;
+    globalEquipmentShards = result.equipmentShards;
+    if (mounted) setState(() {});
+    try { await playRealSound('special'); } catch (_) {}
+    final reward = result.reward!;
+    if (mounted) {
+      _message('مكافأة الصندوق: +${reward.coins} عملة، +${reward.gems} جوهرة، +${reward.equipmentShards} شظية معدات.');
+    }
+  }
+
   Future<void> _equipWeapon(WeaponProfile weapon) async {
     final previous = equippedWeaponId;
     setState(() => equippedWeaponId = weapon.id);
-    try { await saveProgress(); await playRealSound('special'); }
-    catch (_) { if (!mounted) return; setState(() => equippedWeaponId = previous); _message('تعذر حفظ السلاح المختار. بقي السلاح السابق مجهزاً.'); }
+    try {
+      await saveProgress();
+    } catch (_) {
+      equippedWeaponId = previous;
+      if (mounted) {
+        setState(() {});
+        _message('تعذر حفظ السلاح المختار. بقي السلاح السابق مجهزاً.');
+      }
+      return;
+    }
+    try { await playRealSound('special'); } catch (_) {}
   }
 
   Widget _gearSlot(String title, List<EquipmentProfile> items, int equippedId) => Padding(
@@ -144,28 +231,41 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     });
     try {
       await saveProgress();
-      await playRealSound('coin');
-      if (mounted) _message('تم فتح وتجهيز ${item.name}.');
     } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        globalCoins = previousCoins;
-        ownedEquipmentMask = previousMask;
-        equippedArmorId = previousSlots[0];
-        equippedHelmetId = previousSlots[1];
-        equippedRingId = previousSlots[2];
-        equippedRelicId = previousSlots[3];
-      });
-      _message('تعذر حفظ فتح القطعة. لم يتم اعتماد الخصم.');
+      globalCoins = previousCoins;
+      ownedEquipmentMask = previousMask;
+      equippedArmorId = previousSlots[0];
+      equippedHelmetId = previousSlots[1];
+      equippedRingId = previousSlots[2];
+      equippedRelicId = previousSlots[3];
+      if (mounted) {
+        setState(() {});
+        _message('تعذر حفظ فتح القطعة. لم يتم اعتماد الخصم.');
+      }
+      return;
     }
+    try { await playRealSound('coin'); } catch (_) {}
+    if (mounted) _message('تم فتح وتجهيز ${item.name}.');
   }
 
   Future<void> _equipGear(EquipmentProfile item) async {
     if (!EquipmentCatalog.isOwned(ownedEquipmentMask, item)) return;
     final old = [equippedArmorId, equippedHelmetId, equippedRingId, equippedRelicId];
     setState(() { switch (item.slot) { case EquipmentSlot.armor: equippedArmorId=item.id; break; case EquipmentSlot.helmet: equippedHelmetId=item.id; break; case EquipmentSlot.ring: equippedRingId=item.id; break; case EquipmentSlot.relic: equippedRelicId=item.id; break; } });
-    try { await saveProgress(); await playRealSound('special'); }
-    catch (_) { if (!mounted) return; setState(() { equippedArmorId=old[0]; equippedHelmetId=old[1]; equippedRingId=old[2]; equippedRelicId=old[3]; }); _message('تعذر حفظ المعدّات. بقي التجهيز السابق.'); }
+    try {
+      await saveProgress();
+    } catch (_) {
+      equippedArmorId=old[0];
+      equippedHelmetId=old[1];
+      equippedRingId=old[2];
+      equippedRelicId=old[3];
+      if (mounted) {
+        setState(() {});
+        _message('تعذر حفظ المعدّات. بقي التجهيز السابق.');
+      }
+      return;
+    }
+    try { await playRealSound('special'); } catch (_) {}
   }
 
   void _message(String message) {
