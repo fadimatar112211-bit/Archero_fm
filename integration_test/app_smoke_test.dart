@@ -34,6 +34,17 @@ void main() {
     // The arena should be live and expose its pause control.
     await tester.pump(const Duration(seconds: 2));
     expect(find.byIcon(Icons.pause), findsOneWidget);
+    expect(find.byKey(const ValueKey('game-arena-gesture')), findsOneWidget);
+
+    // Exercise touch movement and the active-skill control on the emulator.
+    await tester.drag(
+      find.byKey(const ValueKey('game-arena-gesture')),
+      const Offset(72, -54),
+      touchSlopY: 2,
+    );
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('المهارة الخاصة'));
+    await tester.pump(const Duration(milliseconds: 300));
     expect(tester.takeException(), isNull);
   });
 }
