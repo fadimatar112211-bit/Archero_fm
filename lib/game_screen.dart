@@ -139,7 +139,8 @@ class _GameScreenState extends State<GameScreen>
   bool get stageTransitioning => runLifecycle.isStageTransitioning;
   GameTimerRegistry get timers => runSession.timers;
   bool _pausedForAppLifecycle = false;
-  int _roomHazardCooldownTicks = 0;
+  int get _roomHazardCooldownTicks => runState.roomHazardCooldownTicks;
+  set _roomHazardCooldownTicks(int value) => runState.roomHazardCooldownTicks = value;
 
   List<GameObject> get enemies => runState.enemies;
   List<GameObject> get arrows => runState.arrows;
@@ -179,10 +180,7 @@ class _GameScreenState extends State<GameScreen>
       duration: const Duration(seconds: 12),
     )..repeat();
 
-    if (runSession.isRestored) {
-      final hazardTicks = widget.checkpoint!.state['hazardCooldownTicks'];
-      if (hazardTicks is int && hazardTicks >= 0) _roomHazardCooldownTicks = hazardTicks;
-    } else {
+    if (!runSession.isRestored) {
       final heroStats = PlayerSystem.createRunStats(
         heroType: widget.heroType,
         hpUpgrade: heroHpUpgrade,
@@ -227,7 +225,6 @@ class _GameScreenState extends State<GameScreen>
       await RunCheckpointStore.save(captureRunCheckpoint(
         heroType: widget.heroType,
         run: runState,
-        hazardCooldownTicks: _roomHazardCooldownTicks,
       ));
     } catch (error, stackTrace) {
       debugPrint('Active run checkpoint save failed: $error\\n$stackTrace');
