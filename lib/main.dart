@@ -123,6 +123,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Future<void> _buyAttack() async {
+    debugPrint('[Shop] attack purchase requested: coins=$globalCoins upgrade=$heroAtkUpgrade');
     final purchase = await commitUpgradePurchase(
       upgrade: ShopEconomy.attack(heroAtkUpgrade),
       currentCoins: globalCoins,
@@ -135,6 +136,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         bestScore: bestScore,
       ),
     );
+    debugPrint('[Shop] attack purchase result: ${purchase.status} remaining=${purchase.remainingCoins}');
     if (!purchase.purchased) {
       _message(switch (purchase.status) {
         ShopPurchaseStatus.maxLevel => 'وصلت إلى الحد الأقصى لترقية الهجوم.',
