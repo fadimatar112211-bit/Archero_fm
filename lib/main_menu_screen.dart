@@ -104,6 +104,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         gems: globalGems,
         keys: globalKeys,
         equipmentShards: globalEquipmentShards,
+        unlockedHeroesMask: unlockedHeroesMask,
+        totalKills: totalKills,
+        totalBosses: totalBosses,
+        totalChests: totalChests,
+        totalRuns: totalRuns,
+        claimedAchievementsMask: claimedAchievementsMask,
       ),
     );
     debugPrint('[Shop] attack purchase result: ${purchase.status} remaining=${purchase.remainingCoins}');
