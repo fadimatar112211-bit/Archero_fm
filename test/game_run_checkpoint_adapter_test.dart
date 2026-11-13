@@ -31,14 +31,12 @@ void main() {
 
     final checkpoint = captureRunCheckpoint(
       heroType: 4,
-      coins: 275,
       run: run,
       hazardCooldownTicks: 12,
     );
     final decoded = RunCheckpoint.decode(checkpoint.encode())!;
     final restored = restoreRunCheckpointState(decoded)!;
 
-    expect(decoded.state['walletCoins'], 275);
     expect(decoded.state['hazardCooldownTicks'], 12);
     expect(restored.stage, 6);
     expect(restored.playerHp, 72);
