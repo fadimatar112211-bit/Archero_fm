@@ -17,6 +17,7 @@ import 'combat_timing.dart';
 import 'enemy_ai.dart';
 import 'enemy_projectile_motion.dart';
 import 'combat_collision.dart';
+import 'player_projectile.dart';
 import 'boss_projectiles.dart';
 import 'combat_damage.dart';
 
@@ -876,26 +877,27 @@ class _GameScreenState extends State<GameScreen>
     // تحريك الأسهم وفحص اصطدامها بالأعداء.
     for (int i = arrows.length - 1; i >= 0; i--) {
       final arrow = arrows[i];
-      arrow['x'] = (arrow['x'] as double) + (arrow['vx'] as double);
-      arrow['y'] = (arrow['y'] as double) + (arrow['vy'] as double);
-
-      if ((arrow['x'] as double) < -20 ||
-          (arrow['x'] as double) > arenaWidth + 20 ||
-          (arrow['y'] as double) < -20 ||
-          (arrow['y'] as double) > arenaHeight + 20) {
-        arrows.removeAt(i);
-        continue;
-      }
-
-      final hitIndex = firstOverlappingTargetIndex(
-        projectileX: arrow['x'] as double,
-        projectileY: arrow['y'] as double,
+      final step = resolvePlayerProjectileStep(
+        x: arrow['x'] as double,
+        y: arrow['y'] as double,
+        velocityX: arrow['vx'] as double,
+        velocityY: arrow['vy'] as double,
+        arenaWidth: arenaWidth,
+        arenaHeight: arenaHeight,
         targets: enemies.map((enemy) => CombatCircle(
           x: enemy['x'] as double,
           y: enemy['y'] as double,
           radius: enemy['radius'] as double,
         )).toList(growable: false),
       );
+      arrow['x'] = step.x;
+      arrow['y'] = step.y;
+      if (step.outOfBounds) {
+        arrows.removeAt(i);
+        continue;
+      }
+
+      final hitIndex = step.hitTargetIndex;
       if (hitIndex == null) continue;
 
       final enemy = enemies[hitIndex];
