@@ -65,6 +65,7 @@ class ProgressStore {
     final candidate = value ?? fallback;
     if (key == 'equippedWeaponId') return candidate >= 0 && candidate <= 3 ? candidate : 0;
     if (key == 'ownedEquipmentMask') return candidate.clamp(0, 4095).toInt();
+    if (key == 'gems' || key == 'keys' || key == 'equipmentShards') return candidate.clamp(0, 999999).toInt();
     if (key.startsWith('equipped')) return candidate >= 0 && candidate <= 2 ? candidate : 0;
     if (key == 'bestStage') return candidate < 1 ? 1 : candidate;
     return candidate < 0 ? 0 : candidate;
