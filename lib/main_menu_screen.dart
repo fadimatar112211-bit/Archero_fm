@@ -14,6 +14,7 @@ import 'equipment_system.dart';
 import 'resource_economy.dart';
 import 'achievement_system.dart';
 import 'game_settings_screen.dart';
+import 'loadout_screen.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -787,6 +788,24 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       ),
                     ],
                     const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoadoutScreen(),
+                            ),
+                          ).then((_) {
+                            if (mounted) setState(() {});
+                          });
+                        },
+                        icon: const Icon(Icons.shield),
+                        label: const Text('تجهيزات البطل والأسلحة'),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
