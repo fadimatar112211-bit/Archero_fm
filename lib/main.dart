@@ -524,7 +524,7 @@ class _GameScreenState extends State<GameScreen>
   set arenaHeight(double value) => runState.arenaHeight = value;
 
   bool get _arenaInitialized => runState.arenaInitialized;
-  set _arenaInitialized(bool value) => runState._arenaInitialized = value;
+  set _arenaInitialized(bool value) => runState.arenaInitialized = value;
 
   double get playerX => runState.playerX;
   set playerX(double value) => runState.playerX = value;
@@ -601,7 +601,6 @@ class _GameScreenState extends State<GameScreen>
   bool get gameOverShown => runLifecycle.isGameOver;
   bool get playerDying => runLifecycle.isPlayerDying;
   bool get stageTransitioning => runLifecycle.isStageTransitioning;
-  int playerDeathTicks = 0;
 
   Timer? gameLoop;
   Timer? shootLoop;
