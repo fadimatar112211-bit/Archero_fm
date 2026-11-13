@@ -7,6 +7,8 @@ enum SkillId {
   vitality,
   frostAura,
   coinMagnet,
+  criticalStrike,
+  swiftHands,
 }
 
 enum SkillRarity { common, rare, epic }
@@ -63,6 +65,18 @@ class SkillSystem {
       id: SkillId.coinMagnet,
       title: 'جاذب الكنوز',
       description: 'زيادة مدى جمع العملات 45%.',
+      rarity: SkillRarity.epic,
+    ),
+    SkillOption(
+      id: SkillId.criticalStrike,
+      title: 'ضربة حرجة',
+      description: 'فرصة 15% لإحداث ضرر مضاعف.',
+      rarity: SkillRarity.rare,
+    ),
+    SkillOption(
+      id: SkillId.swiftHands,
+      title: 'سرعة الرامي',
+      description: 'زيادة سرعة إطلاق السهام 18%.',
       rarity: SkillRarity.epic,
     ),
   ];
