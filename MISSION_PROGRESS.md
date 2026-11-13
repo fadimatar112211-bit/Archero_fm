@@ -514,3 +514,21 @@ Current verification state: world/stage implementation is committed to the featu
 4. Then continue Section 9: world-specific music, enemy/boss sounds, combat/death/explosion/skill/upgrade effects, and audio timing/variety.
 5. Require successful analysis, full Flutter tests, Android project generation, and debug APK build on each final PR head before merging.
 6. Physical Android gameplay validation remains outstanding across settings, haptics, checkpoint resume, world/stage selection, menus, combat, and progression. The game remains incomplete until all nine roadmap sections and final device validation are done.
+
+
+## Section 8 follow-up — dedicated loadout screen (PR preparation)
+- Started from the integrated checkpoint after PR #46 merge commit `4e8b65f5af8678cebe3c05c8bf96323a16fe5b91`; the shared integration branch's progress log was updated in commit `7db047ae59892b6e9ed5cb2de94f1e2d88b3d5aa`.
+- Added `lib/loadout_screen.dart`: a dedicated Arabic hero-loadout screen showing the selected weapon's damage/fire-rate/projectile characteristics, equipped armor/helmet/ring/relic selectors restricted to owned pieces, and aggregated equipment bonuses (HP, attack, damage reduction, critical chance, coin pickup radius/reward).
+- Weapon and equipment changes save through the existing progression persistence path. If saving fails, the prior in-memory selection is restored and the user receives an error message.
+- Added a main-menu entry to open the dedicated loadout screen while preserving the existing acquisition/unlock flows in the menu.
+- Added `test/loadout_screen_test.dart` for screen content and persisted weapon selection.
+- Changed: `lib/loadout_screen.dart` (new), `lib/main_menu_screen.dart`, `test/loadout_screen_test.dart` (new), and this progress log.
+- Current status: implementation committed on `feature/dedicated-loadout-screen`; CI validation is pending. Do not merge until Dart analysis, the full Flutter test suite, Android project generation, and Android debug APK build all pass on the exact latest head.
+- Physical Android layout/touch/persistence validation remains outstanding.
+
+### Exact resume point
+1. Run full CI for the latest `feature/dedicated-loadout-screen` head and inspect every step.
+2. Fix any analysis, test, or Android build failure; update this log and rerun on the new exact head.
+3. Open/merge a PR into `feature/procedural-game-audio-v2` only after all checks pass.
+4. Continue Section 8 with HUD, win/loss and progression screen polish, then Section 9's music/effects variety and timing.
+5. Keep physical Android gameplay validation outstanding until performed; the game remains incomplete.
