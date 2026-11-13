@@ -345,8 +345,8 @@ Verification status at the first checkpoint: implementation had not yet been val
 - PR #44, “Add persistent mid-run checkpoint save and resume”, is **open and not merged**.
 - PR #44 base: `feature/procedural-game-audio-v2`.
 - PR #44 head branch: `feature/mid-run-checkpoint-integrated`.
-- Latest PR #44 head SHA after wallet-source-of-truth hardening: `7f991ef65dfaf4f1241cdd85a2e51e421e3e074c`.
-- Earlier run `43496064493` (run 817) was cancelled during the Android debug APK step after setup, dependency installation, Dart analysis, tests, and Android project generation had passed. A new workflow run `43497017111` (run 823) was created for head `7f991ef65dfaf4f1241cdd85a2e51e421e3e074c`; it was pending at the time this checkpoint was written. Do not merge PR #44 until this latest-head run completes successfully.
+- Latest PR #44 head SHA after wallet-source-of-truth hardening and progress-log update: `698c40e08bd01cc4231cfe49dc6f711132bb448c`.
+- Earlier run `43496064493` (run 817) was cancelled during the Android debug APK step after setup, dependency installation, Dart analysis, tests, and Android project generation had passed. Workflow run `43497017111` (run 823) was created for the code-only head and is superseded by the latest-head workflow run `43497110206` (run 825) for head `698c40e08bd01cc4231cfe49dc6f711132bb448c`; the latter was in progress at the time this checkpoint was written. Do not merge PR #44 until this latest-head run completes successfully.
 - No successful CI conclusion has yet been confirmed for the latest PR #44 head. Physical-device gameplay validation has not been performed.
 
 ### PR #44 implementation contents
@@ -377,7 +377,7 @@ Verification status at the first checkpoint: implementation had not yet been val
 - Commit: `7f991ef65dfaf4f1241cdd85a2e51e421e3e074c`.
 
 ### Exact next actions
-1. Poll latest-head workflow run `43497017111` until it completes and inspect every job/step, especially Dart analysis, Flutter tests, Android project generation, and Android debug APK build.
+1. Poll latest-head workflow run `43497110206` until it completes and inspect every job/step, especially Dart analysis, Flutter tests, Android project generation, and Android debug APK build.
 2. If any check fails, inspect logs, fix the underlying issue on `feature/mid-run-checkpoint-integrated`, and wait for a green run on the new head SHA.
 3. Review PR #44 diff and verify mergeability against the current base; merge only after all required checks pass.
 4. After merge, record exact merge commit and successful CI run IDs here.
