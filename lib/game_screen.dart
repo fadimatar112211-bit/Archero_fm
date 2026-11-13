@@ -34,6 +34,7 @@ import 'game_timers.dart';
 import 'room_flow.dart';
 import 'room_encounter.dart';
 import 'room_layout.dart';
+import 'room_hazard_system.dart';
 import 'enemy_hit_resolution.dart';
 import 'player_system.dart';
 import 'skill_selection_dialog.dart';
@@ -70,6 +71,7 @@ class _GameScreenState extends State<GameScreen>
 
   final Random random = Random();
   late final AnimationController worldAnimationController;
+  late RoomLayout _roomLayout;
 
   late final GameRunSession runSession = GameRunSession(
     initialStage: widget.checkpoint?.stage ?? widget.initialStage,
@@ -78,7 +80,7 @@ class _GameScreenState extends State<GameScreen>
         : restoreRunCheckpointState(widget.checkpoint!),
   );
   GameRunState get runState => runSession.state;
-  EquipmentStats get gearStats => EquipmentCatalog.stats(armorId: equippedArmorId, helmetId: equippedHelmetId, ringId: equippedRingId, relicId: equippedRelicId);
+  late final EquipmentStats gearStats = EquipmentCatalog.stats(armorId: equippedArmorId, helmetId: equippedHelmetId, ringId: equippedRingId, relicId: equippedRelicId);
 
   double get arenaWidth => runState.arenaWidth;
   set arenaWidth(double value) => runState.arenaWidth = value;
@@ -175,6 +177,7 @@ class _GameScreenState extends State<GameScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _roomLayout = RoomLayout.forStage(stage);
     worldAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 12),
@@ -233,6 +236,7 @@ class _GameScreenState extends State<GameScreen>
 
 
   void _spawnEnemies({bool notify = true, bool challenge = false}) {
+    _roomLayout = RoomLayout.forStage(stage);
     enemies.clear();
     arrows.clear();
     enemyProjectiles.clear();
@@ -885,27 +889,30 @@ class _GameScreenState extends State<GameScreen>
     // Environmental hazards are room-specific and can be dodged with the
     // existing movement i-frames. The cooldown is tick-based, not timer-based.
     if (_roomHazardCooldownTicks > 0) _roomHazardCooldownTicks--;
-    final roomLayout = RoomLayout.forStage(stage);
-    if (_roomHazardCooldownTicks == 0 &&
-        roomLayout.playerTouchesHazard(
-          x: playerX,
-          y: playerY,
-          arenaWidth: arenaWidth,
-          arenaHeight: arenaHeight,
-        )) {
-      _roomHazardCooldownTicks = 45;
-      if (playerMoveTicks > 0) {
-        combatEffects.add({
-          'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 16,
-        });
-      } else {
-        playerHp = (playerHp - 8 * (1 - gearStats.damageReduction)).clamp(0.0, playerMaxHp).toDouble();
-        lastDamageAt = DateTime.now();
-        combatEffects.add({
-          'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
-        });
-        playRealSound('hit');
-      }
+    final hazard = RoomHazardSystem.advance(
+      layout: _roomLayout,
+      cooldownTicks: _roomHazardCooldownTicks,
+      x: playerX,
+      y: playerY,
+      arenaWidth: arenaWidth,
+      arenaHeight: arenaHeight,
+      playerHp: playerHp,
+      playerMaxHp: playerMaxHp,
+      playerIsDodging: playerMoveTicks > 0,
+      damageReduction: gearStats.damageReduction,
+    );
+    _roomHazardCooldownTicks = hazard.cooldownTicks;
+    if (hazard.status == RoomHazardStatus.dodged) {
+      combatEffects.add({
+        'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 16,
+      });
+    } else if (hazard.status == RoomHazardStatus.damaged) {
+      playerHp = hazard.playerHp;
+      lastDamageAt = DateTime.now();
+      combatEffects.add({
+        'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
+      });
+      playRealSound('hit');
     }
 
     if (playerHp <= 0) {
@@ -950,6 +957,7 @@ class _GameScreenState extends State<GameScreen>
     if (transition.currentRoom.isBoss && runLifecycle.beginSpecialRoomChoice()) {
       unawaited(RunCheckpointStore.clear());
       stage = transition.nextRoom.stage;
+      _roomLayout = RoomLayout.forStage(stage);
       _roomHazardCooldownTicks = 0;
       bestStage = completion.updatedBestStage;
       playerHp = completion.updatedPlayerHp;
@@ -964,6 +972,7 @@ class _GameScreenState extends State<GameScreen>
     );
     unawaited(RunCheckpointStore.clear());
     stage = transition.nextRoom.stage;
+    _roomLayout = RoomLayout.forStage(stage);
     _roomHazardCooldownTicks = 0;
     bestStage = completion.updatedBestStage;
     playerHp = completion.updatedPlayerHp;
@@ -1209,7 +1218,7 @@ class _GameScreenState extends State<GameScreen>
         playerMaxHp: playerMaxHp,
         worldAnimation: worldAnimationController,
         worldTheme: WorldTheme.forStage(stage),
-        roomLayout: RoomLayout.forStage(stage),
+        roomLayout: _roomLayout,
         coinActors: coins,
         playerArrows: arrows,
         enemyProjectiles: enemyProjectiles,

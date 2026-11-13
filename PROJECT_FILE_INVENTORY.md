@@ -27,7 +27,7 @@
 | `.github/workflows/build-apk.yml` | CI لبناء APK بعد تجهيز Flutter/Android وتشغيل الفحوصات ورفع artifact. |
 | `.github/workflows/flutter-ci.yml` | CI لفحوص Flutter والتحليل والاختبارات على تغييرات المستودع. |
 
-### كود التطبيق lib/ (62)
+### كود التطبيق lib/ (63)
 
 | الملف | الوظيفة |
 |---|---|
@@ -82,6 +82,7 @@
 | `lib/room_flow.dart` | قواعد الانتقال وتدفق الغرف. |
 | `lib/room_encounter.dart` | ينسّق إنشاء مواجهات الغرف العادية وغرف الزعماء وتعزيزات غرف التحدي دون اعتماد على واجهة Flutter. |
 | `lib/room_layout.dart` | تعريف تخطيط الغرف ومواقع عناصرها. |
+| `lib/room_hazard_system.dart` | يحسب ضرر عوائق الغرف وتبريدها ومراوغتها بمعزل عن شاشة اللعب. |
 | `lib/run_checkpoint.dart` | نموذج checkpoint للجولة وواجهة تخزينه. |
 | `lib/shop_economy.dart` | قواعد أسعار المتجر وشراء الترقيات والتحقق من الرصيد. |
 | `lib/skill_selection_dialog.dart` | واجهة اختيار مكافأة/مهارة الجولة. |
@@ -141,7 +142,7 @@
 | `assets/spritesheets/player_walk.svg` | إطارات حركة/أنيميشن للبطل: المشي، وتُستخدم لعرض الإطارات المتتابعة. |
 | `assets/wall.svg` | رسم حاجز/جدار البيئة بصيغة متجهية. |
 
-### الاختبارات test/ (62)
+### الاختبارات test/ (63)
 
 | الملف | الوظيفة |
 |---|---|
@@ -191,6 +192,7 @@
 | `test/room_flow_test.dart` | اختبارات آلية لوحدة/ميزة room flow؛ تتحقق من السلوك المحدد في حالات الاختبار. |
 | `test/room_encounter_test.dart` | يختبر توجيه الغرف إلى مولّد الزعيم أو موجات الأعداء، وثبات العشوائية وتعزيزات التحدي. |
 | `test/room_layout_test.dart` | اختبارات آلية لوحدة/ميزة room layout؛ تتحقق من السلوك المحدد في حالات الاختبار. |
+| `test/room_hazard_system_test.dart` | يختبر ضرر العوائق والتبريد والمراوغة وتقليل الضرر والتحقق من الإحداثيات. |
 | `test/run_checkpoint_test.dart` | اختبارات آلية لوحدة/ميزة run checkpoint؛ تتحقق من السلوك المحدد في حالات الاختبار. |
 | `test/shop_economy_test.dart` | اختبارات آلية لوحدة/ميزة shop economy؛ تتحقق من السلوك المحدد في حالات الاختبار. |
 | `test/shop_purchase_commit_test.dart` | اختبارات آلية لوحدة/ميزة shop purchase commit؛ تتحقق من السلوك المحدد في حالات الاختبار. |
