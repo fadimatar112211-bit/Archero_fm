@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
+
 import 'audio_service.dart';
 import 'game_diagnostics.dart';
 import 'player_progress.dart';
@@ -33,4 +35,14 @@ Future<void> saveProgress() async {
 
 final GameAudioService gameAudio = GameAudioService();
 
-Future<void> playRealSound(String type) => gameAudio.play(type);
+@visibleForTesting
+Future<void> Function(String)? playSoundOverrideForTesting;
+
+Future<void> playRealSound(String type) async {
+  final override = playSoundOverrideForTesting;
+  if (override != null) {
+    await override(type);
+    return;
+  }
+  await gameAudio.play(type);
+}
