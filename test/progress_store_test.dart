@@ -220,7 +220,7 @@ void main() {
     );
     expect(preferences.values, initial);
     await ProgressStore.save(coins: 250, hpUpgrade: 20, atkUpgrade: 15, bestStage: 4, bestScore: 150);
-    expect(preferences.values, {'coins': 250, 'hpUpgrade': 20, 'atkUpgrade': 15, 'bestStage': 4, 'bestScore': 150, 'equippedWeaponId': 0, 'equippedArmorId': 0, 'equippedHelmetId': 0, 'equippedRingId': 0, 'equippedRelicId': 0, 'ownedEquipmentMask': 585, 'gems': 0, 'keys': 0, 'equipmentShards': 0, 'unlockedHeroesMask': 1});
+    expect(preferences.values, {'coins': 250, 'hpUpgrade': 20, 'atkUpgrade': 15, 'bestStage': 4, 'bestScore': 150, 'equippedWeaponId': 0, 'equippedArmorId': 0, 'equippedHelmetId': 0, 'equippedRingId': 0, 'equippedRelicId': 0, 'ownedEquipmentMask': 585, 'gems': 0, 'keys': 0, 'equipmentShards': 0, 'unlockedHeroesMask': 1, 'totalKills': 0, 'totalBosses': 0, 'totalChests': 0, 'totalRuns': 0, 'claimedAchievementsMask': 0});
   });
 
   test('persists equipped weapon with the progression snapshot', () async {
