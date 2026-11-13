@@ -134,7 +134,7 @@ Changed files:
 - `test/arena_painter_test.dart`
 - `test/game_arena_view_test.dart`
 
-Verification: pending CI. Do not mark this section complete. These room variants and hazards are an initial gameplay slice; distinct treasure/shop/healing/challenge room flows, obstacle collision/pathfinding, and full world-specific mechanics remain outstanding.
+Verification: first CI run 43471488889 failed at Dart analysis because a room-prop painter passed a Rect where an RRect was required. Corrected in the follow-up commit; CI must be rerun and pass before merging. Do not mark this section complete. These room variants and hazards are an initial gameplay slice; distinct treasure/shop/healing/challenge room flows, obstacle collision/pathfinding, and full world-specific mechanics remain outstanding.
 
 ## Next action
 
