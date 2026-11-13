@@ -1,3 +1,6 @@
+export 'game_progress.dart';
+export 'game_screen.dart';
+
 import 'dart:async';
 import 'dart:ui' show PlatformDispatcher;
 
