@@ -1,5 +1,3 @@
-import 'dart:math';
-
 class CombatCircle {
   final double x;
   final double y;

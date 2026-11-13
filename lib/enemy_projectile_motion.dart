@@ -1,5 +1,3 @@
-import 'dart:math';
-
 class ProjectileStep {
   final double x;
   final double y;
