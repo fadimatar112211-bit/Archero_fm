@@ -454,3 +454,43 @@ Current verification state: world/stage implementation is committed to the featu
 3. Add focused widget/model tests, update this file, open a PR, and require successful analysis, full Flutter tests, Android project generation, and debug APK build on the exact final head before merging.
 4. Continue the remaining Section 8 and Section 9 requirements, then return for hands-on Android validation of checkpoint resume, world/stage selection, menus, combat, and progression.
 5. Keep all remaining requirements in Sections 1–6, 8, and 9 open until implemented and verified. The game is not complete.
+
+
+## Section 8 — initial persistent audio settings slice (implementation branch)
+- Branch: `feature/game-settings-audio-haptics`, based on the integrated PR #45 merge.
+- Added a dedicated app-settings store separate from player progression. The audio-enabled preference defaults safely to on, persists across launches, and recovers from a wrong-typed preference without blocking startup.
+- Added an Arabic settings screen with a persistent master sound-effects toggle and linked it from the main menu.
+- Routed the central `playRealSound` function through the saved audio preference, so disabling sound suppresses all game sound effects without changing gameplay or progression.
+- Added unit tests for default settings, persistence/reload, and malformed preference recovery.
+- Files added: `lib/game_settings.dart`, `lib/game_settings_screen.dart`, `test/game_settings_test.dart`.
+- Files updated: `lib/main.dart`, `lib/main_menu_screen.dart`, `lib/game_progress.dart`.
+- Verification is pending GitHub Actions on the final PR head. No Android device validation has been performed.
+- This is only the first slice of Section 8: control customization, vibration, equipment/weapon dedicated screens, and further menu/HUD/win-loss progression polish remain open.
+
+### Exact next actions
+1. Run Dart analysis, the full Flutter test suite, Android project generation, and Android debug APK build for this branch; fix every failure on the branch's latest head.
+2. Merge only after all required checks pass on the exact final head.
+3. Continue Section 8 with real control/vibration settings and improved dedicated equipment/weapon screens; then continue Section 9 audio/music and effects variety. Do not mark either section complete based on this settings slice.
+
+
+### Section 8 follow-up — functional vibration preference
+- Extended the separate settings store with a persistent vibration toggle, default enabled and independently recoverable if its stored value has the wrong type.
+- Added an Arabic vibration switch to the settings screen.
+- Integrated optional Flutter haptic feedback on actual player damage (enemy projectile and boss area attack) and active-skill use. Haptics respect the saved toggle; failures from unsupported device/platform haptic channels are safely ignored.
+- Expanded unit coverage for defaults, persistence, malformed values, and isolation between the audio and vibration keys.
+- Added a widget test covering both settings controls and persistence of the vibration switch.
+- Changed: `lib/game_settings.dart`, `lib/game_settings_screen.dart`, `lib/game_screen.dart`, `test/game_settings_test.dart`, `test/game_settings_screen_test.dart`.
+- The original PR #46 CI run `43500542198` remained reported as in progress at Android debug APK build for head `46a66725f39f8ea85bb19277a7f73e47b8c12ff6`; it is not evidence for these newer commits. The updated branch must receive and pass a fresh full CI run before merge.
+- Physical-device haptic behavior has not been manually validated; actual vibration depends on device hardware and OS settings.
+
+### Exact next actions
+1. Verify the new branch head and its newly triggered CI. Investigate the stale prior run separately; do not merge based on its earlier passing analysis/tests.
+2. Require a fresh successful Dart analysis, full Flutter tests (including new widget test), Android project generation, and debug APK build on the exact current head.
+3. Merge PR #46 only after all required checks pass.
+4. Continue Section 8 by auditing the equipment/weapon selection and comparison experience, then HUD and win/loss progression; keep the original roadmap requirements open until verified.
+
+
+### CI correction
+- Fresh CI run `43501608553` on head `268218b32826bc89aaf3d6d9dd42e5d026c0d94c` failed during Dart analysis because `HapticFeedback` was not imported into `game_screen.dart`.
+- Corrected by importing `HapticFeedback` from Flutter's services library in commit `ab461ca5b88ae98326baa129f87d4474766bd159`.
+- A new full CI run on the corrected latest head is required; the failed run is not a validation pass.

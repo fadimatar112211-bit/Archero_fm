@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'audio_service.dart';
+import 'game_settings.dart';
 import 'game_diagnostics.dart';
 import 'player_progress.dart';
 import 'progress_store.dart';
@@ -96,6 +97,7 @@ final GameAudioService gameAudio = GameAudioService();
 Future<void> Function(String)? playSoundOverrideForTesting;
 
 Future<void> playRealSound(String type) async {
+  if (!GameSettingsStore.audioEnabled) return;
   final override = playSoundOverrideForTesting;
   if (override != null) {
     await override(type);

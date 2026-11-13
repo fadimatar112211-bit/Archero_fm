@@ -4,6 +4,9 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
+
+import 'game_settings.dart';
 
 import 'game_progress.dart';
 import 'stage_flow.dart';
@@ -333,6 +336,11 @@ class _GameScreenState extends State<GameScreen>
     playRealSound('shoot');
   }
 
+  void _triggerHaptic() {
+    if (!GameSettingsStore.vibrationEnabled) return;
+    unawaited(HapticFeedback.mediumImpact().catchError((Object _) {}));
+  }
+
   void _restartShootLoop() {
     final weapon = WeaponCatalog.byId(equippedWeaponId);
     final intervalMs = CombatBalance.shootIntervalMs(attackSpeedMultiplier * weapon.attackSpeedMultiplier);
@@ -403,6 +411,7 @@ class _GameScreenState extends State<GameScreen>
       specialCooldown = 15;
     });
 
+    _triggerHaptic();
     playRealSound('special');
     _checkStageComplete();
     timers.cancel('cooldown');
@@ -464,6 +473,7 @@ class _GameScreenState extends State<GameScreen>
         playerHp = resolution.updatedPlayerHp;
         switch (resolution.status) {
           case ProjectileHitStatus.damaged:
+            _triggerHaptic();
             lastDamageAt = now;
             combatEffects.add({
               'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
@@ -705,6 +715,7 @@ class _GameScreenState extends State<GameScreen>
               'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 18,
             });
           case AreaAttackHitStatus.damaged:
+            _triggerHaptic();
             playerHp = areaHit.updatedPlayerHp;
             lastDamageAt = areaHit.resolvedAt;
             combatEffects.add({
