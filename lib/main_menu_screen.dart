@@ -26,7 +26,8 @@ class MainMenuScreen extends StatefulWidget {
 class _MainMenuScreenState extends State<MainMenuScreen> {
   final ScrollController _menuScrollController = ScrollController();
   final GlobalKey _shopSectionKey = GlobalKey();
-  final GlobalKey _equipmentSectionKey = GlobalKey();\n  bool _walletBusy = false;
+  final GlobalKey _equipmentSectionKey = GlobalKey();
+  bool _walletBusy = false;
   RunCheckpoint? _activeCheckpoint;
 
   @override
