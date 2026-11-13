@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import 'game_progress.dart';
+import 'game_screen.dart';
+import 'run_checkpoint.dart';
 import 'hero_selection_screen.dart';
 import 'progress_store.dart';
 import 'shop_economy.dart';
@@ -20,6 +22,38 @@ class MainMenuScreen extends StatefulWidget {
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
   bool _walletBusy = false;
+  RunCheckpoint? _activeCheckpoint;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRunCheckpoint();
+  }
+
+  Future<void> _loadRunCheckpoint() async {
+    try {
+      final checkpoint = await RunCheckpointStore.load();
+      if (mounted) setState(() => _activeCheckpoint = checkpoint);
+    } catch (_) {
+      if (mounted) setState(() => _activeCheckpoint = null);
+    }
+  }
+
+  Future<void> _resumeRun() async {
+    final checkpoint = _activeCheckpoint;
+    if (checkpoint == null) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => GameScreen(
+          heroType: checkpoint.heroType,
+          initialStage: checkpoint.stage,
+          checkpoint: checkpoint,
+        ),
+      ),
+    );
+    await _loadRunCheckpoint();
+  }
   Future<void> _buyHealth() async {
     if (_walletBusy) return;
     setState(() => _walletBusy = true);
@@ -730,6 +764,22 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     ])),
                     const SizedBox(height: 18),
                     _achievementPanel(),
+                    if (_activeCheckpoint != null) ...[
+                      const SizedBox(height: 18),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: FilledButton.icon(
+                          onPressed: _resumeRun,
+                          icon: const Icon(Icons.play_circle_fill),
+                          label: Text('متابعة الجولة المحفوظة · المرحلة ${_activeCheckpoint!.stage}'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.greenAccent,
+                            foregroundColor: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 28),
                     SizedBox(
                       width: double.infinity,
