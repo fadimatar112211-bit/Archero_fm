@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'player_progress.dart';
 
 abstract interface class ProgressPreferences {
   int? getInt(String key);
@@ -63,6 +64,20 @@ class ProgressStore {
       for (final key in _defaults.keys)
         key: _validValue(key, prefs.getInt(key)),
     };
+  }
+
+  static Future<PlayerProgress> loadPlayerProgress() async {
+    return PlayerProgress.fromMap(await load());
+  }
+
+  static Future<void> savePlayerProgress(PlayerProgress progress) {
+    return save(
+      coins: progress.coins,
+      hpUpgrade: progress.hpUpgrade,
+      atkUpgrade: progress.atkUpgrade,
+      bestStage: progress.bestStage,
+      bestScore: progress.bestScore,
+    );
   }
 
   static Future<void> save({

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:archero_fm/progress_store.dart';
+import 'package:archero_fm/player_progress.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -99,4 +100,18 @@ void main() {
       'bestScore': 0,
     });
   });
+
+  test('loads and saves the typed player progress snapshot', () async {
+    const snapshot = PlayerProgress(
+      coins: 420,
+      hpUpgrade: 75,
+      atkUpgrade: 45,
+      bestStage: 12,
+      bestScore: 2300,
+    );
+
+    await ProgressStore.savePlayerProgress(snapshot);
+    expect((await ProgressStore.loadPlayerProgress()).toMap(), snapshot.toMap());
+  });
+
 }
