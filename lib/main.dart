@@ -605,7 +605,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
         'maxHp': bossHp,
         'type': 'boss',
         'radius': 36.0,
-        'speed': (0.78 + min(difficultyStep, 16) * 0.012) * enemySpeedMultiplier,
+        'speed': (0.78 + min(difficultyStep, 16) * 0.012) *\n            enemySpeedMultiplier * worldRules.enemySpeedMultiplier,
         'bossPhase': 1,
         'bossVolleyCooldown': 90,
       });
