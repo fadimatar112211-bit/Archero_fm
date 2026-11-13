@@ -23,7 +23,8 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
   late final WorldStageProgression _progression =
       WorldStageProgression(bestStage: bestStage);
   late int _selectedStage = _progression.maxUnlockedStage;
-  late int _expandedWorld = ((_selectedStage - 1) ~/ 10) + 1;
+  late int _expandedWorld =
+      ((_selectedStage - 1) ~/ WorldStageProgression.stagesPerWorld) + 1;
   bool _starting = false;
 
   Future<void> _startSelectedStage() async {
@@ -57,7 +58,8 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedWorld = ((_selectedStage - 1) ~/ 10) + 1;
+    final selectedWorld =
+        ((_selectedStage - 1) ~/ WorldStageProgression.stagesPerWorld) + 1;
     return Scaffold(
       appBar: AppBar(
         title: const Text('اختر العالم والمرحلة'),
@@ -83,7 +85,7 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                itemCount: WorldStageProgression.totalStages ~/ 10,
+                itemCount: WorldStageProgression.totalStages ~/\n                    WorldStageProgression.stagesPerWorld,
                 itemBuilder: (context, index) {
                   final worldId = index + 1;
                   final theme = _progression.themeForWorld(worldId);
@@ -133,7 +135,7 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
                       ),
                       subtitle: Text(
                         unlocked
-                            ? 'العالم $worldId · المراحل المفتوحة $availableInWorld/10'
+                            ? 'العالم $worldId · المراحل $first–${_progression.lastStageOfWorld(worldId)} · المفتوحة $availableInWorld/10'
                             : 'مقفل · افتح المرحلة $first للوصول إليه',
                         style: const TextStyle(fontSize: 12),
                       ),
