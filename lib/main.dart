@@ -20,6 +20,7 @@ import 'combat_collision.dart';
 import 'boss_projectiles.dart';
 import 'combat_damage.dart';
 import 'game_run_lifecycle.dart';
+import 'game_run_state.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -513,30 +514,86 @@ class _GameScreenState extends State<GameScreen>
   final Random random = Random();
   late final AnimationController worldAnimationController;
 
-  double arenaWidth = 360;
-  double arenaHeight = 640;
-  bool _arenaInitialized = false;
-  double playerX = 180;
-  double playerY = 430;
-  double playerHp = 100;
-  double playerMaxHp = 100;
-  double playerSpeed = 3.5;
-  DateTime? lastDamageAt;
-  double attackPowerMultiplier = 1;
-  int extraArrows = 0;
-  double criticalChance = 0;
-  double attackSpeedMultiplier = 1;
-  double enemySpeedMultiplier = 1;
-  double coinPickupRadius = 34;
-  int animationTicks = 0;
-  int heroAttackTicks = 0;
-  int playerMoveTicks = 0;
-  final List<Map<String, dynamic>> combatEffects = [];
-  final List<Map<String, dynamic>> defeatedSprites = [];
+  late final GameRunState runState =
+      GameRunState(initialStage: widget.initialStage);
 
-  int score = 0;
-  late int stage = widget.initialStage;
-  int specialCooldown = 0;
+  double get arenaWidth => runState.arenaWidth;
+  set arenaWidth(double value) => runState.arenaWidth = value;
+
+  double get arenaHeight => runState.arenaHeight;
+  set arenaHeight(double value) => runState.arenaHeight = value;
+
+  bool get _arenaInitialized => runState._arenaInitialized;
+  set _arenaInitialized(bool value) => runState._arenaInitialized = value;
+
+  double get playerX => runState.playerX;
+  set playerX(double value) => runState.playerX = value;
+
+  double get playerY => runState.playerY;
+  set playerY(double value) => runState.playerY = value;
+
+  double get playerHp => runState.playerHp;
+  set playerHp(double value) => runState.playerHp = value;
+
+  double get playerMaxHp => runState.playerMaxHp;
+  set playerMaxHp(double value) => runState.playerMaxHp = value;
+
+  double get playerSpeed => runState.playerSpeed;
+  set playerSpeed(double value) => runState.playerSpeed = value;
+
+  DateTime? get lastDamageAt => runState.lastDamageAt;
+  set lastDamageAt(DateTime? value) => runState.lastDamageAt = value;
+
+  double get attackPowerMultiplier => runState.attackPowerMultiplier;
+  set attackPowerMultiplier(double value) => runState.attackPowerMultiplier = value;
+
+  int get extraArrows => runState.extraArrows;
+  set extraArrows(int value) => runState.extraArrows = value;
+
+  double get criticalChance => runState.criticalChance;
+  set criticalChance(double value) => runState.criticalChance = value;
+
+  double get attackSpeedMultiplier => runState.attackSpeedMultiplier;
+  set attackSpeedMultiplier(double value) => runState.attackSpeedMultiplier = value;
+
+  double get enemySpeedMultiplier => runState.enemySpeedMultiplier;
+  set enemySpeedMultiplier(double value) => runState.enemySpeedMultiplier = value;
+
+  double get coinPickupRadius => runState.coinPickupRadius;
+  set coinPickupRadius(double value) => runState.coinPickupRadius = value;
+
+  int get animationTicks => runState.animationTicks;
+  set animationTicks(int value) => runState.animationTicks = value;
+
+  int get heroAttackTicks => runState.heroAttackTicks;
+  set heroAttackTicks(int value) => runState.heroAttackTicks = value;
+
+  int get playerMoveTicks => runState.playerMoveTicks;
+  set playerMoveTicks(int value) => runState.playerMoveTicks = value;
+
+  List<Map<String, dynamic>> get combatEffects => runState.combatEffects;
+
+  List<Map<String, dynamic>> get defeatedSprites => runState.defeatedSprites;
+
+  int get score => runState.score;
+  set score(int value) => runState.score = value;
+
+  int get stage => runState.stage;
+  set stage(int value) => runState.stage = value;
+
+  int get specialCooldown => runState.specialCooldown;
+  set specialCooldown(int value) => runState.specialCooldown = value;
+
+  int get playerDeathTicks => runState.playerDeathTicks;
+  set playerDeathTicks(int value) => runState.playerDeathTicks = value;
+
+  List<GameObject> get enemies => runState.enemies;
+
+  List<GameObject> get arrows => runState.arrows;
+
+  List<GameObject> get enemyProjectiles => runState.enemyProjectiles;
+
+  List<GameObject> get coins => runState.coins;
 
   final GameRunLifecycle runLifecycle = GameRunLifecycle();
   bool get isPaused => runLifecycle.isPaused;
@@ -549,11 +606,6 @@ class _GameScreenState extends State<GameScreen>
   Timer? gameLoop;
   Timer? shootLoop;
   Timer? cooldownLoop;
-
-  final List<GameObject> enemies = [];
-  final List<GameObject> arrows = [];
-  final List<GameObject> enemyProjectiles = [];
-  final List<GameObject> coins = [];
 
   @override
   void initState() {
