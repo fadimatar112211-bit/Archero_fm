@@ -1,13 +1,8 @@
 name: Android Emulator QA
 
+# Emulator validation is intentionally manual and runs at integrated milestones,
+# not after every small subtask. Flutter CI continues to run automatically.
 on:
-  push:
-    branches:
-      - main
-      - "feature-*"
-      - "feature/**"
-      - "fix/**"
-  pull_request:
   workflow_dispatch:
 
 permissions:
