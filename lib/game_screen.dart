@@ -12,6 +12,7 @@ import 'game_progress.dart';
 import 'stage_flow.dart';
 import 'skill_system.dart';
 import 'boss_combat.dart';
+import 'boss_spawn.dart';
 import 'world_rules.dart';
 import 'world_theme.dart';
 import 'combat_stats.dart';
@@ -233,24 +234,41 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
+  List<GameObject> _createStageEncounter({
+    required int targetStage,
+    required double speedMultiplier,
+  }) {
+    if (RoomFlow.forStage(targetStage).isBoss) {
+      return [
+        createBossForStage(
+          stage: targetStage,
+          arenaWidth: arenaWidth,
+          arenaHeight: arenaHeight,
+          enemySpeedMultiplier: speedMultiplier,
+        ),
+      ];
+    }
+    return createEnemyWave(
+      stage: targetStage,
+      arenaWidth: arenaWidth,
+      arenaHeight: arenaHeight,
+      enemySpeedMultiplier: speedMultiplier,
+      random: random,
+    );
+  }
+
   void _spawnEnemies({bool notify = true, bool challenge = false}) {
     enemies.clear();
     arrows.clear();
     enemyProjectiles.clear();
-    enemies.addAll(createEnemyWave(
-      stage: stage,
-      arenaWidth: arenaWidth,
-      arenaHeight: arenaHeight,
-      enemySpeedMultiplier: enemySpeedMultiplier,
-      random: random,
+    enemies.addAll(_createStageEncounter(
+      targetStage: stage,
+      speedMultiplier: enemySpeedMultiplier,
     ));
     if (challenge) {
-      final extraWave = createEnemyWave(
-        stage: stage + 2,
-        arenaWidth: arenaWidth,
-        arenaHeight: arenaHeight,
-        enemySpeedMultiplier: enemySpeedMultiplier * 1.12,
-        random: random,
+      final extraWave = _createStageEncounter(
+        targetStage: stage + 2,
+        speedMultiplier: enemySpeedMultiplier * 1.12,
       ).take(2);
       for (final enemy in extraWave) {
         final hp = enemy['hp'];

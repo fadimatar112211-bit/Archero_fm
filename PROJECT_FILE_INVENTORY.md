@@ -27,7 +27,7 @@
 | `.github/workflows/build-apk.yml` | CI لبناء APK بعد تجهيز Flutter/Android وتشغيل الفحوصات ورفع artifact. |
 | `.github/workflows/flutter-ci.yml` | CI لفحوص Flutter والتحليل والاختبارات على تغييرات المستودع. |
 
-### كود التطبيق lib/ (57)
+### كود التطبيق lib/ (58)
 
 | الملف | الوظيفة |
 |---|---|
@@ -35,6 +35,7 @@
 | `lib/audio_service.dart` | خدمة تشغيل وإدارة المؤثرات/الموسيقى الصوتية وإعدادات الصوت. |
 | `lib/boss_combat.dart` | قواعد منطق قتال الزعماء ومراحل/نتائج هجماتهم. |
 | `lib/boss_projectiles.dart` | إنشاء/حركة/قواعد مقذوفات الزعماء. |
+| `lib/boss_spawn.dart` | إنشاء كيان الزعيم وخصائصه الأساسية بمعزل عن مولّد موجات الأعداء العاديين. |
 | `lib/coin_collection.dart` | قواعد التقاط العملات وحساب نواتج الجمع. |
 | `lib/combat_collision.dart` | حسابات كشف التصادم بين عناصر القتال. |
 | `lib/combat_damage.dart` | قواعد حساب الضرر وتطبيقه على أطراف القتال. |
@@ -46,7 +47,7 @@
 | `lib/enemy_attack_rules.dart` | قواعد أنماط وهجمات الأعداء. |
 | `lib/enemy_hit_resolution.dart` | تحديد نتيجة إصابة العدو وتطبيق آثارها. |
 | `lib/enemy_projectile_motion.dart` | حساب حركة مقذوفات الأعداء. |
-| `lib/enemy_spawn.dart` | توليد الأعداء وتحديد خصائص/أماكن ظهورهم. |
+| `lib/enemy_spawn.dart` | توليد موجات الأعداء العاديين فقط وتحديد خصائص/أماكن ظهورهم. |
 | `lib/equipment_system.dart` | تعريف المعدات وخصائصها وامتلاكها وتجهيزها. |
 | `lib/game_actor_widgets.dart` | عناصر واجهة عرض اللاعب والأعداء والعملات والمقذوفات داخل الساحة. |
 | `lib/game_arena_view.dart` | واجهة عرض الساحة؛ تستقبل حالة للقراءة وتبلغ تفاعلات المستخدم عبر callbacks. |
@@ -136,7 +137,7 @@
 | `assets/spritesheets/player_walk.svg` | إطارات حركة/أنيميشن للبطل: المشي، وتُستخدم لعرض الإطارات المتتابعة. |
 | `assets/wall.svg` | رسم حاجز/جدار البيئة بصيغة متجهية. |
 
-### الاختبارات test/ (58)
+### الاختبارات test/ (59)
 
 | الملف | الوظيفة |
 |---|---|
@@ -145,6 +146,7 @@
 | `test/audio_service_test.dart` | اختبارات آلية لوحدة/ميزة audio service؛ تتحقق من السلوك المحدد في حالات الاختبار. |
 | `test/boss_combat_test.dart` | اختبارات آلية لوحدة/ميزة boss combat؛ تتحقق من السلوك المحدد في حالات الاختبار. |
 | `test/boss_projectiles_test.dart` | اختبارات آلية لوحدة/ميزة boss projectiles؛ تتحقق من السلوك المحدد في حالات الاختبار. |
+| `test/boss_spawn_test.dart` | اختبارات إنشاء الزعيم وخصائصه وتدرج صحته وسرعته بمعزل عن موجات الأعداء. |
 | `test/coin_collection_test.dart` | اختبارات آلية لوحدة/ميزة coin collection؛ تتحقق من السلوك المحدد في حالات الاختبار. |
 | `test/combat_collision_test.dart` | اختبارات آلية لوحدة/ميزة combat collision؛ تتحقق من السلوك المحدد في حالات الاختبار. |
 | `test/combat_damage_test.dart` | اختبارات آلية لوحدة/ميزة combat damage؛ تتحقق من السلوك المحدد في حالات الاختبار. |
