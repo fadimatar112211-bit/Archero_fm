@@ -1955,7 +1955,6 @@ class FighterSpritePainter extends CustomPainter {
     final light = Paint()..color = hero ? heroMetal : Color.lerp(tint, Colors.white, 0.38)!;
     final skin = Paint()..color = hero ? const Color(0xFFFFD5B2) : (boss ? const Color(0xFF6D244F) : const Color(0xFF83A84A));
     final cape = Paint()..color = hero ? (variant == 3 ? const Color(0xFF35204F) : variant == 4 ? const Color(0xFF12645E) : variant == 2 ? const Color(0xFF9A351E) : const Color(0xFFE33E35)) : (stalker ? const Color(0xFF39265F) : Color.lerp(tint, Colors.black, 0.48)!);
-    final motion = sin(phase * 1.7);
     final breathe = 1 + sin(phase * 2) * 0.018;
 
     // ظل أرضي يعطي الشخصية عمقاً.
@@ -2197,7 +2196,7 @@ class ArenaPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
     canvas.drawRect(rect, Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [theme.topColor, theme.midColor, theme.bottomColor],
