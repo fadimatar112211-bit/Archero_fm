@@ -20,6 +20,17 @@ class MainMenuScreen extends StatefulWidget {
 class _MainMenuScreenState extends State<MainMenuScreen> {
   bool _walletBusy = false;
   Future<void> _buyHealth() async {
+    if (_walletBusy) return;
+    setState(() => _walletBusy = true);
+    try {
+      await _buyHealthLocked();
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _buyHealthLocked() async {
     final purchase = await commitUpgradePurchase(
       upgrade: ShopEconomy.health(heroHpUpgrade),
       currentCoins: globalCoins,
@@ -57,6 +68,17 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Future<void> _buyAttack() async {
+    if (_walletBusy) return;
+    setState(() => _walletBusy = true);
+    try {
+      await _buyAttackLocked();
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _buyAttackLocked() async {
     debugPrint('[Shop] attack purchase requested: coins=$globalCoins upgrade=$heroAtkUpgrade');
     final purchase = await commitUpgradePurchase(
       upgrade: ShopEconomy.attack(heroAtkUpgrade),
@@ -207,6 +229,17 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Future<void> _equipWeapon(WeaponProfile weapon) async {
+    if (_walletBusy) return;
+    setState(() => _walletBusy = true);
+    try {
+      await _equipWeaponLocked(weapon);
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _equipWeaponLocked(WeaponProfile weapon) async {
     final previous = equippedWeaponId;
     setState(() => equippedWeaponId = weapon.id);
     try {
@@ -309,6 +342,17 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Future<void> _equipGear(EquipmentProfile item) async {
+    if (_walletBusy) return;
+    setState(() => _walletBusy = true);
+    try {
+      await _equipGearLocked(item);
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _equipGearLocked(EquipmentProfile item) async {
     if (!EquipmentCatalog.isOwned(ownedEquipmentMask, item)) return;
     final old = [equippedArmorId, equippedHelmetId, equippedRingId, equippedRelicId];
     setState(() { switch (item.slot) { case EquipmentSlot.armor: equippedArmorId=item.id; break; case EquipmentSlot.helmet: equippedHelmetId=item.id; break; case EquipmentSlot.ring: equippedRingId=item.id; break; case EquipmentSlot.relic: equippedRelicId=item.id; break; } });
