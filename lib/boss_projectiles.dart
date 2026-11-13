@@ -46,7 +46,7 @@ List<BossProjectileSpec> createBossFanVolley({
 
   final safeSpeed = speed.clamp(0.0, 1000.0).toDouble();
   final safeDamage = damage.clamp(0.0, 1000000.0).toDouble();
-  final safeLife = lifetimeTicks.clamp(1, 100000);
+  final safeLife = lifetimeTicks.clamp(1, 100000).toInt();
   final baseAngle = atan2(targetY - originY, targetX - originX);
 
   return List<BossProjectileSpec>.generate(count, (index) {
