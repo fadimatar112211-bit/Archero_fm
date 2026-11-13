@@ -36,4 +36,19 @@ void main() {
     await expectLater(saveProgress(), throwsA(isA<StateError>()));
     expect(GameDiagnostics.entries, hasLength(1));
   });
+  test('progress loading falls back safely and records startup diagnostics',
+      () async {
+    final progress = await loadProgressOrDefaults();
+
+    expect(progress.toMap(), {
+      'coins': 150,
+      'hpUpgrade': 0,
+      'atkUpgrade': 0,
+      'bestStage': 1,
+      'bestScore': 0,
+    });
+    expect(GameDiagnostics.entries, hasLength(1));
+    expect(GameDiagnostics.entries.single.source, 'application_startup');
+  });
+
 }
