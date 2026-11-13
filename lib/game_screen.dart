@@ -909,19 +909,6 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed ||
-        !mounted ||
-        isPaused ||
-        gameOverShown ||
-        showMysteryChest) {
-      return;
-    }
-    // Never let combat continue behind another app or a system interruption.
-    setState(() => runLifecycle.pause());
-  }
-
   void _togglePause() {
     if (showMysteryChest || gameOverShown) return;
     setState(() => runLifecycle.togglePause());
