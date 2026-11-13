@@ -61,10 +61,12 @@ jobs:
           emulator-boot-timeout: 600
           disable-animations: true
           script: |
-            flutter test integration_test/app_smoke_test.dart -d emulator-5554 --reporter expanded
             mkdir -p artifacts
-            adb exec-out screencap -p > artifacts/android-emulator-main-menu.png
-            adb logcat -d -t 5000 > artifacts/android-emulator-logcat.txt
+            test_status=0
+            flutter test integration_test/app_smoke_test.dart -d emulator-5554 --reporter expanded || test_status=$?
+            adb exec-out screencap -p > artifacts/android-emulator-arena.png || true
+            adb logcat -d -t 5000 > artifacts/android-emulator-logcat.txt || true
+            exit $test_status
 
       - name: Upload emulator evidence
         if: always()
