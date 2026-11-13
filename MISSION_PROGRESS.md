@@ -532,3 +532,20 @@ Current verification state: world/stage implementation is committed to the featu
 3. Open/merge a PR into `feature/procedural-game-audio-v2` only after all checks pass.
 4. Continue Section 8 with HUD, win/loss and progression screen polish, then Section 9's music/effects variety and timing.
 5. Keep physical Android gameplay validation outstanding until performed; the game remains incomplete.
+
+
+## PR #47 — loadout screen test correction (2026-11-14)
+- Reproduced the two failures from workflow run `43504256044` (job `132157657052`): the balanced bow label is intentionally rendered in both the equipped-weapon heading and selector; the test incorrectly expected one occurrence. The selector interaction test did not prove that the intended selector popup had opened before tapping an option.
+- Corrected the visible-label assertion to expect both legitimate occurrences.
+- Added a stable `weapon-selector` key to the weapon dropdown. The widget test now targets that exact control, scrolls it into view, opens it, asserts the spring-bow option is present in the popup, selects it, and then checks in-memory and persisted equipment IDs plus the success message.
+- Commits: UI selector key `e9713fc6fddd64f374ba9fda0e44830052551f2a`; focused test correction `5c94279b5447fce754b6bf8b23ea201981d21ff9`.
+- Status: awaiting a fresh full CI run on the new exact PR head. These test edits are not yet validated; do not merge until analysis, all Flutter tests, Android project generation, and Android debug APK build pass on that exact head.
+- Art inventory confirmed in the integration branch: original SVG illustrations exist for player, melee enemy, ranged enemy, and boss; `assets/spritesheets/` is declared as an asset directory. This confirms those core art files exist, not that every planned animation, environment, effect, or all future art is complete. Audit the spritesheet directory and in-game rendering separately.
+- Physical Android gameplay testing remains outstanding.
+
+### Exact resume point
+1. Fetch the latest PR #47 head and its new workflow run; inspect all job steps.
+2. If the dropdown test still fails, use the new failure log to fix the real interaction path rather than weakening the assertion.
+3. Merge PR #47 only after all required checks pass on the exact current head.
+4. Rebuild the release APK from the integrated branch after merge so the downloadable build includes PR #47.
+5. Then run the game on Android and continue the remaining Section 8 and Section 9 work.
