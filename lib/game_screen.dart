@@ -30,6 +30,7 @@ import 'game_run_session.dart';
 import 'game_run_state.dart';
 import 'game_timers.dart';
 import 'room_flow.dart';
+import 'room_layout.dart';
 import 'player_movement.dart';
 import 'enemy_hit_resolution.dart';
 import 'skill_selection_dialog.dart';
@@ -124,6 +125,7 @@ class _GameScreenState extends State<GameScreen>
   bool get stageTransitioning => runLifecycle.isStageTransitioning;
   GameTimerRegistry get timers => runSession.timers;
   bool _pausedForAppLifecycle = false;
+  int _roomHazardCooldownTicks = 0;
 
   List<GameObject> get enemies => runState.enemies;
   List<GameObject> get arrows => runState.arrows;
@@ -740,6 +742,32 @@ class _GameScreenState extends State<GameScreen>
     }
     if (collection.collectedAny) unawaited(saveProgressSafely());
 
+    // Environmental hazards are room-specific and can be dodged with the
+    // existing movement i-frames. The cooldown is tick-based, not timer-based.
+    if (_roomHazardCooldownTicks > 0) _roomHazardCooldownTicks--;
+    final roomLayout = RoomLayout.forStage(stage);
+    if (_roomHazardCooldownTicks == 0 &&
+        roomLayout.playerTouchesHazard(
+          x: playerX,
+          y: playerY,
+          arenaWidth: arenaWidth,
+          arenaHeight: arenaHeight,
+        )) {
+      _roomHazardCooldownTicks = 45;
+      if (playerMoveTicks > 0) {
+        combatEffects.add({
+          'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 16,
+        });
+      } else {
+        playerHp = (playerHp - 8).clamp(0.0, playerMaxHp).toDouble();
+        lastDamageAt = DateTime.now();
+        combatEffects.add({
+          'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
+        });
+        playRealSound('hit');
+      }
+    }
+
     if (playerHp <= 0) {
       playerHp = 0;
       runLifecycle.beginPlayerDeath();
@@ -771,6 +799,7 @@ class _GameScreenState extends State<GameScreen>
       mysteryChest: advance.reward == StageRewardType.mysteryChest,
     );
     stage = transition.nextRoom.stage;
+    _roomHazardCooldownTicks = 0;
     bestStage = completion.updatedBestStage;
     playerHp = completion.updatedPlayerHp;
     unawaited(saveProgressSafely());
@@ -942,6 +971,7 @@ class _GameScreenState extends State<GameScreen>
         playerMaxHp: playerMaxHp,
         worldAnimation: worldAnimationController,
         worldTheme: WorldTheme.forStage(stage),
+        roomLayout: RoomLayout.forStage(stage),
         coinActors: coins,
         playerArrows: arrows,
         enemyProjectiles: enemyProjectiles,

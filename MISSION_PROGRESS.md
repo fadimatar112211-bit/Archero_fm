@@ -112,6 +112,30 @@ PR 35 – فصل بنية اللعبة: https://github.com/fadimatar112211-bit/A
 - PR #37 CI run 43466730871 succeeded: Dart analysis, tests, Android project generation, and Android debug APK build.
 - These are historical checkpoints, not proof that all requirements in this new roadmap are complete.
 
+## Current execution batch — Section 4: Rooms and stages
+
+Status: **Implementation in progress; automated CI not yet run.**
+
+Branch: `feature/roadmap-room-layouts-and-hazards`
+
+Implemented in this batch:
+- Added deterministic, viewport-independent room layout data with four floor-plan variants.
+- Added a world-specific environmental hazard type for each of the six existing worlds.
+- Integrated room props and hazard visuals into the arena painter.
+- Added an active hazard damage zone; the player's existing movement/dodge window can avoid its periodic damage.
+- Added focused room-layout tests and painter/view regression coverage.
+
+Changed files:
+- `lib/room_layout.dart` (new)
+- `lib/game_screen.dart`
+- `lib/game_arena_view.dart`
+- `lib/game_painters.dart`
+- `test/room_layout_test.dart` (new)
+- `test/arena_painter_test.dart`
+- `test/game_arena_view_test.dart`
+
+Verification: pending CI. Do not mark this section complete. These room variants and hazards are an initial gameplay slice; distinct treasure/shop/healing/challenge room flows, obstacle collision/pathfinding, and full world-specific mechanics remain outstanding.
+
 ## Next action
 
-Audit the current repository against the nine sections, identify the highest-impact concrete gaps, and implement them in coherent batches while updating this file.
+Create and validate the implementation PR. Fix all analysis/test/build failures before merging, then continue the next high-impact roadmap gaps in coherent batches while updating this file.
