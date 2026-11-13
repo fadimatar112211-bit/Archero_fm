@@ -132,7 +132,7 @@ void main() {
         ),
         choice: SkillId.criticalStrike,
       );
-      expect(result.stats.criticalChance, 0.5);
+      expect(result.stats.criticalChance, closeTo(0.5, 1e-10));
       expect(result.stats.activeSynergies, contains(SkillSynergyId.shatterpoint));
     });
 
