@@ -12,8 +12,6 @@ void main() {
             baseAngle: 0,
             enemyX: 0,
             animationTicks: 10,
-            bossEnraged: false,
-            bossPhaseMovementMultiplier: 1,
           );
 
       expect(decide(100).angle, closeTo(pi, 0.000001));
@@ -73,20 +71,6 @@ void main() {
       expect(stalker.speedMultiplier, 0.72);
     });
 
-    test('boss movement scales by phase and enrage state', () {
-      final normal = decideEnemyMovement(
-        type: 'boss', distanceToPlayer: 150, baseAngle: 0,
-        enemyX: 0, animationTicks: 0, bossEnraged: false,
-        bossPhaseMovementMultiplier: 1.2,
-      );
-      final enraged = decideEnemyMovement(
-        type: 'boss', distanceToPlayer: 150, baseAngle: 0,
-        enemyX: 0, animationTicks: 0, bossEnraged: true,
-        bossPhaseMovementMultiplier: 1.2,
-      );
 
-      expect(normal.speedMultiplier, closeTo(3.18, 0.000001));
-      expect(enraged.speedMultiplier, closeTo(3.78, 0.000001));
-    });
   });
 }
