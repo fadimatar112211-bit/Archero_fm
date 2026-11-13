@@ -107,6 +107,7 @@ void main() {
         'equippedHelmetId': 0,
         'equippedRingId': 0,
         'equippedRelicId': 0,
+        'ownedEquipmentMask': 585,
     });
   });
 
