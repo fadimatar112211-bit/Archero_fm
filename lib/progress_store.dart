@@ -35,6 +35,7 @@ class ProgressStore {
     'gems': 0,
     'keys': 0,
     'equipmentShards': 0,
+    'unlockedHeroesMask': 1,
   };
 
   // Serialize complete snapshots so overlapping saves cannot interleave.
@@ -65,6 +66,7 @@ class ProgressStore {
     final candidate = value ?? fallback;
     if (key == 'equippedWeaponId') return candidate >= 0 && candidate <= 3 ? candidate : 0;
     if (key == 'ownedEquipmentMask') return candidate.clamp(0, 4095).toInt();
+    if (key == 'unlockedHeroesMask') return (candidate.clamp(0, 15).toInt() | 1);
     if (key == 'gems' || key == 'keys' || key == 'equipmentShards') return candidate.clamp(0, 999999).toInt();
     if (key.startsWith('equipped')) return candidate >= 0 && candidate <= 2 ? candidate : 0;
     if (key == 'bestStage') return candidate < 1 ? 1 : candidate;
@@ -99,6 +101,7 @@ class ProgressStore {
       gems: progress.gems,
       keys: progress.keys,
       equipmentShards: progress.equipmentShards,
+      unlockedHeroesMask: progress.unlockedHeroesMask,
     );
   }
 
@@ -117,6 +120,7 @@ class ProgressStore {
     int gems = 0,
     int keys = 0,
     int equipmentShards = 0,
+    int unlockedHeroesMask = 1,
   }) {
     final values = <String, int>{
       'coins': _validValue('coins', coins),
@@ -133,6 +137,7 @@ class ProgressStore {
       'gems': _validValue('gems', gems),
       'keys': _validValue('keys', keys),
       'equipmentShards': _validValue('equipmentShards', equipmentShards),
+      'unlockedHeroesMask': _validValue('unlockedHeroesMask', unlockedHeroesMask),
     };
 
     final nextWrite = _pendingWrite.then((_) async {
