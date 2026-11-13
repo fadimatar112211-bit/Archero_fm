@@ -117,11 +117,32 @@ class _GameScreenState extends State<GameScreen>
   bool get playerDying => runLifecycle.isPlayerDying;
   bool get stageTransitioning => runLifecycle.isStageTransitioning;
   final GameTimerRegistry timers = GameTimerRegistry();
+  bool _pausedForAppLifecycle = false;
 
   List<GameObject> get enemies => runState.enemies;
   List<GameObject> get arrows => runState.arrows;
   List<GameObject> get enemyProjectiles => runState.enemyProjectiles;
   List<GameObject> get coins => runState.coins;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (_pausedForAppLifecycle && runLifecycle.resume()) {
+        _pausedForAppLifecycle = false;
+        if (mounted) setState(() {});
+      }
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused) {
+      if (runLifecycle.pause()) {
+        _pausedForAppLifecycle = true;
+        if (mounted) setState(() {});
+      }
+    }
+  }
 
   @override
   void initState() {
