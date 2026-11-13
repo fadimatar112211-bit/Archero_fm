@@ -76,25 +76,36 @@ class RunCheckpoint {
 
 /// Small isolated store for the optional in-progress run snapshot.
 class RunCheckpointStore {
-  static Future<void> save(RunCheckpoint checkpoint) async {
-    final preferences = await SharedPreferences.getInstance();
-    final saved = await preferences.setString(
-      RunCheckpoint.storageKey,
-      checkpoint.encode(),
-    );
-    if (!saved) throw StateError('Unable to persist active run checkpoint');
+  static Future<void> _pendingWrite = Future<void>.value();
+
+  static Future<void> save(RunCheckpoint checkpoint) {
+    final nextWrite = _pendingWrite.then((_) async {
+      final preferences = await SharedPreferences.getInstance();
+      final saved = await preferences.setString(
+        RunCheckpoint.storageKey,
+        checkpoint.encode(),
+      );
+      if (!saved) throw StateError('Unable to persist active run checkpoint');
+    });
+    _pendingWrite = nextWrite.catchError((Object _) {});
+    return nextWrite;
   }
 
   static Future<RunCheckpoint?> load() async {
+    await _pendingWrite;
     final preferences = await SharedPreferences.getInstance();
     return RunCheckpoint.decode(preferences.getString(RunCheckpoint.storageKey));
   }
 
-  static Future<void> clear() async {
-    final preferences = await SharedPreferences.getInstance();
-    final removed = await preferences.remove(RunCheckpoint.storageKey);
-    if (!removed && preferences.containsKey(RunCheckpoint.storageKey)) {
-      throw StateError('Unable to clear active run checkpoint');
-    }
+  static Future<void> clear() {
+    final nextWrite = _pendingWrite.then((_) async {
+      final preferences = await SharedPreferences.getInstance();
+      final removed = await preferences.remove(RunCheckpoint.storageKey);
+      if (!removed && preferences.containsKey(RunCheckpoint.storageKey)) {
+        throw StateError('Unable to clear active run checkpoint');
+      }
+    });
+    _pendingWrite = nextWrite.catchError((Object _) {});
+    return nextWrite;
   }
 }
