@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'progress_store.dart';
 import 'stage_flow.dart';
+import 'skill_system.dart';
 import 'world_theme.dart';
 
 Future<void> main() async {
@@ -509,6 +510,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   DateTime? lastDamageAt;
   double attackPowerMultiplier = 1;
   int extraArrows = 0;
+  double enemySpeedMultiplier = 1;
+  double coinPickupRadius = 34;
   int animationTicks = 0;
   int heroAttackTicks = 0;
   int playerMoveTicks = 0;
@@ -633,7 +636,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           'maxHp': hp,
           'type': enemyType,
           'radius': enemyType == 'tank' ? 23.0 : 19.0,
-          'speed': speed,
+          'speed': speed * enemySpeedMultiplier,
         });
       }
     }
@@ -1064,7 +1067,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     for (int i = coins.length - 1; i >= 0; i--) {
       final dx = playerX - (coins[i]['x'] as double);
       final dy = playerY - (coins[i]['y'] as double);
-      if (sqrt(dx * dx + dy * dy) < 34) {
+      if (sqrt(dx * dx + dy * dy) < coinPickupRadius) {
         globalCoins += 10;
         collectedCoin = true;
         coins.removeAt(i);
@@ -1112,40 +1115,68 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     if (!mounted || gameOverShown) return;
     setState(() => isPaused = true);
 
-    final choice = await showDialog<String>(
+    final offers = SkillSystem.rollOffers(
+      stage: stage,
+      random: random,
+    );
+    final choice = await showDialog<SkillId>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
         title: const Text(
-          '✨ ترقية مهارة أسطورية',
+          '✨ اختر مهارة للمرحلة القادمة',
           style: TextStyle(color: Colors.amber),
         ),
-        content: const Text('اختر ترقية واحدة للمرحلة القادمة:'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, 'arrow'),
-            child: const Text('سهم إضافي'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, 'attack'),
-            child: const Text('قوة الهجوم +35%'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, 'health'),
-            child: const Text('استعادة 40 صحة'),
-          ),
-        ],
+        content: const Text(
+          'كل ترقية تمنحك ميزة تستمر خلال هذه الجولة. '
+          'تزداد فرصة ظهور المهارات النادرة مع تقدمك.',
+        ),
+        actions: offers.map((skill) {
+          final rarityLabel = switch (skill.rarity) {
+            SkillRarity.common => 'عادية',
+            SkillRarity.rare => 'نادرة',
+            SkillRarity.epic => 'ملحمية',
+          };
+          final rarityColor = switch (skill.rarity) {
+            SkillRarity.common => Colors.white70,
+            SkillRarity.rare => Colors.lightBlueAccent,
+            SkillRarity.epic => Colors.purpleAccent,
+          };
+          return TextButton(
+            onPressed: () => Navigator.pop(dialogContext, skill.id),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(skill.title),
+                Text(
+                  '$rarityLabel · ${skill.description}',
+                  style: TextStyle(color: rarityColor, fontSize: 11),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
 
     if (!mounted || gameOverShown) return;
     setState(() {
-      if (choice == 'arrow') {
-        extraArrows++;
-      } else if (choice == 'attack') {
-        attackPowerMultiplier += 0.35;
-      } else if (choice == 'health') {
-        playerHp = min(playerMaxHp, playerHp + 40);
+      switch (choice) {
+        case SkillId.extraArrow:
+          extraArrows++;
+        case SkillId.attackPower:
+          attackPowerMultiplier += 0.25;
+        case SkillId.healing:
+          playerHp = min(playerMaxHp, playerHp + 55);
+        case SkillId.vitality:
+          playerMaxHp += 25;
+          playerHp = min(playerMaxHp, playerHp + 25);
+        case SkillId.frostAura:
+          enemySpeedMultiplier *= 0.9;
+        case SkillId.coinMagnet:
+          coinPickupRadius *= 1.45;
+        case null:
+          break;
       }
       isPaused = false;
       stageTransitioning = false;
