@@ -87,40 +87,51 @@ class MainMenuScreen extends StatefulWidget {
 }
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
-  Future<void> _buyHealth() async {
-    final upgrade = ShopEconomy.health(heroHpUpgrade);
-    if (!upgrade.canPurchase(globalCoins)) {
-      _message(
-        upgrade.isMaxed
-            ? 'وصلت إلى الحد الأقصى لترقية الصحة.'
-            : 'عملاتك لا تكفي لشراء ترقية الصحة.',
-      );
-      return;
-    }
-    setState(() {
-      globalCoins -= upgrade.cost;
-      heroHpUpgrade += upgrade.increase;
-    });
-    await saveProgress();
-    await playRealSound('coin');
-  }
+  Future<void> _buyHealth() => _purchaseUpgrade(UpgradeKind.health);
 
-  Future<void> _buyAttack() async {
-    final upgrade = ShopEconomy.attack(heroAtkUpgrade);
-    if (!upgrade.canPurchase(globalCoins)) {
-      _message(
-        upgrade.isMaxed
-            ? 'وصلت إلى الحد الأقصى لترقية الهجوم.'
-            : 'عملاتك لا تكفي لشراء ترقية الهجوم.',
-      );
-      return;
+  Future<void> _buyAttack() => _purchaseUpgrade(UpgradeKind.attack);
+
+  Future<void> _purchaseUpgrade(UpgradeKind kind) async {
+    final result = await ShopPurchaseCoordinator.purchase(
+      kind: kind,
+      coins: globalCoins,
+      hpUpgrade: heroHpUpgrade,
+      atkUpgrade: heroAtkUpgrade,
+      persist: ({
+        required int coins,
+        required int hpUpgrade,
+        required int atkUpgrade,
+      }) => ProgressStore.save(
+        coins: coins,
+        hpUpgrade: hpUpgrade,
+        atkUpgrade: atkUpgrade,
+        bestStage: bestStage,
+        bestScore: bestScore,
+      ),
+    );
+
+    if (!mounted) return;
+    switch (result.status) {
+      case ShopPurchaseStatus.purchased:
+        setState(() {
+          globalCoins = result.coins;
+          heroHpUpgrade = result.hpUpgrade;
+          heroAtkUpgrade = result.atkUpgrade;
+        });
+        await playRealSound('coin');
+      case ShopPurchaseStatus.insufficientFunds:
+        _message('عملاتك لا تكفي لشراء الترقية.');
+      case ShopPurchaseStatus.maxLevel:
+        _message(kind == UpgradeKind.health
+            ? 'وصلت إلى الحد الأقصى لترقية الصحة.'
+            : 'وصلت إلى الحد الأقصى لترقية الهجوم.');
+      case ShopPurchaseStatus.persistenceFailed:
+        GameDiagnostics.record(
+          result.error!,
+          source: 'shop.purchase',
+        );
+        _message('تعذر حفظ عملية الشراء. لم يتم خصم العملات.');
     }
-    setState(() {
-      globalCoins -= upgrade.cost;
-      heroAtkUpgrade += upgrade.increase;
-    });
-    await saveProgress();
-    await playRealSound('coin');
   }
 
   void _message(String message) {
