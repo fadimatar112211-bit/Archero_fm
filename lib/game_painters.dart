@@ -1062,8 +1062,8 @@ class SpriteSheetFrame extends StatelessWidget {
             height: height,
             child: OverflowBox(
               alignment: Alignment.centerLeft,
-              minWidth: width * frameCount,
-              maxWidth: width * frameCount,
+              minWidth: width * safeFrameCount,
+              maxWidth: width * safeFrameCount,
               minHeight: height,
               maxHeight: height,
               child: Transform.translate(
