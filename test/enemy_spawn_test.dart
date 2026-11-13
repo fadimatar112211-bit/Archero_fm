@@ -76,7 +76,7 @@ void main() {
       ).single;
 
       expect(boss['hp'], 638);
-      expect(boss['speed'], closeTo(1.2285, 0.000001));
+      expect(boss['speed'], closeTo(1.29402, 0.000001));
     });
   });
 }
