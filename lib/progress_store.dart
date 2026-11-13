@@ -36,6 +36,11 @@ class ProgressStore {
     'keys': 0,
     'equipmentShards': 0,
     'unlockedHeroesMask': 1,
+    'totalKills': 0,
+    'totalBosses': 0,
+    'totalChests': 0,
+    'totalRuns': 0,
+    'claimedAchievementsMask': 0,
   };
 
   // Serialize complete snapshots so overlapping saves cannot interleave.
@@ -67,6 +72,8 @@ class ProgressStore {
     if (key == 'equippedWeaponId') return candidate >= 0 && candidate <= 3 ? candidate : 0;
     if (key == 'ownedEquipmentMask') return candidate.clamp(0, 4095).toInt();
     if (key == 'unlockedHeroesMask') return (candidate.clamp(0, 15).toInt() | 1);
+    if (key == 'claimedAchievementsMask') return candidate.clamp(0, 65535).toInt();
+    if (key == 'totalKills' || key == 'totalBosses' || key == 'totalChests' || key == 'totalRuns') return candidate.clamp(0, 999999999).toInt();
     if (key == 'gems' || key == 'keys' || key == 'equipmentShards') return candidate.clamp(0, 999999).toInt();
     if (key.startsWith('equipped')) return candidate >= 0 && candidate <= 2 ? candidate : 0;
     if (key == 'bestStage') return candidate < 1 ? 1 : candidate;
@@ -102,6 +109,11 @@ class ProgressStore {
       keys: progress.keys,
       equipmentShards: progress.equipmentShards,
       unlockedHeroesMask: progress.unlockedHeroesMask,
+      totalKills: progress.totalKills,
+      totalBosses: progress.totalBosses,
+      totalChests: progress.totalChests,
+      totalRuns: progress.totalRuns,
+      claimedAchievementsMask: progress.claimedAchievementsMask,
     );
   }
 
@@ -121,6 +133,11 @@ class ProgressStore {
     int keys = 0,
     int equipmentShards = 0,
     int unlockedHeroesMask = 1,
+    int totalKills = 0,
+    int totalBosses = 0,
+    int totalChests = 0,
+    int totalRuns = 0,
+    int claimedAchievementsMask = 0,
   }) {
     final values = <String, int>{
       'coins': _validValue('coins', coins),
@@ -138,6 +155,11 @@ class ProgressStore {
       'keys': _validValue('keys', keys),
       'equipmentShards': _validValue('equipmentShards', equipmentShards),
       'unlockedHeroesMask': _validValue('unlockedHeroesMask', unlockedHeroesMask),
+      'totalKills': _validValue('totalKills', totalKills),
+      'totalBosses': _validValue('totalBosses', totalBosses),
+      'totalChests': _validValue('totalChests', totalChests),
+      'totalRuns': _validValue('totalRuns', totalRuns),
+      'claimedAchievementsMask': _validValue('claimedAchievementsMask', claimedAchievementsMask),
     };
 
     final nextWrite = _pendingWrite.then((_) async {
