@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'progress_store.dart';
 import 'stage_flow.dart';
 import 'skill_system.dart';
+import 'boss_combat.dart';
 import 'world_theme.dart';
 
 Future<void> main() async {
@@ -601,7 +602,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
         'maxHp': bossHp,
         'type': 'boss',
         'radius': 36.0,
-        'speed': 0.78 + min(difficultyStep, 16) * 0.012,
+        'speed': (0.78 + min(difficultyStep, 16) * 0.012) * enemySpeedMultiplier,
+        'bossPhase': 1,
+        'bossVolleyCooldown': 90,
       });
     } else {
       final count = min(2 + (stage ~/ 2), 7);
@@ -896,8 +899,50 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       final distance = sqrt(dx * dx + dy * dy);
       final angle = atan2(dy, dx);
       final type = enemy['type'] as String;
-      final bossEnraged = type == 'boss' &&
-          (enemy['hp'] as double) <= (enemy['maxHp'] as double) * 0.35;
+      final bossPhase = type == 'boss'
+          ? BossCombat.phaseForHealth(
+              hp: enemy['hp'] as double,
+              maxHp: enemy['maxHp'] as double,
+            )
+          : 1;
+      final bossConfig = BossCombat.configForPhase(bossPhase);
+      final previousBossPhase = (enemy['bossPhase'] as int?) ?? 1;
+      final bossEnraged = bossPhase == 3;
+      if (type == 'boss' && bossPhase != previousBossPhase) {
+        enemy['bossPhase'] = bossPhase;
+        combatEffects.add({
+          'x': enemy['x'], 'y': enemy['y'],
+          'type': 'bossBurst', 'life': 30,
+        });
+      }
+      var bossVolleyCooldown =
+          (enemy['bossVolleyCooldown'] as int?) ?? 90;
+      if (type == 'boss' && bossPhase >= 2) {
+        if (bossVolleyCooldown > 0) bossVolleyCooldown--;
+        if (bossVolleyCooldown == 0 && distance <= 320) {
+          final baseAngle = atan2(dy, dx);
+          final count = bossConfig.volleyCount;
+          for (var shotIndex = 0; shotIndex < count; shotIndex++) {
+            final spread = count == 1
+                ? 0.0
+                : (shotIndex / (count - 1) - 0.5) * 0.78;
+            final shotAngle = baseAngle + spread;
+            enemyProjectiles.add({
+              'x': enemy['x'], 'y': enemy['y'],
+              'vx': cos(shotAngle) * bossConfig.projectileSpeed,
+              'vy': sin(shotAngle) * bossConfig.projectileSpeed,
+              'damage': bossConfig.projectileDamage,
+              'life': 115,
+            });
+          }
+          bossVolleyCooldown = bossConfig.volleyCooldownTicks;
+          combatEffects.add({
+            'x': enemy['x'], 'y': enemy['y'],
+            'type': 'bossTell', 'life': 16,
+          });
+        }
+      }
+      enemy['bossVolleyCooldown'] = bossVolleyCooldown;
       var attackTicks = (enemy['attackTicks'] as int?) ?? 0;
       var attackCooldown = (enemy['attackCooldown'] as int?) ?? 0;
       if (attackTicks > 0) attackTicks--;
@@ -1001,7 +1046,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       } else if (type == 'boss') {
         final bossCycle = animationTicks % 180;
         if (bossCycle < 28) {
-          moveSpeed *= bossEnraged ? 3.15 : 2.65;
+          moveSpeed *= (bossEnraged ? 3.15 : 2.65) *
+              bossConfig.movementMultiplier;
           if (bossCycle == 0) {
             combatEffects.add({
               'x': enemy['x'], 'y': enemy['y'],
