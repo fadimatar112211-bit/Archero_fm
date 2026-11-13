@@ -486,7 +486,7 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateMixin {
   String get playerSpritePrefix => switch (widget.heroType) {
     2 => 'assets/spritesheets/player_flame',
     3 => 'assets/spritesheets/player_shadow',
@@ -495,6 +495,7 @@ class _GameScreenState extends State<GameScreen> {
   };
 
   final Random random = Random();
+  late final AnimationController worldAnimationController;
 
   double playerX = 180;
   double playerY = 430;
@@ -533,6 +534,10 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
+    worldAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 12),
+    )..repeat();
 
     playerMaxHp += heroHpUpgrade.toDouble();
     playerHp = playerMaxHp;
@@ -1178,6 +1183,7 @@ class _GameScreenState extends State<GameScreen> {
     gameLoop?.cancel();
     shootLoop?.cancel();
     cooldownLoop?.cancel();
+    worldAnimationController.dispose();
     super.dispose();
   }
 
@@ -1221,7 +1227,12 @@ class _GameScreenState extends State<GameScreen> {
 
                   // خلفية زخرفية بسيطة.
                   Positioned.fill(
-                    child: CustomPaint(painter: ArenaPainter(theme: WorldTheme.forStage(stage))),
+                    child: CustomPaint(
+                      painter: ArenaPainter(
+                        theme: WorldTheme.forStage(stage),
+                        animation: worldAnimationController,
+                      ),
+                    ),
                   ),
 
                   // لوحة معلومات المرحلة.
@@ -2192,9 +2203,13 @@ class FighterSpritePainter extends CustomPainter {
 // -----------------------------------------------------------------------------
 
 class ArenaPainter extends CustomPainter {
-  const ArenaPainter({this.theme = WorldTheme.forest});
+  ArenaPainter({
+    this.theme = WorldTheme.forest,
+    this.animation,
+  }) : super(repaint: animation);
 
   final WorldTheme theme;
+  final Animation<double>? animation;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -2610,9 +2625,13 @@ class ArenaPainter extends CustomPainter {
         for (final side in [0, 1]) {
           final direction = side == 0 ? 1.0 : -1.0;
           final edgeX = side == 0 ? 39.0 : size.width - 39.0;
-          final drift = ((i * 13) % 17).toDouble();
-          final point = Offset(edgeX + direction * drift, y);
-          final radius = 1.2 + (i % 3) * .45;
+          final phase = animation?.value ?? 0.0;
+          final drift = ((i * 13) % 17).toDouble() +
+              sin((phase * 2 * 3.141592653589793) + i * .9) * 4;
+          final floatY = y + cos((phase * 2 * 3.141592653589793) + i * 1.3) * 7;
+          final point = Offset(edgeX + direction * drift, floatY);
+          final radius = 1.2 + (i % 3) * .45 +
+              (sin(phase * 6.283185307179586 + i) + 1) * .35;
           if (theme.id == 2 || theme.id == 6) {
             // Embers and storm sparks.
             canvas.drawLine(
@@ -2653,7 +2672,7 @@ class ArenaPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant ArenaPainter oldDelegate) =>
-      oldDelegate.theme.id != theme.id;
+      oldDelegate.theme.id != theme.id || oldDelegate.animation != animation;
 }
 
 /// Displays one cell from a horizontal vector sprite sheet.
