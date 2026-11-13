@@ -623,25 +623,60 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _useSpecialSkill() {
-    if (specialCooldown > 0 ||
-        enemies.isEmpty ||
-        isPaused ||
-        showMysteryChest ||
-        gameOverShown) {
-      return;
-    }
+    if (specialCooldown > 0 || enemies.isEmpty || isPaused ||
+        showMysteryChest || gameOverShown) return;
 
     setState(() {
-      score += enemies.length * 30;
-      for (final enemy in enemies) {
-        coins.add({'x': enemy['x'], 'y': enemy['y']});
+      // Distinct hero skills: flame burst, shadow evasion, storm strike.
+      final skillDamage = switch (widget.heroType) {
+        2 => 70.0,
+        3 => 42.0,
+        4 => 54.0,
+        _ => 48.0,
+      } * attackPowerMultiplier;
+
+      if (widget.heroType == 3) {
+        playerMoveTicks = 36;
+        combatEffects.add({
+          'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 24,
+        });
       }
-      enemies.clear();
+
+      for (int i = enemies.length - 1; i >= 0; i--) {
+        final enemy = enemies[i];
+        final isBoss = enemy['type'] == 'boss';
+        enemy['hp'] = (enemy['hp'] as double) -
+            (isBoss ? skillDamage * 0.65 : skillDamage);
+        enemy['hitTicks'] = 10;
+        combatEffects.add({
+          'x': enemy['x'], 'y': enemy['y'],
+          'type': widget.heroType == 2 ? 'bossHit' :
+              widget.heroType == 3 ? 'shadowHit' :
+              widget.heroType == 4 ? 'metalHit' : 'sparkHit',
+          'life': 22,
+        });
+
+        if ((enemy['hp'] as double) <= 0) {
+          final x = enemy['x'];
+          final y = enemy['y'];
+          final type = enemy['type'] as String;
+          defeatedSprites.add({
+            'x': x, 'y': y, 'type': type, 'boss': isBoss, 'life': 24,
+          });
+          combatEffects.add({
+            'x': x, 'y': y, 'type': isBoss ? 'bossBurst' : 'defeat',
+            'life': 25,
+          });
+          coins.add({'x': x, 'y': y});
+          score += isBoss ? 150 : 20;
+          enemies.removeAt(i);
+        }
+      }
       specialCooldown = 15;
     });
+
     playRealSound('special');
     _checkStageComplete();
-
     cooldownLoop?.cancel();
     cooldownLoop = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
