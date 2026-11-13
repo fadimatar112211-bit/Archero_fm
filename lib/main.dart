@@ -887,52 +887,56 @@ class _GameScreenState extends State<GameScreen>
         )).toList(growable: false),
       );
       if (hitIndex == null) continue;
+
       final enemy = enemies[hitIndex];
-          final hitType = switch (enemy['type']) {
-            'tank' => 'metalHit',
-            'stalker' => 'shadowHit',
-            'runner' => 'sparkHit',
-            'boss' => 'bossHit',
-            _ => 'impact',
-          };
-          combatEffects.add({
-            'x': enemy['x'], 'y': enemy['y'], 'type': hitType, 'life': 16,
-          });
-          enemy['hitTicks'] = 9;
-          final isCritical = random.nextDouble() < criticalChance;
-          final arrowDamage = CombatBalance.arrowDamage(
-            baseDamage: 35,
-            attackMultiplier: attackPowerMultiplier,
-            criticalChance: criticalChance,
-            roll: isCritical ? 0 : 1,
-          );
-          enemy['hp'] = (enemy['hp'] as double) - arrowDamage;
-          if (isCritical) {
-            combatEffects.add({
-              'x': enemy['x'],
-              'y': enemy['y'],
-              'type': 'criticalHit',
-              'life': 22,
-            });
-          }
-          arrows.removeAt(i);
-          arrowRemoved = true;
-
-          if ((enemy['hp'] as double) <= 0) {
-            defeatedSprites.add({'x': enemy['x'], 'y': enemy['y'], 'type': enemy['type'], 'boss': enemy['type'] == 'boss', 'life': 24});
-            combatEffects.add({
-              'x': enemy['x'], 'y': enemy['y'],
-              'type': enemy['type'] == 'boss' ? 'bossBurst' : 'defeat',
-              'life': 25,
-            });
-            coins.add({'x': enemy['x'], 'y': enemy['y']});
-            score += enemy['type'] == 'boss' ? 150 : 20;
-            enemies.removeAt(j);
-            playRealSound('hit');
-          }
-          break;
+      final hitType = switch (enemy['type']) {
+        'tank' => 'metalHit',
+        'stalker' => 'shadowHit',
+        'runner' => 'sparkHit',
+        'boss' => 'bossHit',
+        _ => 'impact',
+      };
+      combatEffects.add({
+        'x': enemy['x'], 'y': enemy['y'], 'type': hitType, 'life': 16,
+      });
+      enemy['hitTicks'] = 9;
+      final isCritical = random.nextDouble() < criticalChance;
+      final arrowDamage = CombatBalance.arrowDamage(
+        baseDamage: 35,
+        attackMultiplier: attackPowerMultiplier,
+        criticalChance: criticalChance,
+        roll: isCritical ? 0 : 1,
+      );
+      enemy['hp'] = (enemy['hp'] as double) - arrowDamage;
+      if (isCritical) {
+        combatEffects.add({
+          'x': enemy['x'],
+          'y': enemy['y'],
+          'type': 'criticalHit',
+          'life': 22,
+        });
       }
+      arrows.removeAt(i);
 
+      if ((enemy['hp'] as double) <= 0) {
+        defeatedSprites.add({
+          'x': enemy['x'],
+          'y': enemy['y'],
+          'type': enemy['type'],
+          'boss': enemy['type'] == 'boss',
+          'life': 24,
+        });
+        combatEffects.add({
+          'x': enemy['x'],
+          'y': enemy['y'],
+          'type': enemy['type'] == 'boss' ? 'bossBurst' : 'defeat',
+          'life': 25,
+        });
+        coins.add({'x': enemy['x'], 'y': enemy['y']});
+        score += enemy['type'] == 'boss' ? 150 : 20;
+        enemies.removeAt(hitIndex);
+        playRealSound('hit');
+      }
     }
 
     // إطفاء ومضة الإصابة تدريجياً حتى لا تبقى الشخصية مضيئة.
