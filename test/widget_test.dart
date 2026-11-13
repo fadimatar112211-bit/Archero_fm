@@ -211,6 +211,57 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('achievement reward is claimed once and persisted with the wallet', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    ProgressStore.resetForTesting();
+    globalCoins = 150;
+    globalGems = 0;
+    globalEquipmentShards = 0;
+    globalKeys = 0;
+    bestStage = 1;
+    bestScore = 0;
+    totalKills = 10;
+    totalBosses = 0;
+    totalChests = 0;
+    totalRuns = 0;
+    claimedAchievementsMask = 0;
+    unlockedHeroesMask = 1;
+    ownedEquipmentMask = 585;
+    heroHpUpgrade = 0;
+    heroAtkUpgrade = 0;
+    equippedWeaponId = 0;
+    equippedArmorId = 0;
+    equippedHelmetId = 0;
+    equippedRingId = 0;
+    equippedRelicId = 0;
+    addTearDown(() {
+      globalCoins = 150;
+      globalGems = 0;
+      globalEquipmentShards = 0;
+      globalKeys = 0;
+      totalKills = 0;
+      totalBosses = 0;
+      totalChests = 0;
+      totalRuns = 0;
+      claimedAchievementsMask = 0;
+      ProgressStore.resetForTesting();
+    });
+
+    await tester.pumpWidget(const ArcheroSoundApp());
+    await tester.ensureVisible(find.text('🏆 الإنجازات · 0/10'));
+    expect(find.text('أول انتصار'), findsOneWidget);
+    await tester.tap(find.text('استلام').first);
+    await tester.pumpAndSettle();
+
+    expect(globalCoins, 230);
+    expect(claimedAchievementsMask & 1, 1);
+    final saved = await ProgressStore.loadPlayerProgress();
+    expect(saved.coins, 230);
+    expect(saved.claimedAchievementsMask & 1, 1);
+    expect(find.text('تم الاستلام'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('combat aura and projectile painters render without errors',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
