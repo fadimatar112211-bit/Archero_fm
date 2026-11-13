@@ -48,6 +48,7 @@ Future<void> main() async {
     globalGems = progress.gems;
     globalKeys = progress.keys;
     globalEquipmentShards = progress.equipmentShards;
+    unlockedHeroesMask = progress.unlockedHeroesMask;
     runApp(const ArcheroSoundApp());
   }, (error, stackTrace) {
     GameDiagnostics.record(
