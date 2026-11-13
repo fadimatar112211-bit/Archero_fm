@@ -181,8 +181,6 @@ class _GameScreenState extends State<GameScreen>
     )..repeat();
 
     if (runSession.isRestored) {
-      final savedCoins = widget.checkpoint!.state['walletCoins'];
-      if (savedCoins is int && savedCoins >= 0) globalCoins = savedCoins;
       final hazardTicks = widget.checkpoint!.state['hazardCooldownTicks'];
       if (hazardTicks is int && hazardTicks >= 0) _roomHazardCooldownTicks = hazardTicks;
     } else {
@@ -229,7 +227,6 @@ class _GameScreenState extends State<GameScreen>
     try {
       await RunCheckpointStore.save(captureRunCheckpoint(
         heroType: widget.heroType,
-        coins: globalCoins,
         run: runState,
         hazardCooldownTicks: _roomHazardCooldownTicks,
       ));
