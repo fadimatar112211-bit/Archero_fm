@@ -17,6 +17,9 @@ void main() {
         'equippedRingId': 0,
         'equippedRelicId': 0,
         'ownedEquipmentMask': 585,
+        'gems': 0,
+        'keys': 0,
+        'equipmentShards': 0,
       });
     });
 
