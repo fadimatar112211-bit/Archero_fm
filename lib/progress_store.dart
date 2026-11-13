@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+typedef ProgressStoreWrite = Future<bool> Function(String key, int value);
+
 class ProgressStore {
   static const Map<String, int> _defaults = {
     'coins': 150,
@@ -11,6 +13,12 @@ class ProgressStore {
 
   // Serialize complete snapshots so overlapping saves cannot interleave.
   static Future<void> _pendingWrite = Future<void>.value();
+  static ProgressStoreWrite? _writeOverride;
+
+  /// Injects a write implementation for deterministic persistence-failure tests.
+  static void setWriteOverrideForTesting(ProgressStoreWrite? override) {
+    _writeOverride = override;
+  }
 
   static int _validValue(String key, int? value) {
     final fallback = _defaults[key]!;
@@ -43,9 +51,16 @@ class ProgressStore {
     };
 
     final nextWrite = _pendingWrite.then((_) async {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = _writeOverride == null
+          ? await SharedPreferences.getInstance()
+          : null;
       for (final entry in values.entries) {
-        await prefs.setInt(entry.key, entry.value);
+        final saved = _writeOverride == null
+            ? await prefs!.setInt(entry.key, entry.value)
+            : await _writeOverride!(entry.key, entry.value);
+        if (!saved) {
+          throw StateError('Failed to persist progress key: ${entry.key}');
+        }
       }
     });
 
