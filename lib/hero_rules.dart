@@ -5,6 +5,8 @@ class HeroProfile {
     required this.summary,
     required this.activeSkillName,
     required this.activeSkillDescription,
+    required this.activeSkillDamage,
+    this.triggersDodge = false,
     required this.passiveSkillName,
     required this.passiveSkillDescription,
   });
@@ -14,6 +16,8 @@ class HeroProfile {
   final String summary;
   final String activeSkillName;
   final String activeSkillDescription;
+  final double activeSkillDamage;
+  final bool triggersDodge;
   final String passiveSkillName;
   final String passiveSkillDescription;
 
@@ -23,6 +27,7 @@ class HeroProfile {
     summary: 'صحة وسرعة وهجوم متوازنة.',
     activeSkillName: 'نبضة الطاقة',
     activeSkillDescription: 'تسبب 48 ضرراً أساسياً لجميع الأعداء.',
+    activeSkillDamage: 48,
     passiveSkillName: 'تركيز الرامي',
     passiveSkillDescription: 'فرصة حرجة أساسية بنسبة 5%.',
   );
@@ -33,6 +38,7 @@ class HeroProfile {
     summary: 'يبدأ بصحة إضافية قدرها 50.',
     activeSkillName: 'انفجار اللهب',
     activeSkillDescription: 'يسبب 70 ضرراً أساسياً لجميع الأعداء.',
+    activeSkillDamage: 70,
     passiveSkillName: 'جلد اللهب',
     passiveSkillDescription: '50 نقطة صحة إضافية عند بدء الجولة.',
   );
@@ -43,6 +49,8 @@ class HeroProfile {
     summary: 'يمتلك سرعة حركة أعلى.',
     activeSkillName: 'خطوة الظل',
     activeSkillDescription: 'تفادي قصير مع 42 ضرراً أساسياً لجميع الأعداء.',
+    activeSkillDamage: 42,
+    triggersDodge: true,
     passiveSkillName: 'خطوة خفيفة',
     passiveSkillDescription: 'سرعة حركة أعلى من بقية الأبطال.',
   );
@@ -53,6 +61,7 @@ class HeroProfile {
     summary: 'يطلق سهماً إضافياً في كل هجمة.',
     activeSkillName: 'عاصفة السهام',
     activeSkillDescription: 'تسبب 54 ضرراً أساسياً لجميع الأعداء.',
+    activeSkillDamage: 54,
     passiveSkillName: 'وتر العاصفة',
     passiveSkillDescription: 'سهم إضافي في كل هجمة.',
   );
