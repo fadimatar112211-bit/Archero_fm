@@ -82,11 +82,37 @@ class ProgressStore {
 
     final nextWrite = _pendingWrite.then((_) async {
       final prefs = await _preferencesProvider();
-      for (final entry in values.entries) {
-        final stored = await prefs.setInt(entry.key, entry.value);
-        if (!stored) {
-          throw StateError('Failed to persist progression key: ${entry.key}');
+      final previousValues = <String, int>{
+        for (final key in values.keys) key: _validValue(key, prefs.getInt(key)),
+      };
+      final writtenKeys = <String>[];
+
+      try {
+        for (final entry in values.entries) {
+          final stored = await prefs.setInt(entry.key, entry.value);
+          if (!stored) {
+            throw StateError('Failed to persist progression key: ${entry.key}');
+          }
+          writtenKeys.add(entry.key);
         }
+      } catch (error, stackTrace) {
+        Object? rollbackError;
+        for (final key in writtenKeys.reversed) {
+          try {
+            final restored = await prefs.setInt(key, previousValues[key]!);
+            if (!restored) {
+              throw StateError('Failed to restore progression key: $key');
+            }
+          } catch (error) {
+            rollbackError ??= error;
+          }
+        }
+        if (rollbackError != null) {
+          throw StateError(
+            'Progress save failed and rollback was incomplete: $rollbackError',
+          );
+        }
+        Error.throwWithStackTrace(error, stackTrace);
       }
     });
 
