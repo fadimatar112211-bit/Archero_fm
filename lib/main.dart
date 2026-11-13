@@ -19,6 +19,7 @@ import 'enemy_projectile_motion.dart';
 import 'combat_collision.dart';
 import 'boss_projectiles.dart';
 import 'combat_damage.dart';
+import 'game_run_lifecycle.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -537,12 +538,13 @@ class _GameScreenState extends State<GameScreen>
   late int stage = widget.initialStage;
   int specialCooldown = 0;
 
-  bool isPaused = false;
-  bool showMysteryChest = false;
-  bool gameOverShown = false;
-  bool playerDying = false;
+  final GameRunLifecycle runLifecycle = GameRunLifecycle();
+  bool get isPaused => runLifecycle.isPaused;
+  bool get showMysteryChest => runLifecycle.showMysteryChest;
+  bool get gameOverShown => runLifecycle.isGameOver;
+  bool get playerDying => runLifecycle.isPlayerDying;
+  bool get stageTransitioning => runLifecycle.isStageTransitioning;
   int playerDeathTicks = 0;
-  bool stageTransitioning = false;
 
   Timer? gameLoop;
   Timer? shootLoop;
@@ -1172,7 +1174,7 @@ class _GameScreenState extends State<GameScreen>
 
     if (playerHp <= 0) {
       playerHp = 0;
-      playerDying = true;
+      runLifecycle.beginPlayerDeath();
       playerDeathTicks = 0;
       playRealSound('hit');
       if (mounted) setState(() {});
@@ -1188,16 +1190,17 @@ class _GameScreenState extends State<GameScreen>
 
   void _checkStageComplete() {
     if (stageTransitioning || enemies.isNotEmpty || gameOverShown) return;
-    stageTransitioning = true;
-
     final advance = StageFlow.complete(stage);
+    runLifecycle.beginStageReward(
+      mysteryChest: advance.reward == StageRewardType.mysteryChest,
+    );
     stage = advance.nextStage;
     bestStage = max(bestStage, stage);
     playerHp = min(playerMaxHp, playerHp + 35);
     saveProgress();
 
     if (advance.reward == StageRewardType.mysteryChest) {
-      setState(() => showMysteryChest = true);
+      setState(() {});
       playRealSound('special');
     } else {
       _showPerksDialog();
@@ -1206,7 +1209,7 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _showPerksDialog() async {
     if (!mounted || gameOverShown) return;
-    setState(() => isPaused = true);
+    setState(() {});
 
     final offers = SkillSystem.rollOffers(
       stage: stage,
@@ -1276,8 +1279,7 @@ class _GameScreenState extends State<GameScreen>
         case null:
           break;
       }
-      isPaused = false;
-      stageTransitioning = false;
+      runLifecycle.completeSkillSelection();
     });
     _spawnEnemies();
   }
@@ -1285,8 +1287,7 @@ class _GameScreenState extends State<GameScreen>
   void _collectChest() {
     setState(() {
       globalCoins += (75 * WorldRules.forStage(max(1, stage - 1)).coinRewardMultiplier).round();
-      showMysteryChest = false;
-      stageTransitioning = false;
+      runLifecycle.collectChest();
     });
     saveProgress();
     playRealSound('coin');
@@ -1295,7 +1296,7 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _endGame() async {
     if (gameOverShown) return;
-    gameOverShown = true;
+    runLifecycle.finishRun();
     bestStage = max(bestStage, stage);
     bestScore = max(bestScore, score);
     saveProgress();
@@ -1360,12 +1361,12 @@ class _GameScreenState extends State<GameScreen>
       return;
     }
     // Never let combat continue behind another app or a system interruption.
-    setState(() => isPaused = true);
+    setState(() => runLifecycle.pause());
   }
 
   void _togglePause() {
     if (showMysteryChest || gameOverShown) return;
-    setState(() => isPaused = !isPaused);
+    setState(() => runLifecycle.togglePause());
   }
 
   @override
