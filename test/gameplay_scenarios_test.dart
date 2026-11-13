@@ -69,7 +69,7 @@ void main() {
         criticalRoll: 1,
         isBoss: false,
       );
-      expect(hit.isDefeated, isTrue);
+      expect(hit.isDefeated, isFalse);
       expect(hit.updatedHp, 10);
       expect(hit.dropsCoin, isFalse);
       expect(hit.scoreAward, 0);
