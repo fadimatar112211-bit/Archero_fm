@@ -1269,10 +1269,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           style: TextStyle(color: Colors.redAccent),
         ),
         content: Text(
-          'المرحلة التي وصلت إليها: $stage
-'
-          'النقاط الإجمالية: $score
-'
+          'المرحلة التي وصلت إليها: $stage\n'
+          'النقاط الإجمالية: $score\n'
           'رصيد العملات: 🪙 $globalCoins',
         ),
         actions: [
