@@ -46,6 +46,9 @@ void main() {
       ),
       throwsA(isA<StateError>()),
     );
+
+    // Coins were written first and must be restored after the next key fails.
+    expect(fake.values['coins'], 150);
   });
 
   test('keeps the save queue usable after a failed write', () async {
