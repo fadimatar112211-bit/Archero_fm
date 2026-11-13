@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 
 import 'game_diagnostics.dart';
 import 'game_progress.dart';
+import 'game_settings.dart';
 import 'main_menu_screen.dart';
 
 Future<void> main() async {
@@ -33,6 +34,7 @@ Future<void> main() async {
   };
 
   await runZonedGuarded<Future<void>>(() async {
+    await GameSettingsStore.load();
     final progress = await loadProgressOrDefaults();
     globalCoins = progress.coins;
     heroHpUpgrade = progress.hpUpgrade;
