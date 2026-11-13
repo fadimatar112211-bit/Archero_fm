@@ -30,6 +30,8 @@ import 'equipment_system.dart';
 import 'game_run_lifecycle.dart';
 import 'game_run_session.dart';
 import 'game_run_state.dart';
+import 'run_checkpoint.dart';
+import 'game_run_checkpoint_adapter.dart';
 import 'game_timers.dart';
 import 'room_flow.dart';
 import 'room_layout.dart';
@@ -45,11 +47,13 @@ typedef GameObject = Map<String, dynamic>;
 class GameScreen extends StatefulWidget {
   final int heroType;
   final int initialStage;
+  final RunCheckpoint? checkpoint;
 
   const GameScreen({
     super.key,
     required this.heroType,
     this.initialStage = 1,
+    this.checkpoint,
   });
 
   @override
@@ -68,8 +72,12 @@ class _GameScreenState extends State<GameScreen>
   final Random random = Random();
   late final AnimationController worldAnimationController;
 
-  late final GameRunSession runSession =
-      GameRunSession(initialStage: widget.initialStage);
+  late final GameRunSession runSession = GameRunSession(
+    initialStage: widget.checkpoint?.stage ?? widget.initialStage,
+    restoredState: widget.checkpoint == null
+        ? null
+        : restoreRunCheckpointState(widget.checkpoint!),
+  );
   GameRunState get runState => runSession.state;
   EquipmentStats get gearStats => EquipmentCatalog.stats(armorId: equippedArmorId, helmetId: equippedHelmetId, ringId: equippedRingId, relicId: equippedRelicId);
 
@@ -154,6 +162,7 @@ class _GameScreenState extends State<GameScreen>
         state == AppLifecycleState.paused) {
       if (runLifecycle.pause()) {
         _pausedForAppLifecycle = true;
+        unawaited(_persistRunCheckpoint());
         if (mounted) setState(() {});
       }
     }
@@ -168,19 +177,26 @@ class _GameScreenState extends State<GameScreen>
       duration: const Duration(seconds: 12),
     )..repeat();
 
-    final heroStats = createHeroRunStats(
-      heroType: widget.heroType,
-      hpUpgrade: heroHpUpgrade,
-      attackUpgrade: heroAtkUpgrade,
-    );
-    final gear = EquipmentCatalog.stats(armorId: equippedArmorId, helmetId: equippedHelmetId, ringId: equippedRingId, relicId: equippedRelicId);
-    playerMaxHp = heroStats.playerMaxHp + gear.maxHpBonus;
-    playerHp = heroStats.playerHp + gear.maxHpBonus;
-    playerSpeed = heroStats.playerSpeed;
-    attackPowerMultiplier = heroStats.attackPowerMultiplier * (1 + gear.attackBonus);
-    extraArrows = heroStats.extraArrows;
-    criticalChance = (heroStats.criticalChance + gear.criticalChanceBonus).clamp(0.0, 0.75).toDouble();
-    coinPickupRadius += gear.coinPickupRadiusBonus;
+    if (runSession.isRestored) {
+      final savedCoins = widget.checkpoint!.state['walletCoins'];
+      if (savedCoins is int && savedCoins >= 0) globalCoins = savedCoins;
+      final hazardTicks = widget.checkpoint!.state['hazardCooldownTicks'];
+      if (hazardTicks is int && hazardTicks >= 0) _roomHazardCooldownTicks = hazardTicks;
+    } else {
+      final heroStats = createHeroRunStats(
+        heroType: widget.heroType,
+        hpUpgrade: heroHpUpgrade,
+        attackUpgrade: heroAtkUpgrade,
+      );
+      final gear = EquipmentCatalog.stats(armorId: equippedArmorId, helmetId: equippedHelmetId, ringId: equippedRingId, relicId: equippedRelicId);
+      playerMaxHp = heroStats.playerMaxHp + gear.maxHpBonus;
+      playerHp = heroStats.playerHp + gear.maxHpBonus;
+      playerSpeed = heroStats.playerSpeed;
+      attackPowerMultiplier = heroStats.attackPowerMultiplier * (1 + gear.attackBonus);
+      extraArrows = heroStats.extraArrows;
+      criticalChance = (heroStats.criticalChance + gear.criticalChanceBonus).clamp(0.0, 0.75).toDouble();
+      coinPickupRadius += gear.coinPickupRadiusBonus;
+    }
 
     timers.periodic('game', const Duration(milliseconds: 16), () {
       if (!mounted || !runLifecycle.canAdvanceGameClock) return;
@@ -194,6 +210,27 @@ class _GameScreenState extends State<GameScreen>
     });
 
     _restartShootLoop();
+    timers.periodic('checkpoint', const Duration(seconds: 5), () {
+      if (runLifecycle.phase == GameRunPhase.active ||
+          runLifecycle.phase == GameRunPhase.paused) {
+        unawaited(_persistRunCheckpoint());
+      }
+    });
+    if (runSession.isRestored) unawaited(saveProgressSafely());
+  }
+
+  Future<void> _persistRunCheckpoint() async {
+    if (gameOverShown || !runSession.isRestored && !runLifecycle.canAdvanceGameClock && !isPaused) return;
+    try {
+      await RunCheckpointStore.save(captureRunCheckpoint(
+        heroType: widget.heroType,
+        coins: globalCoins,
+        run: runState,
+        hazardCooldownTicks: _roomHazardCooldownTicks,
+      ));
+    } catch (error, stackTrace) {
+      debugPrint('Active run checkpoint save failed: $error\\n$stackTrace');
+    }
   }
 
   void _spawnEnemies({bool notify = true, bool challenge = false}) {
@@ -1006,6 +1043,7 @@ class _GameScreenState extends State<GameScreen>
   Future<void> _endGame() async {
     if (gameOverShown) return;
     runLifecycle.finishRun();
+    try { await RunCheckpointStore.clear(); } catch (_) {}
     bestStage = max(bestStage, stage);
     bestScore = max(bestScore, score);
     totalRuns++;
