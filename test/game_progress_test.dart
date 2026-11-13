@@ -55,6 +55,7 @@ void main() {
         'gems': 0,
         'keys': 0,
         'equipmentShards': 0,
+      'unlockedHeroesMask': 1,
     });
     expect(GameDiagnostics.entries, hasLength(1));
     expect(GameDiagnostics.entries.single.source, 'application_startup');
