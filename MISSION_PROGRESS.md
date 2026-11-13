@@ -4,7 +4,7 @@ Last updated: 2026-11-13
 
 ## Source of truth
 
-The following nine sections and their items, as supplied by the user on 2026-11-13, are the active roadmap for the project. This replaces the previous roadmap and its execution structure.
+The authoritative execution roadmap is `DETAILED_GAME_ROADMAP.md` on this branch. It contains the user's ten numbered sections and all detailed sub-items. This progress log is supplemental evidence only; it does not replace or renumber the detailed roadmap.
 
 Preserve the section names, item wording, and order. Do not invent, omit, rename, or silently reorder requirements. As work proceeds, add implementation status, files, commits, PRs, and verification evidence under the relevant item without changing the original requirement text.
 
@@ -764,3 +764,38 @@ Commits:
 - أصبح `ProgressStore.load()` ينتظر طابور الكتابات قبل قراءة التقدم، وبذلك يرى snapshot مكتمل بعد نجاح الكتابة أو استعادة القيم السابقة بعد فشلها.
 - أُضيف اختبار بتخزين مؤجل يثبت أن القراءة لا تكتمل قبل انتهاء كتابة snapshot، ثم تتحقق من القيم النهائية.
 - هذا يعالج جزءاً من 1.1.11؛ ما زالت مراجعة جميع عمليات الشراء والحفظ المتزامنة مطلوبة قبل إغلاق البند.
+
+
+## حزمة التنفيذ المتكاملة للمهمة 1.1
+
+طلب المستخدم تنفيذ جميع بنود 1.1 كحزمة مترابطة بدلاً من التوقف وطلب الإذن بعد كل بند. يُنفّذ العمل على دفعات داخل الحزمة مع احترام الاعتماديات، والاختبارات المستهدفة لكل تغيير، ثم اختبار تكامل شامل عند اكتمال 1.1. لا يعني أسلوب الحزمة وضع علامة اكتمال على بند قبل التحقق منه.
+
+### تدقيق أولي لحالة بنود 1.1
+
+| البند | الحالة الحالية | ما تحقق / ما تبقى |
+|---|---|---|
+| 1.1.1 | مكتمل | جرد الملفات ووظائفها موثق؛ تُحدّثه الإضافات الجديدة. |
+| 1.1.2 | مكتمل | واجهة PlayerSystem وفصل استدعاءات اللاعب عن تفاصيل القتال مع اختبارات. |
+| 1.1.3 | قيد الإكمال | فصل spawn والحركة وقواعد هجمات الزعيم ومحاكاته ومقذوفاته؛ يلزم التحقق النهائي من التكامل وCI. |
+| 1.1.4 | قيد التنفيذ | RoomFlow وRoomLayout موجودان، وأُضيف RoomEncounterFactory لفصل إنشاء مواجهات الغرف؛ يلزم فصل بقية تنسيق انتقالات الغرف عن GameScreen. |
+| 1.1.5 | يحتاج تدقيق تكامل | WeaponCatalog وEquipmentCatalog منفصلان ولكل منهما اختبارات؛ يلزم التحقق من فصل إدارة التجهيز والتأثيرات وعدم بقاء اقتران غير ضروري. |
+| 1.1.6 | يحتاج تدقيق تكامل | ShopEconomy وResourceEconomy موجودان مع اختبارات معاملات؛ يلزم مراجعة مسارات واجهات المتجر والشراء المتزامن. |
+| 1.1.7 | يحتاج تدقيق تكامل | ProgressStore وRunCheckpointStore منفصلان عن الواجهات؛ يلزم تدقيق كل عمليات القراءة/الكتابة والاستعادة والفشل. |
+| 1.1.8 | قيد التنفيذ | GameRunState وGameRunSession موجودان؛ يلزم استكمال نقل الحالة التي ما زالت مملوكة مباشرة إلى GameScreen وتوحيد مصدرها. |
+| 1.1.9 | يحتاج تحقق تكامل | GameRunLifecycle يوحّد حالات active/paused/reward/dying/gameOver؛ يلزم مراجعة جميع الانتقالات والمسارات غير المتزامنة. |
+| 1.1.10 | يحتاج تدقيق | GameTimerRegistry ينظم المؤقتات؛ يلزم جرد الحركات والمؤثرات والأحداث ومصادر التوقيت المتبقية. |
+| 1.1.11 | قيد التنفيذ | الكتابات متسلسلة، وأُضيف انتظار القراءة لطابور الكتابة لمنع رؤية snapshot جزئي؛ يلزم اختبار تعارض معاملات الشراء والحفظ الأخرى. |
+| 1.1.12 | يحتاج تحقق | GameRunSession يلغي المؤقتات وGameScreen يزيل observer ويتخلص من AnimationController؛ يلزم تدقيق انتقالات الشاشات والأصوات والحوارات والمهام غير المتزامنة. |
+| 1.1.13 | لم يُغلق | يلزم قياس الأداء واستهلاك الذاكرة وتحديد نقاط الاختناق قبل أي تحسينات. |
+| 1.1.14 | لم يُغلق | يلزم تشغيل مجموعة اختبارات الانحدار والتكامل كاملة ثم Android Emulator QA في نقطة التحقق النهائية للحزمة. |
+
+### تغييرات الحزمة الأخيرة
+
+- `352e9b704a8c690e1d05489fa64eafe875d46d26`: إنشاء `lib/room_encounter.dart`.
+- `0a45a65e3581d0eaa801f2e7c60edd5f1830e8ef`: اختبارات RoomEncounterFactory.
+- `9fbcdbedb6c2d8d5ddaef7e7a5669eb049eec5ec`: توصيل GameScreen بمصنع مواجهات الغرف.
+- `699b7dcc76ecbdb9e17250c874a6e3f6eb41453d`: تحديث جرد الملفات إلى 62 lib و62 test.
+- `f343f04dc49263ab242805ef3369eba376edd717`: جعل ProgressStore.load ينتظر اكتمال طابور الحفظ.
+- `e43b617f2f99158b18b22a63a55384276034b7b3`: اختبار عدم قراءة snapshot جزئي.
+- لم يُشغّل المحاكي بعد؛ يُحجز للتحقق المجمّع عند اكتمال حزمة 1.1.
+- CI على commit `1d1287d2ae1896f7a353c2474807d5780fa6afd2` بدأ، ولم تكن نتيجته النهائية معروفة عند كتابة هذا التحديث.
