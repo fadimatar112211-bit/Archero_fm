@@ -210,10 +210,10 @@ Implemented in this batch:
 - Added two ways to obtain keys: 180 coins or 5 gems.
 - Chest openings and key purchases persist the full wallet snapshot before committing the in-memory balance; insufficient balances and storage failures leave the wallet unchanged.
 - Added wallet and chest controls to the main menu, including resource counters, purchase buttons, disabled states, and reward feedback.
-- Serialized chest/key UI transactions to prevent rapid repeated taps from submitting overlapping purchases.
+- Serialized chest/key, shop upgrade, weapon selection, equipment selection, and equipment unlock UI transactions to prevent overlapping full-wallet snapshots from overwriting one another.
 - Preserved resource balances through health and attack shop purchases.
 - Hardened weapon/equipment selection and unlock flows so sound playback errors do not incorrectly roll back already-saved purchases or equipment changes.
-- Added model, persistence, transaction, and widget tests covering defaults, round trips, normalization, bounded chest rewards, insufficient balances, save failure rollback, and the visible chest wallet.
+- Added model, persistence, transaction, equipment shard unlock, and widget tests covering defaults, round trips, normalization, bounded chest rewards, insufficient balances, save failure rollback, shard costs/prerequisites, and the visible chest wallet.
 
 Files changed:
 - `lib/player_progress.dart`
@@ -227,6 +227,6 @@ Files changed:
 - `test/resource_economy_test.dart` (new)
 - `test/widget_test.dart`
 
-Remaining in Section 6: equipment-shard spending/crafting, gem sinks beyond keys, economy balancing against real run rewards, and achievement/progression-linked reward tables. The new chest economy is an initial functional slice, not a complete economy.
+Equipment shards now unlock equipment tiers as an alternative to coins (8 shards for tier 1, 20 for tier 2), with tier prerequisites and save-failure rollback. Remaining in Section 6: shard-based crafting/merging and duplicate conversion, gem sinks beyond keys, economy balancing against real run rewards, and achievement/progression-linked reward tables. The new chest economy is an initial functional slice, not a complete economy.
 
 Remaining in Section 7: save/restore the active run, persistent hero unlocks, achievement persistence/rewards, world/stage unlock gates, and stronger corruption recovery.
