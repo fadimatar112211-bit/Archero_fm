@@ -1051,7 +1051,13 @@ class ArenaPainter extends CustomPainter {
       final localRounded = RRect.fromRectAndRadius(local, const Radius.circular(9));
       canvas.drawRRect(localRounded.shift(const Offset(0, 5)), propShadow);
       canvas.drawRRect(localRounded, propBase);
-      canvas.drawRRect(local.deflate(3).shift(const Offset(0, -2)), propTop);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          local.deflate(3).shift(const Offset(0, -2)),
+          const Radius.circular(7),
+        ),
+        propTop,
+      );
       canvas.drawLine(
         Offset(local.left + 7, local.top + 5),
         Offset(local.right - 7, local.top + 5),
