@@ -9,9 +9,10 @@ class SpecialRoomChoiceDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('اختر وجهتك التالية'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
           const Text('انتصرت على الزعيم! اختر غرفة خاصة قبل متابعة المغامرة.'),
           const SizedBox(height: 12),
           ...specialRoomOptions.map((option) => Padding(
@@ -30,7 +31,8 @@ class SpecialRoomChoiceDialog extends StatelessWidget {
               ),
             ),
           )),
-        ],
+          ],
+        ),
       ),
     );
   }
