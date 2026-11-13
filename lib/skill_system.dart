@@ -85,8 +85,17 @@ class SkillSystem {
     required int stage,
     required Random random,
     int count = 3,
+    double? currentHp,
+    double? maxHp,
   }) {
-    final remaining = List<SkillOption>.of(_catalog);
+    final healthIsFull = currentHp != null &&
+        maxHp != null &&
+        currentHp.isFinite &&
+        maxHp.isFinite &&
+        currentHp >= maxHp;
+    final remaining = _catalog
+        .where((skill) => !(healthIsFull && skill.id == SkillId.healing))
+        .toList();
     final offers = <SkillOption>[];
     final safeCount = count.clamp(1, remaining.length);
 
