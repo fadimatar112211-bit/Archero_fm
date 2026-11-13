@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archero_fm/boss_system.dart';
+import 'package:archero_fm/boss_attack_rules.dart';
+import 'package:archero_fm/combat_damage.dart';
 
 void main() {
   group('BossSystem.advance', () {
@@ -48,6 +50,57 @@ void main() {
       expect(impact.areaAttackTicks, 8);
       expect(impact.areaImpactTriggered, isTrue);
       expect(impact.areaHitDone, isTrue);
+    });
+
+    test('boss area impact damages the player while dodge and invulnerability protect', () {
+      final now = DateTime.utc(2026, 11, 14);
+      final update = BossSystem.advance(
+        x: 100, y: 100, hp: 30, maxHp: 100,
+        playerX: 200, playerY: 100,
+        animationTicks: 10, previousPhase: 3,
+        volleyCooldown: 90, attackTicks: 0, attackCooldown: 1,
+        areaAttackTicks: 9, areaHitDone: false,
+      );
+
+      expect(update.enraged, isTrue);
+      expect(update.areaImpactTriggered, isTrue);
+      final damage = BossAttackRules.areaDamage(enraged: update.enraged);
+      final radius = BossAttackRules.areaDamageRadius(enraged: update.enraged);
+      final hit = resolveAreaAttackHit(
+        playerHp: 100,
+        distanceToPlayer: update.distanceToPlayer,
+        attackRadius: radius,
+        damage: damage,
+        isDodging: false,
+        lastDamageAt: null,
+        now: now,
+      );
+      expect(hit.status, AreaAttackHitStatus.damaged);
+      expect(hit.updatedPlayerHp, 80);
+
+      final dodged = resolveAreaAttackHit(
+        playerHp: 100,
+        distanceToPlayer: update.distanceToPlayer,
+        attackRadius: radius,
+        damage: damage,
+        isDodging: true,
+        lastDamageAt: null,
+        now: now,
+      );
+      expect(dodged.status, AreaAttackHitStatus.dodged);
+      expect(dodged.updatedPlayerHp, 100);
+
+      final protected = resolveAreaAttackHit(
+        playerHp: 100,
+        distanceToPlayer: update.distanceToPlayer,
+        attackRadius: radius,
+        damage: damage,
+        isDodging: false,
+        lastDamageAt: now.subtract(const Duration(milliseconds: 100)),
+        now: now,
+      );
+      expect(protected.status, AreaAttackHitStatus.invulnerable);
+      expect(protected.updatedPlayerHp, 100);
     });
 
     test('does not start area attacks outside range or repeat a resolved impact', () {
