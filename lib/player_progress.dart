@@ -22,6 +22,16 @@ class PlayerProgress {
   final int equippedArmorId, equippedHelmetId, equippedRingId, equippedRelicId;
   final int ownedEquipmentMask;
 
+
+  int get effectiveOwnedEquipmentMask {
+    var mask = ownedEquipmentMask.clamp(0, 4095).toInt();
+    if (equippedArmorId >= 0 && equippedArmorId <= 2) mask |= 1 << equippedArmorId;
+    if (equippedHelmetId >= 0 && equippedHelmetId <= 2) mask |= 1 << (3 + equippedHelmetId);
+    if (equippedRingId >= 0 && equippedRingId <= 2) mask |= 1 << (6 + equippedRingId);
+    if (equippedRelicId >= 0 && equippedRelicId <= 2) mask |= 1 << (9 + equippedRelicId);
+    return mask;
+  }
+
   factory PlayerProgress.fromMap(Map<String, int> values) {
     final weaponId = values['equippedWeaponId'] ?? 0;
     int gearId(String key) { final value = values[key] ?? 0; return value >= 0 && value <= 2 ? value : 0; }
@@ -60,7 +70,7 @@ class PlayerProgress {
     'equippedHelmetId': equippedHelmetId,
     'equippedRingId': equippedRingId,
     'equippedRelicId': equippedRelicId,
-    'ownedEquipmentMask': ownedEquipmentMask,
+    'ownedEquipmentMask': effectiveOwnedEquipmentMask,
   };
 
   PlayerProgress copyWith({
