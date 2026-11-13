@@ -57,6 +57,12 @@ class WorldRules {
     citadel,
   ];
 
+  /// Coins granted for collecting one dropped coin in this world.
+  int get pickupCoinReward => (10 * coinRewardMultiplier).round();
+
+  /// Coins granted by the stage mystery chest in this world.
+  int get mysteryChestReward => (75 * coinRewardMultiplier).round();
+
   static WorldRules forStage(int stage) {
     final safeStage = stage < 1 ? 1 : stage;
     final worldIndex = ((safeStage - 1) ~/ 10).clamp(0, all.length - 1);
