@@ -43,6 +43,29 @@ void main() {
       );
     });
 
+    test('does not offer explicitly excluded skills', () {
+      final offers = SkillSystem.rollOffers(
+        stage: 4,
+        random: Random(11),
+        count: 8,
+        excludedSkills: {SkillId.healing, SkillId.coinMagnet},
+      );
+
+      expect(offers.map((skill) => skill.id), isNot(contains(SkillId.healing)));
+      expect(offers.map((skill) => skill.id), isNot(contains(SkillId.coinMagnet)));
+      expect(offers, hasLength(6));
+    });
+
+    test('returns no offers when every skill is excluded', () {
+      final offers = SkillSystem.rollOffers(
+        stage: 1,
+        random: Random(5),
+        excludedSkills: SkillId.values.toSet(),
+      );
+
+      expect(offers, isEmpty);
+    });
+
     test('offers expose common, rare, and epic upgrade tiers', () {
       final all = SkillSystem.rollOffers(
         stage: 20,

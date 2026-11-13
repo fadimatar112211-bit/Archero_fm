@@ -85,8 +85,12 @@ class SkillSystem {
     required int stage,
     required Random random,
     int count = 3,
+    Set<SkillId> excludedSkills = const <SkillId>{},
   }) {
-    final remaining = List<SkillOption>.of(_catalog);
+    final remaining = _catalog
+        .where((skill) => !excludedSkills.contains(skill.id))
+        .toList();
+    if (remaining.isEmpty) return const <SkillOption>[];
     final offers = <SkillOption>[];
     final safeCount = count.clamp(1, remaining.length);
 

@@ -1211,6 +1211,9 @@ class _GameScreenState extends State<GameScreen>
     final offers = SkillSystem.rollOffers(
       stage: stage,
       random: random,
+      excludedSkills: playerHp >= playerMaxHp
+          ? const <SkillId>{SkillId.healing}
+          : const <SkillId>{},
     );
     final choice = await showDialog<SkillId>(
       context: context,
