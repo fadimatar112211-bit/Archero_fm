@@ -628,6 +628,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           'ranged' => baseHp * 0.82,
           _ => baseHp,
         };
+        final hp = baseVariantHp * worldRules.enemyHealthMultiplier;
         final speed = switch (enemyType) {
           'tank' => 0.52 + difficultyStep * 0.008,
           'runner' => 1.25 + difficultyStep * 0.018,
