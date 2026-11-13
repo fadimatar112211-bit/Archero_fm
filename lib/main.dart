@@ -17,6 +17,7 @@ import 'combat_timing.dart';
 import 'enemy_ai.dart';
 import 'enemy_projectile_motion.dart';
 import 'combat_collision.dart';
+import 'boss_projectiles.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -973,19 +974,23 @@ class _GameScreenState extends State<GameScreen>
       if (type == 'boss' && bossPhase >= 2) {
         if (bossVolleyCooldown > 0) bossVolleyCooldown--;
         if (bossVolleyCooldown == 0 && distance <= 320) {
-          final baseAngle = atan2(dy, dx);
-          final count = bossConfig.volleyCount;
-          for (var shotIndex = 0; shotIndex < count; shotIndex++) {
-            final spread = count == 1
-                ? 0.0
-                : (shotIndex / (count - 1) - 0.5) * 0.78;
-            final shotAngle = baseAngle + spread;
+          final volley = createBossFanVolley(
+            originX: enemy['x'] as double,
+            originY: enemy['y'] as double,
+            targetX: playerX,
+            targetY: playerY,
+            count: bossConfig.volleyCount,
+            speed: bossConfig.projectileSpeed,
+            damage: bossConfig.projectileDamage,
+          );
+          for (final projectile in volley) {
             enemyProjectiles.add({
-              'x': enemy['x'], 'y': enemy['y'],
-              'vx': cos(shotAngle) * bossConfig.projectileSpeed,
-              'vy': sin(shotAngle) * bossConfig.projectileSpeed,
-              'damage': bossConfig.projectileDamage,
-              'life': 115,
+              'x': projectile.x,
+              'y': projectile.y,
+              'vx': projectile.velocityX,
+              'vy': projectile.velocityY,
+              'damage': projectile.damage,
+              'life': projectile.lifetimeTicks,
             });
           }
           bossVolleyCooldown = bossConfig.volleyCooldownTicks;
