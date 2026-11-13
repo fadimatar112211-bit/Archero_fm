@@ -421,3 +421,15 @@ Current verification state: world/stage implementation is committed to the featu
 4. Continue Section 7 with stronger save-corruption recovery (including invalid payload handling, safe defaults, and preserving valid progress where possible).
 5. Later, perform hands-on Android validation of checkpoint resume and world/stage selection; do not claim manual verification prematurely.
 6. Keep the nine-section roadmap open; the project is not complete.
+
+
+### Section 7 — save-corruption recovery hardening (added to PR #45)
+- Progression reads now isolate a wrong-typed/corrupt SharedPreferences entry to that one key instead of allowing it to throw out of the whole profile load. Valid coins, gems, stage progress, counters, and equipment data in other keys remain available.
+- Invalid optional run-checkpoint JSON and checkpoints stored under the wrong preference type are now discarded from the checkpoint key only. They do not affect the separately stored player progression.
+- Added regression tests proving that valid progression survives a wrong-typed best-stage key, malformed checkpoint text is removed, and a wrong-typed checkpoint entry is removed without touching the wallet.
+- Updated files: `lib/progress_store.dart`, `lib/run_checkpoint.dart`, `test/progress_store_test.dart`, `test/run_checkpoint_test.dart`.
+- These changes are implementation-only until the latest PR #45 CI run succeeds; no manual device validation has been performed.
+
+### Latest PR #45 CI history
+- An early run on the initial world-picker draft failed Dart analysis. The failure exposed a const-expression issue in the world-count model, a literal escaped newline in the world list expression, and use of unsupported test-view setup methods. These were corrected in follow-up commits.
+- Do not treat the earlier failed/cancelled runs as validation. Only the final workflow run for the exact latest head SHA can qualify the batch.
