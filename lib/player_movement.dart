@@ -41,7 +41,7 @@ PlayerMovementResolution resolvePlayerDrag({
   final safeCurrentMoveTicks = currentMoveTicks < 0 ? 0 : currentMoveTicks;
   final distanceSquared =
       safeDeltaX * safeDeltaX + safeDeltaY * safeDeltaY;
-  final moved = distanceSquared.isFinite &&
+  final moved = !distanceSquared.isFinite ||
       distanceSquared > safeMovementThreshold;
 
   return PlayerMovementResolution(

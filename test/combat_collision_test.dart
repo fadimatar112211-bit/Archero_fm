@@ -30,6 +30,29 @@ void main() {
       ), 1);
     });
 
+    test('ignores invalid projectile coordinates and malformed targets', () {
+      const targets = [
+        CombatCircle(x: double.nan, y: 0, radius: 10),
+        CombatCircle(x: 0, y: 0, radius: double.infinity),
+        CombatCircle(x: 0, y: 0, radius: -5),
+      ];
+      expect(firstOverlappingTargetIndex(
+        projectileX: 0, projectileY: 0, targets: targets,
+      ), isNull);
+      expect(firstOverlappingTargetIndex(
+        projectileX: double.infinity, projectileY: 0,
+        targets: const [CombatCircle(x: 0, y: 0, radius: 10)],
+      ), isNull);
+    });
+
+    test('normalizes an invalid projectile radius without false collisions', () {
+      expect(firstOverlappingTargetIndex(
+        projectileX: 12, projectileY: 0,
+        targets: const [CombatCircle(x: 0, y: 0, radius: 10)],
+        projectileRadius: double.nan,
+      ), isNull);
+    });
+
     test('supports a custom projectile radius', () {
       expect(firstOverlappingTargetIndex(
         projectileX: 14, projectileY: 0,

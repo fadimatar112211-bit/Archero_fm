@@ -24,7 +24,38 @@ void main() {
       expect(step.shouldRemove, isTrue);
     });
 
-    test('expires projectiles at zero life and outside arena bounds', () {
+    test('expires projectiles with invalid motion, target, or arena data', () {
+      final invalidMotion = advanceEnemyProjectile(
+        x: 10, y: 10, velocityX: double.nan, velocityY: 0, life: 5,
+        targetX: 100, targetY: 100, arenaWidth: 300, arenaHeight: 500,
+      );
+      final invalidTarget = advanceEnemyProjectile(
+        x: 10, y: 10, velocityX: 0, velocityY: 0, life: 5,
+        targetX: double.infinity, targetY: 100,
+        arenaWidth: 300, arenaHeight: 500,
+      );
+      final invalidArena = advanceEnemyProjectile(
+        x: 10, y: 10, velocityX: 0, velocityY: 0, life: 5,
+        targetX: 100, targetY: 100,
+        arenaWidth: double.nan, arenaHeight: 500,
+      );
+      expect(invalidMotion.shouldRemove, isTrue);
+      expect(invalidTarget.shouldRemove, isTrue);
+      expect(invalidArena.shouldRemove, isTrue);
+      expect(invalidMotion.hitTarget, isFalse);
+    });
+
+    test('normalizes negative hit radius and bounds padding', () {
+      final step = advanceEnemyProjectile(
+        x: 10, y: 10, velocityX: 0, velocityY: 0, life: 5,
+        targetX: 10, targetY: 10, arenaWidth: 300, arenaHeight: 500,
+        hitRadius: -10, boundsPadding: -5,
+      );
+      expect(step.hitTarget, isFalse);
+      expect(step.shouldRemove, isFalse);
+    });
+
+    test('expires projectiles at zero life and outside arena bounds', {
       final expired = advanceEnemyProjectile(
         x: 10, y: 10, velocityX: 0, velocityY: 0, life: 1,
         targetX: 200, targetY: 200, arenaWidth: 300, arenaHeight: 500,

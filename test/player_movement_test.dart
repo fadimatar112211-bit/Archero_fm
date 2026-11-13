@@ -84,6 +84,20 @@ void main() {
       expect(result.moveTicks, 0);
     });
 
+    test('treats very large finite drags as movement even if squared distance overflows', () {
+      final result = resolvePlayerDrag(
+        currentX: 180,
+        currentY: 430,
+        deltaX: 1e200,
+        deltaY: 0,
+        arenaWidth: 360,
+        arenaHeight: 640,
+        currentMoveTicks: 0,
+      );
+      expect(result.x, 338);
+      expect(result.moveTicks, 8);
+    });
+
     test('uses safe defaults for non-finite movement thresholds', () {
       final result = resolvePlayerDrag(
         currentX: 180,

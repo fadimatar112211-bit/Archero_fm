@@ -19,6 +19,8 @@ class ProjectileStep {
 }
 
 /// Advances a projectile by one simulation tick and reports collision/expiry.
+/// Invalid motion or arena data expires the projectile instead of allowing a
+/// NaN/infinite position to poison subsequent collision calculations.
 ProjectileStep advanceEnemyProjectile({
   required double x,
   required double y,
@@ -35,13 +37,33 @@ ProjectileStep advanceEnemyProjectile({
   final nextX = x + velocityX;
   final nextY = y + velocityY;
   final nextLife = life - 1;
-  final dx = nextX - targetX;
-  final dy = nextY - targetY;
-  final hit = sqrt(dx * dx + dy * dy) < hitRadius;
-  final outside = nextX < -boundsPadding ||
-      nextX > arenaWidth + boundsPadding ||
-      nextY < -boundsPadding ||
-      nextY > arenaHeight + boundsPadding;
+  final validMotion = x.isFinite &&
+      y.isFinite &&
+      velocityX.isFinite &&
+      velocityY.isFinite &&
+      nextX.isFinite &&
+      nextY.isFinite;
+  final validTarget = targetX.isFinite && targetY.isFinite;
+  final validArena = arenaWidth.isFinite &&
+      arenaHeight.isFinite &&
+      arenaWidth >= 0 &&
+      arenaHeight >= 0;
+  final safePadding =
+      boundsPadding.isFinite && boundsPadding >= 0 ? boundsPadding : 20.0;
+  final safeHitRadius = hitRadius.isFinite && hitRadius >= 0 ? hitRadius : 0.0;
+  final invalid = !validMotion || !validTarget || !validArena;
+
+  final dx = validMotion && validTarget ? nextX - targetX : double.infinity;
+  final dy = validMotion && validTarget ? nextY - targetY : double.infinity;
+  final distanceSquared = dx * dx + dy * dy;
+  final hit = !invalid &&
+      distanceSquared.isFinite &&
+      distanceSquared < safeHitRadius * safeHitRadius;
+  final outside = invalid ||
+      nextX < -safePadding ||
+      nextX > arenaWidth + safePadding ||
+      nextY < -safePadding ||
+      nextY > arenaHeight + safePadding;
 
   return ProjectileStep(
     x: nextX,
