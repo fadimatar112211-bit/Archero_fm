@@ -242,7 +242,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('${item.name} · ${item.rarity}', style: TextStyle(color: selected ? Colors.lightBlueAccent : Colors.white, fontWeight: FontWeight.bold)),
               Text(item.description, style: const TextStyle(fontSize: 11, color: Colors.white70)),
-              if (!owned) Text(canUnlock ? 'فتح القطعة: ${EquipmentCatalog.unlockCost(item)} عملة' : 'افتح القطعة السابقة أولاً', style: const TextStyle(fontSize: 11, color: Colors.amber)),
+              if (!owned) Text(canUnlock ? 'فتح: ${EquipmentCatalog.unlockCost(item)} عملة أو ${EquipmentCatalog.shardUnlockCost(item)} شظايا' : 'افتح القطعة السابقة أولاً', style: const TextStyle(fontSize: 11, color: Colors.amber)),
             ])),
             if (selected) const Icon(Icons.check_circle, color: Colors.lightBlueAccent)
             else if (!owned) Icon(canUnlock ? Icons.lock_open : Icons.lock, color: Colors.amber),
@@ -253,17 +253,30 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   );
 
   Future<void> _unlockGear(EquipmentProfile item) async {
-    if (!EquipmentCatalog.canUnlock(ownedEquipmentMask, item)) return;
-    final cost = EquipmentCatalog.unlockCost(item);
-    if (globalCoins < cost) {
-      _message('تحتاج إلى $cost عملة لفتح هذه القطعة.');
+    if (_walletBusy || !EquipmentCatalog.canUnlock(ownedEquipmentMask, item)) return;
+    final shardCost = EquipmentCatalog.shardUnlockCost(item);
+    final coinCost = EquipmentCatalog.unlockCost(item);
+    final useShards = EquipmentCatalog.canUnlockWithShards(
+      ownedEquipmentMask,
+      item,
+      globalEquipmentShards,
+    );
+    if (!useShards && globalCoins < coinCost) {
+      _message('تحتاج إلى $coinCost عملة أو $shardCost شظايا لفتح هذه القطعة.');
       return;
     }
+
     final previousCoins = globalCoins;
+    final previousShards = globalEquipmentShards;
     final previousMask = ownedEquipmentMask;
     final previousSlots = [equippedArmorId, equippedHelmetId, equippedRingId, equippedRelicId];
     setState(() {
-      globalCoins -= cost;
+      _walletBusy = true;
+      if (useShards) {
+        globalEquipmentShards -= shardCost;
+      } else {
+        globalCoins -= coinCost;
+      }
       ownedEquipmentMask = EquipmentCatalog.unlock(ownedEquipmentMask, item);
       switch (item.slot) {
         case EquipmentSlot.armor: equippedArmorId = item.id; break;
@@ -274,21 +287,25 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     });
     try {
       await saveProgress();
+      try { await playRealSound('coin'); } catch (_) {}
+      if (mounted) {
+        _message(useShards
+            ? 'تم فتح وتجهيز ${item.name} باستخدام الشظايا.'
+            : 'تم فتح وتجهيز ${item.name}.');
+      }
     } catch (_) {
       globalCoins = previousCoins;
+      globalEquipmentShards = previousShards;
       ownedEquipmentMask = previousMask;
       equippedArmorId = previousSlots[0];
       equippedHelmetId = previousSlots[1];
       equippedRingId = previousSlots[2];
       equippedRelicId = previousSlots[3];
-      if (mounted) {
-        setState(() {});
-        _message('تعذر حفظ فتح القطعة. لم يتم اعتماد الخصم.');
-      }
-      return;
+      if (mounted) _message('تعذر حفظ فتح القطعة. لم يتم اعتماد الخصم.');
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
     }
-    try { await playRealSound('coin'); } catch (_) {}
-    if (mounted) _message('تم فتح وتجهيز ${item.name}.');
   }
 
   Future<void> _equipGear(EquipmentProfile item) async {
