@@ -1190,10 +1190,16 @@ class _GameScreenState extends State<GameScreen>
     if (stageTransitioning || enemies.isNotEmpty || gameOverShown) return;
     stageTransitioning = true;
 
-    final advance = StageFlow.complete(stage);
+    final completion = resolveStageCompletion(
+      currentStage: stage,
+      playerHp: playerHp,
+      playerMaxHp: playerMaxHp,
+      bestStage: bestStage,
+    );
+    final advance = completion.advance;
     stage = advance.nextStage;
-    bestStage = max(bestStage, stage);
-    playerHp = min(playerMaxHp, playerHp + 35);
+    bestStage = completion.updatedBestStage;
+    playerHp = completion.updatedPlayerHp;
     saveProgress();
 
     if (advance.reward == StageRewardType.mysteryChest) {
