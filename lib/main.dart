@@ -8,6 +8,7 @@ import 'progress_store.dart';
 import 'stage_flow.dart';
 import 'skill_system.dart';
 import 'boss_combat.dart';
+import 'world_rules.dart';
 import 'world_theme.dart';
 
 Future<void> main() async {
@@ -591,10 +592,12 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     // يزداد التحدي تدريجياً، مع سقف لمعدل النمو حتى تبقى المراحل
     // المتقدمة صعبة دون أن تتحول إلى أعداء سريعي الحركة أو ممتلئي الصحة بشكل غير عادل.
     final difficultyStep = min(max(stage - 1, 0), 20).toDouble();
+    final worldRules = WorldRules.forStage(stage);
 
     if (stage % 5 == 0) {
       final bossProgress = min(max(stage - 5, 0), 45).toDouble();
-      final bossHp = 360.0 + bossProgress * 22;
+      final bossHp = (360.0 + bossProgress * 22) *
+          worldRules.enemyHealthMultiplier;
       enemies.add({
         'x': arenaWidth / 2,
         'y': arenaHeight * 0.16,
@@ -618,7 +621,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           _ => 'ranged',
         };
         final baseHp = 55.0 + difficultyStep * 10;
-        final hp = switch (enemyType) {
+        final baseVariantHp = switch (enemyType) {
           'tank' => baseHp * 1.8,
           'runner' => baseHp * 0.72,
           'stalker' => baseHp * 0.9,
@@ -639,7 +642,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           'maxHp': hp,
           'type': enemyType,
           'radius': enemyType == 'tank' ? 23.0 : 19.0,
-          'speed': speed * enemySpeedMultiplier,
+          'speed': speed * enemySpeedMultiplier *\n              worldRules.enemySpeedMultiplier,
         });
       }
     }
@@ -1114,7 +1117,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       final dx = playerX - (coins[i]['x'] as double);
       final dy = playerY - (coins[i]['y'] as double);
       if (sqrt(dx * dx + dy * dy) < coinPickupRadius) {
-        globalCoins += 10;
+        globalCoins +=\n            (10 * WorldRules.forStage(stage).coinRewardMultiplier).round();
         collectedCoin = true;
         coins.removeAt(i);
         playRealSound('coin');
@@ -1232,7 +1235,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
   void _collectChest() {
     setState(() {
-      globalCoins += 75;
+      globalCoins += (75 * WorldRules.forStage(stage).coinRewardMultiplier).round();
       showMysteryChest = false;
       stageTransitioning = false;
     });
