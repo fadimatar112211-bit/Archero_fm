@@ -43,7 +43,9 @@ void main() {
         upgrade: ShopEconomy.health(0),
         currentCoins: 49,
         currentUpgradeValue: 0,
-        persist: (_, __) async => called = true,
+        persist: (_, __) async {
+          called = true;
+        },
       );
 
       expect(result.status, ShopPurchaseStatus.insufficientFunds);
