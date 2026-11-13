@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - "feature-*"
+      - "feature/**"
       - "chore/**"
       - "fix/**"
   pull_request:
