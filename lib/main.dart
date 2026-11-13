@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:typed_data';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'progress_store.dart';
@@ -11,7 +9,7 @@ import 'skill_system.dart';
 import 'boss_combat.dart';
 import 'world_rules.dart';
 import 'shop_economy.dart';
-import 'procedural_audio.dart';
+import 'audio_service.dart';
 import 'world_theme.dart';
 import 'combat_stats.dart';
 
@@ -44,22 +42,9 @@ Future<void> saveProgress() => ProgressStore.save(
   bestScore: bestScore,
 );
 
-final Map<String, AudioPlayer> _soundPlayers = {};
-final Map<String, Uint8List> _soundWavCache = {};
+final GameAudioService gameAudio = GameAudioService();
 
-Future<void> playRealSound(String type) async {
-  const soundTypes = {'shoot', 'hit', 'coin', 'special'};
-  if (!soundTypes.contains(type)) return;
-
-  try {
-    final player = _soundPlayers.putIfAbsent(type, AudioPlayer.new);
-    final wav = _soundWavCache.putIfAbsent(type, () => buildToneWav(type));
-    await player.stop();
-    await player.play(BytesSource(wav));
-  } catch (_) {
-    // Audio is optional; gameplay continues if the device cannot play it.
-  }
-}
+Future<void> playRealSound(String type) => gameAudio.play(type);
 
 class ArcheroSoundApp extends StatelessWidget {
   const ArcheroSoundApp({super.key});
