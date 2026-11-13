@@ -47,6 +47,16 @@ void main() {
       expect(progress.ownedEquipmentMask, 585);
     });
 
+    test('legacy equipped items are retained as owned during migration', () {
+      final progress = PlayerProgress.fromMap({
+        'equippedArmorId': 2,
+        'equippedHelmetId': 1,
+      });
+      expect(progress.equippedArmorId, 2);
+      expect(progress.ownedEquipmentMask & (1 << 2), isNonZero);
+      expect(progress.ownedEquipmentMask & (1 << 4), isNonZero);
+    });
+
     test('copyWith updates selected values without mutating original', () {
       const original = PlayerProgress(coins: 150, bestStage: 2);
       final updated = original.copyWith(coins: 220, bestScore: 500, equippedWeaponId: 3);
