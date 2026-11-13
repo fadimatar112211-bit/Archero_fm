@@ -55,7 +55,7 @@ void main() {
       expect(step.shouldRemove, isFalse);
     });
 
-    test('expires projectiles at zero life and outside arena bounds', {
+    test('expires projectiles at zero life and outside arena bounds', () {
       final expired = advanceEnemyProjectile(
         x: 10, y: 10, velocityX: 0, velocityY: 0, life: 1,
         targetX: 200, targetY: 200, arenaWidth: 300, arenaHeight: 500,
