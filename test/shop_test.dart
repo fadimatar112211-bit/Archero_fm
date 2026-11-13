@@ -21,6 +21,10 @@ void main() {
 
     await tester.tap(find.text('صحة +25 · المستوى 0/20 · 50 عملة'));
     await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    });
+    await tester.pumpAndSettle();
 
     expect(globalCoins, 100);
     expect(heroHpUpgrade, 25);
@@ -36,6 +40,10 @@ void main() {
     final attackButton = find.text('هجوم +15 · المستوى 0/15 · 70 عملة');
     await tester.ensureVisible(attackButton);
     await tester.tap(attackButton);
+    await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    });
     await tester.pumpAndSettle();
 
     expect(globalCoins, 80);
