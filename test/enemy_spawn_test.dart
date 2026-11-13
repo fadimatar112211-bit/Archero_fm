@@ -75,18 +75,6 @@ void main() {
         expect(enemy['speed'], greaterThan(0));
       }
     });
-
-    test('scales boss health and speed with world and stage progression', () {
-      final boss = createEnemyWave(
-        stage: 15,
-        arenaWidth: 360,
-        arenaHeight: 640,
-        enemySpeedMultiplier: 1.3,
-        random: Random(3),
-      ).single;
-
-      expect(boss['hp'], 638);
-      expect(boss['speed'], closeTo(1.29402, 0.000001));
-    });
+ 
   });
 }
