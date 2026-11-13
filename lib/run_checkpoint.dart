@@ -94,7 +94,26 @@ class RunCheckpointStore {
   static Future<RunCheckpoint?> load() async {
     await _pendingWrite;
     final preferences = await SharedPreferences.getInstance();
-    return RunCheckpoint.decode(preferences.getString(RunCheckpoint.storageKey));
+    String? raw;
+    try {
+      raw = preferences.getString(RunCheckpoint.storageKey);
+    } catch (_) {
+      // A type-corrupted optional checkpoint must not prevent startup.
+      try {
+        await preferences.remove(RunCheckpoint.storageKey);
+      } catch (_) {}
+      return null;
+    }
+
+    final checkpoint = RunCheckpoint.decode(raw);
+    if (raw != null && checkpoint == null) {
+      // Discard only the invalid run snapshot. Persistent player progression
+      // is stored separately and remains untouched.
+      try {
+        await preferences.remove(RunCheckpoint.storageKey);
+      } catch (_) {}
+    }
+    return checkpoint;
   }
 
   static Future<void> clear() {
