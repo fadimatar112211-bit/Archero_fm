@@ -412,6 +412,50 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       ),
                     ),
                     const SizedBox(height: 18),
+                    const SizedBox(height: 18),
+                    _panel(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            '💎 الموارد والصناديق',
+                            style: TextStyle(color: Colors.amberAccent, fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            alignment: WrapAlignment.spaceAround,
+                            spacing: 14,
+                            runSpacing: 10,
+                            children: [
+                              _resourceBadge(Icons.diamond, 'الجواهر', globalGems, Colors.lightBlueAccent),
+                              _resourceBadge(Icons.vpn_key, 'المفاتيح', globalKeys, Colors.amber),
+                              _resourceBadge(Icons.auto_awesome, 'شظايا المعدات', globalEquipmentShards, Colors.purpleAccent),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            onPressed: _buyChestKey,
+                            icon: const Icon(Icons.key),
+                            label: const Text('شراء مفتاح · 180 عملة'),
+                          ),
+                          const SizedBox(height: 8),
+                          ...chestDefinitions.map((chest) => Padding(
+                            padding: const EdgeInsets.only(bottom: 7),
+                            child: OutlinedButton.icon(
+                              onPressed: globalKeys >= chest.keyCost ? () => _openChest(chest) : null,
+                              icon: Icon(chest.type == RewardChestType.relic ? Icons.diamond : Icons.inventory_2),
+                              label: Text('${chest.name} · ${chest.keyCost} مفتاح'),
+                            ),
+                          )),
+                          const Text(
+                            'الصناديق تمنح عملات وجواهر وشظايا معدات، وتُحفظ الموارد قبل اعتماد المكافأة.',
+                            style: TextStyle(fontSize: 11, color: Colors.white70),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
                     _panel(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                       const Text('⚔️ ترسانة الأسلحة',style:TextStyle(color:Colors.amberAccent,fontSize:18,fontWeight:FontWeight.bold)),
                       const SizedBox(height:6),
@@ -470,6 +514,17 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       ),
     );
   }
+
+  Widget _resourceBadge(IconData icon, String label, int value, Color color) =>
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(height: 3),
+          Text('$value', style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+          Text(label, style: const TextStyle(fontSize: 11, color: Colors.white70)),
+        ],
+      );
 
   Widget _panel({required Widget child}) {
     return Container(
