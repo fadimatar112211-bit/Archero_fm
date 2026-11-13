@@ -49,6 +49,11 @@ Future<void> main() async {
     globalKeys = progress.keys;
     globalEquipmentShards = progress.equipmentShards;
     unlockedHeroesMask = progress.unlockedHeroesMask;
+    totalKills = progress.totalKills;
+    totalBosses = progress.totalBosses;
+    totalChests = progress.totalChests;
+    totalRuns = progress.totalRuns;
+    claimedAchievementsMask = progress.claimedAchievementsMask;
     runApp(const ArcheroSoundApp());
   }, (error, stackTrace) {
     GameDiagnostics.record(

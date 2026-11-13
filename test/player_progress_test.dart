@@ -21,6 +21,11 @@ void main() {
         'keys': 0,
         'equipmentShards': 0,
         'unlockedHeroesMask': 1,
+        'totalKills': 0,
+        'totalBosses': 0,
+        'totalChests': 0,
+        'totalRuns': 0,
+        'claimedAchievementsMask': 0,
       });
     });
 
@@ -51,6 +56,11 @@ void main() {
       expect(progress.equippedWeaponId, 0);
       expect(progress.ownedEquipmentMask, 585);
       expect(progress.unlockedHeroesMask, 1);
+      expect(progress.totalKills, 0);
+      expect(progress.totalBosses, 0);
+      expect(progress.totalChests, 0);
+      expect(progress.totalRuns, 0);
+      expect(progress.claimedAchievementsMask, 0);
     });
 
     test('round-trips gem key and equipment shard balances', () {

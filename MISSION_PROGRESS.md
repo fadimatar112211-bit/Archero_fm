@@ -200,7 +200,7 @@ PR #41 is merged into `feature/procedural-game-audio-v2` as commit `81cdd3b94700
 
 Branch: `feature/persistent-resources-and-chest-economy-integrated`
 
-Status: PR #42 is open and not merged yet. Its earlier head passed Dart analysis and Flutter tests, but the Android APK job remained stuck in progress; subsequent commits expanded the feature set and triggered fresh CI runs. Revalidate the current head before merging.
+Status: PR #42 merged into `feature/procedural-game-audio-v2` as commit `77a2347cbf264e8d2e5760209148bd70b7b34aff`. Final-head CI runs `43488128681` and `43488116406` both completed successfully, including Dart analysis, full Flutter tests, Android project generation, and Android debug APK build.
 
 Implemented in this batch:
 - Added persistent player balances for gems, chest keys, and equipment shards.
@@ -228,14 +228,14 @@ Files changed:
 - `test/resource_economy_test.dart` (new)
 - `test/widget_test.dart`
 
-Equipment shards now unlock equipment tiers as an alternative to coins (8 shards for tier 1, 20 for tier 2), with tier prerequisites and save-failure rollback. Remaining in Section 6: shard-based crafting/merging and duplicate conversion, gem sinks beyond keys, economy balancing against real run rewards, and achievement/progression-linked reward tables. The new chest economy is an initial functional slice, not a complete economy.
+Equipment shards now unlock equipment tiers as an alternative to coins (8 shards for tier 1, 20 for tier 2), with tier prerequisites and save-failure rollback. Remaining in Section 6: shard-based crafting/merging and duplicate conversion, gem sinks beyond keys, economy balancing against real run rewards, and further reward tables. Achievement-linked rewards are now implemented in the current follow-up branch. The new chest economy is an initial functional slice, not a complete economy.
 
-Section 7 progress: persistent hero unlocks are now implemented. The starter hero remains unlocked; the other three heroes can be unlocked for 50/75/100 gems. Unlocks and gem deductions are saved in the same complete progression snapshot, failed saves roll back the purchase, and locked heroes cannot start a run. Remaining in Section 7: save/restore the active run, achievement persistence/rewards, world/stage unlock gates, and stronger corruption recovery.
+Section 7 progress: persistent hero unlocks are now implemented. The starter hero remains unlocked; the other three heroes can be unlocked for 50/75/100 gems. Unlocks and gem deductions are saved in the same complete progression snapshot, failed saves roll back the purchase, and locked heroes cannot start a run. Remaining in Section 7: save/restore the active run, achievement persistence/rewards (implemented in the current follow-up branch but awaiting merge), world/stage unlock gates, and stronger corruption recovery.
 
 
 ### Follow-up — Section 7: persistent hero unlocks
 
-Implemented on the current PR #42 branch:
+Implemented in merged PR #42:
 - Added a validated four-hero ownership bitmask to `PlayerProgress` and `ProgressStore`, including legacy-safe defaults that keep the starter hero unlocked.
 - Added startup restoration and full-snapshot save support for unlocked heroes.
 - Added hero selection lock states and gem prices: 50 gems for the flame hero, 75 for the shadow hero, and 100 for the storm hero.
@@ -245,3 +245,56 @@ Implemented on the current PR #42 branch:
 - Added tests for ownership-mask normalization, persistence, and the successful hero unlock UI flow.
 
 Remaining in Section 7: mid-run checkpoint save/restore, achievements and reward claims, world/stage unlock gates, and stronger save corruption recovery.
+
+
+### Follow-up PR #43 — persistent achievements and reward claims
+
+Branch: `feature/persistent-achievements-and-reward-claims`
+
+Status: implementation and tests are committed on this branch. Latest-head CI is running; PR creation and merge are pending successful validation.
+
+Implemented:
+- Added persistent lifetime counters for defeated enemies, defeated bosses, opened reward chests, and completed runs.
+- Added a 10-achievement milestone catalog covering combat kills, boss defeats, chest openings, stage progression, and completed runs.
+- Added persistent one-time reward claim bits so an achievement reward cannot be collected twice.
+- Added rewards in coins, gems, and equipment shards.
+- Added a full achievements board to the main menu showing milestone requirements, progress counters, locked/ready/claimed states, and claim buttons.
+- Achievement claims save the complete progression snapshot (wallet balances and claim bit together) before updating in-memory balances; a storage failure leaves the reward claimable and does not grant unpersisted currency.
+- Enemy and boss counters update on defeats; room progression persists combat counters, run completion persists run totals, and both in-run and menu reward chests count toward chest milestones.
+- Extended PlayerProgress, ProgressStore, startup restoration, and all main-menu shop/wallet save paths to preserve achievement counters and claim flags.
+- Added model/persistence tests, achievement threshold and one-time claim tests, and a widget test for persistent reward claiming.
+
+Changed files:
+- `lib/achievement_system.dart` (new)
+- `lib/player_progress.dart`
+- `lib/progress_store.dart`
+- `lib/game_progress.dart`
+- `lib/main.dart`
+- `lib/game_screen.dart`
+- `lib/main_menu_screen.dart`
+- `test/achievement_system_test.dart` (new)
+- `test/player_progress_test.dart`
+- `test/progress_store_test.dart`
+- `test/progress_store_failure_test.dart`
+- `test/widget_test.dart`
+
+Remaining in Section 7: mid-run checkpoint save/restore, world/stage unlock gates, and stronger save corruption recovery. The achievement system is an initial persistent milestone set; more progression goals and reward tuning remain open.
+
+
+## Session checkpoint — 2026-11-13 (latest verified state)
+
+This checkpoint was added after reviewing GitHub PRs #41, #42, and #43 and the current contents of this progress file. Use it as the resume point next session; do not repeat the completed work listed above.
+
+### Verified PR states
+- PR #41, “Add boss-gated special room choices and rewards”: **merged** into `feature/procedural-game-audio-v2` on 2026-11-13. Merge commit: `81cdd3b947003b0cefa54541b0d948ecbf448c80`. Final-head CI runs `43482791474` and `43482784424` succeeded (Dart analysis, Flutter tests, Android project generation, Android debug APK build).
+- PR #42, “Add persistent resource wallet and reward chests”: **merged** into `feature/procedural-game-audio-v2` on 2026-11-13. Merge commit: `77a2347cbf264e8d2e5760209148bd70b7b34aff`. Final-head CI runs `43488128681` and `43488116406` succeeded (Dart analysis, Flutter tests, Android project generation, Android debug APK build).
+- PR #43, “Add persistent achievements and one-time reward claims”: **open, not merged** at this checkpoint. Branch: `feature/persistent-achievements-and-reward-claims`. Head commit: `9be87b14d4a93e2244d4b55d23e264e406510aa3`. The two GitHub Actions check runs on this head (`43491077166` and `43491060914`) are completed successfully. PR #43 changes 14 files, including the achievement implementation, persistence integration, tests, and this progress file. Do not describe PR #43 as merged until GitHub confirms the merge.
+
+### Exact resume point
+- The latest implementation batch is PR #43: persistent achievements and one-time reward claims (details and changed-file list are recorded in the section above).
+- The next action is to review PR #43's latest diff and CI result, then merge it only after confirming the checks are green and the branch/base integration is safe. After merge, verify the integrated branch state and record the merge commit here.
+- After PR #43, continue Section 7 with mid-run checkpoint save/restore, then world/stage unlock gates, and stronger save-corruption recovery. Keep Section 7 marked partial until these requirements are implemented and verified.
+- Other still-open requirements remain as recorded in the nine-section roadmap above; merging PRs #41–#43 does not mean the full game is complete.
+
+### Progress-recording rule for future sessions
+After every coherent implementation batch, update this `MISSION_PROGRESS.md` in the active working branch with: roadmap section/item, what changed, exact files, tests and build results, CI run IDs and outcomes, PR number/state, merge commit (if merged), remaining gaps, and the exact next action. Keep statuses evidence-based (implemented, tested, built, manually gameplay-verified are distinct). Before stopping a session, write a fresh “Session checkpoint” so the next session can resume without asking the user to reconstruct the history.
