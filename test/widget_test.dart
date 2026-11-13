@@ -162,6 +162,24 @@ void main() {
 
   testWidgets('hero unlock spends gems only after persistent save succeeds', (tester) async {
     SharedPreferences.setMockInitialValues({});
+    addTearDown(() {
+      globalCoins = 150;
+      globalGems = 0;
+      globalKeys = 0;
+      globalEquipmentShards = 0;
+      unlockedHeroesMask = 1;
+      ownedEquipmentMask = 585;
+      heroHpUpgrade = 0;
+      heroAtkUpgrade = 0;
+      bestStage = 1;
+      bestScore = 0;
+      equippedWeaponId = 0;
+      equippedArmorId = 0;
+      equippedHelmetId = 0;
+      equippedRingId = 0;
+      equippedRelicId = 0;
+      ProgressStore.resetForTesting();
+    });
     globalCoins = 150;
     globalGems = 100;
     globalKeys = 0;
