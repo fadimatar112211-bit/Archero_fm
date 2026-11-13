@@ -58,6 +58,10 @@ void main() {
   }
 
   testWidgets('renders presentation from supplied run snapshot', (tester) async {
+    tester.view.physicalSize = const Size(400, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       MaterialApp(
         home: SizedBox(
@@ -79,6 +83,10 @@ void main() {
 
   testWidgets('reports arena dimensions and drag intent to its owner',
       (tester) async {
+    tester.view.physicalSize = const Size(400, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     Size? reportedSize;
     Offset? reportedDelta;
 
@@ -99,7 +107,7 @@ void main() {
     expect(reportedSize!.width, 400);
     expect(reportedSize!.height, 700);
 
-    await tester.drag(find.byType(GestureDetector), const Offset(18, -9));
+    await tester.drag(find.byKey(const ValueKey('game-arena-gesture')), const Offset(18, -9));
     await tester.pump();
 
     expect(reportedDelta, const Offset(18, -9));
