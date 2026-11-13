@@ -44,7 +44,6 @@ void main() {
         'keys': 0,
         'equipmentShards': 0,
         'unlockedHeroesMask': 1,
-      'unlockedHeroesMask': 1,
     });
   });
 
@@ -72,6 +71,7 @@ void main() {
         'gems': 0,
         'keys': 0,
         'equipmentShards': 0,
+        'unlockedHeroesMask': 1,
     });
   });
 
@@ -175,6 +175,7 @@ void main() {
       gems: 31,
       keys: 2,
       equipmentShards: 14,
+      unlockedHeroesMask: 15,
     );
 
     await ProgressStore.savePlayerProgress(snapshot);
@@ -206,6 +207,19 @@ void main() {
       equippedArmorId: 1, ownedEquipmentMask: mask,
     );
     expect((await ProgressStore.loadPlayerProgress()).ownedEquipmentMask, mask);
+  });
+
+  test('persists and normalizes unlocked hero progression', () async {
+    await ProgressStore.save(
+      coins: 300, hpUpgrade: 25, atkUpgrade: 15, bestStage: 4, bestScore: 600,
+      unlockedHeroesMask: 15,
+    );
+    expect((await ProgressStore.loadPlayerProgress()).unlockedHeroesMask, 15);
+    await ProgressStore.save(
+      coins: 300, hpUpgrade: 25, atkUpgrade: 15, bestStage: 4, bestScore: 600,
+      unlockedHeroesMask: 0,
+    );
+    expect((await ProgressStore.loadPlayerProgress()).unlockedHeroesMask, 1);
   });
 
   test('normalizes unknown equipped weapon IDs to the default', () async {
