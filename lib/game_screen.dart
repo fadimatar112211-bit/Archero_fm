@@ -1063,61 +1063,6 @@ class _GameScreenState extends State<GameScreen>
                   if (showMysteryChest)
                     MysteryChestOverlay(onCollect: _collectChest),
                 ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  // صندوق المكافأة.
-                  if (showMysteryChest)
-                    Positioned.fill(
-                      child: Container(
-                        color: Colors.black.withOpacity(0.82),
-                        child: Center(
-                          child: Container(
-                            margin: const EdgeInsets.all(24),
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF241B05),
-                              border: Border.all(color: Colors.amber, width: 2),
-                              borderRadius: BorderRadius.circular(22),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.card_giftcard,
-                                  color: Colors.amber,
-                                  size: 58,
-                                ),
-                                const SizedBox(height: 12),
-                                const Text(
-                                  'صندوق المكافآت الأسطوري!',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Colors.amberAccent,
-                                    fontSize: 19,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                const Text('تحصل على 75 عملة مجانية'),
-                                const SizedBox(height: 18),
-                                FilledButton(
-                                  onPressed: _collectChest,
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: Colors.amber,
-                                    foregroundColor: Colors.black,
-                                  ),
-                                  child: const Text('افتح الصندوق'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
               ),
             );
           },
