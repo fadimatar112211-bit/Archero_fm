@@ -93,6 +93,10 @@ PR 35 – فصل بنية اللعبة: https://github.com/fadimatar112211-bit/A
 - مؤثرات بصرية أكثر تنوعاً.
 - تحسين تزامن الصوت مع الحركة.
 
+## Delivery target — 2026-11-14
+
+**Primary target: finish the complete game tomorrow, not merely complete as much work as possible.** Treat all nine roadmap sections and every listed requirement as part of the delivery target. Prioritize implementation and integration in parallel, preserve existing custom features, fix issues as they are found, and keep pushing coherent checkpoints to GitHub throughout the work. Do not describe the game as complete until the full feature set is integrated, automated checks pass, and the final Android gameplay validation is completed. The date is the project target, not permission to misrepresent unfinished work as finished.
+
 ## Progress tracking rules
 
 - This nine-section list is the sole active roadmap until the user provides a replacement or revision.
@@ -114,7 +118,7 @@ PR 35 – فصل بنية اللعبة: https://github.com/fadimatar112211-bit/A
 
 ## Current execution batch — Section 4: Rooms and stages
 
-Status: **Implementation in progress; automated CI not yet run.**
+Status: **Implementation in progress; CI rerun is currently underway.**
 
 Branch: `feature/roadmap-room-layouts-and-hazards`
 
@@ -134,8 +138,8 @@ Changed files:
 - `test/arena_painter_test.dart`
 - `test/game_arena_view_test.dart`
 
-Verification: first CI run 43471488889 failed at Dart analysis because a room-prop painter passed a Rect where an RRect was required. Corrected in the follow-up commit; CI must be rerun and pass before merging. Do not mark this section complete. These room variants and hazards are an initial gameplay slice; distinct treasure/shop/healing/challenge room flows, obstacle collision/pathfinding, and full world-specific mechanics remain outstanding.
+Verification: first CI run 43471488889 failed at Dart analysis because a room-prop painter passed a Rect where an RRect was required. Corrected in the follow-up commit. CI rerun 43471741820 has passed Dart analysis, tests, and Android project generation; Android debug APK build is still running at this checkpoint. Do not mark this section complete. These room variants and hazards are an initial gameplay slice; distinct treasure/shop/healing/challenge room flows, obstacle collision/pathfinding, and full world-specific mechanics remain outstanding.
 
 ## Next action
 
-Create and validate the implementation PR. Fix all analysis/test/build failures before merging, then continue the next high-impact roadmap gaps in coherent batches while updating this file.
+Finish CI for PR #38, merge when all checks pass, then continue implementing the remaining requirements across all nine sections in large integrated batches. Keep this file updated at each GitHub checkpoint. The delivery target is the complete playable game on 2026-11-14.
