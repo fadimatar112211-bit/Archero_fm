@@ -2598,6 +2598,53 @@ class ArenaPainter extends CustomPainter {
       canvas.drawPath(flag, Paint()..color = const Color(0xFF55D6D1));
     }
 
+    // Biome atmosphere: deterministic edge particles add depth without
+    // covering the central combat lane or introducing per-frame randomness.
+    if (size.width > 100 && size.height > 180) {
+      final ambient = Paint()
+        ..color = theme.accentColor.withOpacity(.42)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+      final crisp = Paint()..color = theme.accentColor.withOpacity(.72);
+      for (var i = 0; i < 9; i++) {
+        final y = size.height * (.24 + i * .071);
+        for (final side in [0, 1]) {
+          final direction = side == 0 ? 1.0 : -1.0;
+          final edgeX = side == 0 ? 39.0 : size.width - 39.0;
+          final drift = ((i * 13) % 17).toDouble();
+          final point = Offset(edgeX + direction * drift, y);
+          final radius = 1.2 + (i % 3) * .45;
+          if (theme.id == 2 || theme.id == 6) {
+            // Embers and storm sparks.
+            canvas.drawLine(
+              point.translate(-direction * 3, 3),
+              point.translate(direction * 3, -3),
+              Paint()..color = theme.accentColor.withOpacity(.55)
+                ..strokeWidth = 1.2..strokeCap = StrokeCap.round,
+            );
+          } else if (theme.id == 3) {
+            // Tiny ice diamonds.
+            final diamond = Path()
+              ..moveTo(point.dx, point.dy - 3)
+              ..lineTo(point.dx + 2, point.dy)
+              ..lineTo(point.dx, point.dy + 3)
+              ..lineTo(point.dx - 2, point.dy)..close();
+            canvas.drawPath(diamond, ambient);
+          } else if (theme.id == 4) {
+            // Fine drifting sand grains.
+            canvas.drawCircle(point, radius * .7, crisp);
+          } else if (theme.id == 5) {
+            // Arcane motes.
+            canvas.drawCircle(point, radius + 1, ambient);
+            canvas.drawCircle(point, .8, crisp);
+          } else {
+            // Forest pollen.
+            canvas.drawCircle(point, radius + 1.5, ambient);
+            canvas.drawCircle(point, 1, crisp);
+          }
+        }
+      }
+    }
+
     final vignette = Paint()
       ..shader = RadialGradient(colors: [Colors.transparent, Colors.black.withOpacity(.48)],
         stops: const [0.55, 1]).createShader(rect);
