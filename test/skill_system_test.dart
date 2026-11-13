@@ -39,7 +39,7 @@ void main() {
           random: Random(3),
           count: 99,
         ),
-        hasLength(6),
+        hasLength(8),
       );
     });
 
