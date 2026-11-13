@@ -91,7 +91,6 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
                   final theme = _progression.themeForWorld(worldId);
                   final unlocked = _progression.isWorldUnlocked(worldId);
                   final first = _progression.firstStageOfWorld(worldId);
-                  final last = _progression.lastStageOfWorld(worldId);
                   final availableInWorld = List<int>.generate(10, (i) => first + i)
                       .where(_progression.isStageUnlocked)
                       .length;
