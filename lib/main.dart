@@ -28,6 +28,7 @@ import 'player_attack.dart';
 import 'player_projectiles.dart';
 import 'game_run_lifecycle.dart';
 import 'game_run_state.dart';
+import 'room_flow.dart';
 import 'player_movement.dart';
 import 'game_diagnostics.dart';
 import 'enemy_hit_resolution.dart';
@@ -1260,17 +1261,18 @@ class _GameScreenState extends State<GameScreen>
 
   void _checkStageComplete() {
     if (stageTransitioning || enemies.isNotEmpty || gameOverShown) return;
+    final transition = RoomFlow.complete(stage);
     final completion = resolveStageCompletion(
       currentStage: stage,
       playerHp: playerHp,
       playerMaxHp: playerMaxHp,
       bestStage: bestStage,
     );
-    final advance = completion.advance;
+    final advance = transition.stageAdvance;
     runLifecycle.beginStageReward(
       mysteryChest: advance.reward == StageRewardType.mysteryChest,
     );
-    stage = advance.nextStage;
+    stage = transition.nextRoom.stage;
     bestStage = completion.updatedBestStage;
     playerHp = completion.updatedPlayerHp;
     saveProgress();
