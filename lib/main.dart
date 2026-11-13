@@ -2411,7 +2411,6 @@ class ArenaPainter extends CustomPainter {
     // Distinct environmental landmarks for the five remaining worlds.
     // All decorations are clipped to narrow side rails, keeping combat clear.
     if (size.width > 100 && size.height > 180 && theme.id >= 2 && theme.id <= 6) {
-      final railWidth = size.width * .105;
       for (final side in [0, 1]) {
         final left = side == 0;
         final direction = left ? 1.0 : -1.0;
