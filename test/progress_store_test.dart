@@ -175,6 +175,15 @@ void main() {
     final p = await ProgressStore.loadPlayerProgress();
     expect(p.equippedWeaponId,2); expect(p.equippedArmorId,1); expect(p.equippedHelmetId,2); expect(p.equippedRingId,1); expect(p.equippedRelicId,2); expect(p.ownedEquipmentMask,585 | (1<<1) | (1<<5) | (1<<7) | (1<<11));
   });
+  test('persists and restores the unlocked equipment mask', () async {
+    const mask = 585 | (1 << 1) | (1 << 5) | (1 << 7);
+    await ProgressStore.save(
+      coins: 300, hpUpgrade: 25, atkUpgrade: 15, bestStage: 4, bestScore: 600,
+      equippedArmorId: 1, ownedEquipmentMask: mask,
+    );
+    expect((await ProgressStore.loadPlayerProgress()).ownedEquipmentMask, mask);
+  });
+
   test('normalizes unknown equipped weapon IDs to the default', () async {
     await ProgressStore.save(coins:300,hpUpgrade:25,atkUpgrade:15,bestStage:4,bestScore:600,equippedWeaponId:99,equippedArmorId:99,equippedHelmetId:-1,equippedRingId:99,equippedRelicId:-1);
     final p = await ProgressStore.loadPlayerProgress();
