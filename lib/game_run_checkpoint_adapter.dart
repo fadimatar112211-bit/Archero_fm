@@ -6,7 +6,6 @@ import 'skill_system.dart';
 RunCheckpoint captureRunCheckpoint({
   required int heroType,
   required GameRunState run,
-  int hazardCooldownTicks = 0,
 }) {
   return RunCheckpoint(
     heroType: heroType,
@@ -43,7 +42,7 @@ RunCheckpoint captureRunCheckpoint({
       'arrows': _copyEntities(run.arrows),
       'enemyProjectiles': _copyEntities(run.enemyProjectiles),
       'coins': _copyEntities(run.coins),
-      'hazardCooldownTicks': hazardCooldownTicks,
+      'hazardCooldownTicks': run.roomHazardCooldownTicks,
     },
   );
 }
@@ -85,6 +84,7 @@ GameRunState? restoreRunCheckpointState(RunCheckpoint checkpoint) {
     run.score = _integer(data, 'score');
     run.specialCooldown = _integer(data, 'specialCooldown');
     run.playerDeathTicks = _integer(data, 'playerDeathTicks');
+    run.roomHazardCooldownTicks = hazardCooldown;
     run.challengeRoomRewardPending = data['challengeRoomRewardPending'] == true;
 
     run.selectedSkills
