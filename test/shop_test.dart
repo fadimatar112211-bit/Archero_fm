@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:archero_fm/main.dart';
 
@@ -36,7 +35,9 @@ void main() {
       (tester) async {
     await tester.pumpWidget(const ArcheroSoundApp());
 
-    await tester.tap(find.text('هجوم +15 (70)'));
+    final attackButton = find.text('هجوم +15 (70)');
+    await tester.ensureVisible(attackButton);
+    await tester.tap(attackButton);
     await tester.pumpAndSettle();
 
     expect(globalCoins, 80);
