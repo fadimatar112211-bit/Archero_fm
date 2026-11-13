@@ -11,8 +11,8 @@ void main(){
   });
   test('combines equipment bonuses with safe caps',(){
    final s=EquipmentCatalog.stats(armorId:2,helmetId:2,ringId:2,relicId:2);
-   expect(s.maxHpBonus,90);expect(s.attackBonus,closeTo(.11,.0001));expect(s.damageReduction,closeTo(.14,.0001));expect(s.criticalChanceBonus,closeTo(.15,.0001));expect(s.coinPickupRadiusBonus,24);expect(s.coinRewardBonus,.15);
+   expect(s.maxHpBonus,65);expect(s.attackBonus,closeTo(.11,.0001));expect(s.damageReduction,closeTo(.14,.0001));expect(s.criticalChanceBonus,closeTo(.15,.0001));expect(s.coinPickupRadiusBonus,24);expect(s.coinRewardBonus,.15);
   });
-  test('unknown IDs fall back to base item',(){expect(EquipmentCatalog.byId(EquipmentSlot.relic,99).id,0);});
+  test('unknown IDs fall back to base item',(){expect(EquipmentCatalog.byId(EquipmentSlot.relic,99).id,0); expect(EquipmentCatalog.byId(EquipmentSlot.relic,1).maxHpBonus,25);});
  });
 }
