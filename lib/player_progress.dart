@@ -62,9 +62,9 @@ class PlayerProgress {
       equippedRingId: ringId,
       equippedRelicId: relicId,
       ownedEquipmentMask: ownedMask,
-      gems: (values['gems'] ?? 0).clamp(0, 999999),
-      keys: (values['keys'] ?? 0).clamp(0, 999999),
-      equipmentShards: (values['equipmentShards'] ?? 0).clamp(0, 999999),
+      gems: (values['gems'] ?? 0).clamp(0, 999999).toInt(),
+      keys: (values['keys'] ?? 0).clamp(0, 999999).toInt(),
+      equipmentShards: (values['equipmentShards'] ?? 0).clamp(0, 999999).toInt(),
     );
   }
 
