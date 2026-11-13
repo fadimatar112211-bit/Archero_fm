@@ -171,6 +171,11 @@ void main() {
       globalKeys = 0;
       globalEquipmentShards = 0;
       unlockedHeroesMask = 1;
+      totalKills = 0;
+      totalBosses = 0;
+      totalChests = 0;
+      totalRuns = 0;
+      claimedAchievementsMask = 0;
       ownedEquipmentMask = 585;
       heroHpUpgrade = 0;
       heroAtkUpgrade = 0;
@@ -188,6 +193,11 @@ void main() {
     globalKeys = 0;
     globalEquipmentShards = 0;
     unlockedHeroesMask = 1;
+    totalKills = 0;
+    totalBosses = 0;
+    totalChests = 0;
+    totalRuns = 0;
+    claimedAchievementsMask = 0;
     ownedEquipmentMask = 585;
     heroHpUpgrade = 0;
     heroAtkUpgrade = 0;
