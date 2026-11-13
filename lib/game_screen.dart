@@ -11,14 +11,12 @@ import 'game_settings.dart';
 import 'game_progress.dart';
 import 'stage_flow.dart';
 import 'skill_system.dart';
-import 'boss_spawn.dart';
 import 'world_rules.dart';
 import 'world_theme.dart';
 import 'combat_stats.dart';
 import 'combat_effects.dart';
 import 'coin_collection.dart';
 import 'enemy_ai.dart';
-import 'enemy_spawn.dart';
 import 'enemy_attack_rules.dart';
 import 'boss_attack_rules.dart';
 import 'boss_projectiles.dart';
@@ -34,6 +32,7 @@ import 'run_checkpoint.dart';
 import 'game_run_checkpoint_adapter.dart';
 import 'game_timers.dart';
 import 'room_flow.dart';
+import 'room_encounter.dart';
 import 'room_layout.dart';
 import 'enemy_hit_resolution.dart';
 import 'player_system.dart';
@@ -235,47 +234,26 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
-  List<GameObject> _createStageEncounter({
-    required int targetStage,
-    required double speedMultiplier,
-  }) {
-    if (RoomFlow.forStage(targetStage).isBoss) {
-      return [
-        createBossForStage(
-          stage: targetStage,
-          arenaWidth: arenaWidth,
-          arenaHeight: arenaHeight,
-          enemySpeedMultiplier: speedMultiplier,
-        ),
-      ];
-    }
-    return createEnemyWave(
-      stage: targetStage,
-      arenaWidth: arenaWidth,
-      arenaHeight: arenaHeight,
-      enemySpeedMultiplier: speedMultiplier,
-      random: random,
-    );
-  }
 
   void _spawnEnemies({bool notify = true, bool challenge = false}) {
     enemies.clear();
     arrows.clear();
     enemyProjectiles.clear();
-    enemies.addAll(_createStageEncounter(
-      targetStage: stage,
-      speedMultiplier: enemySpeedMultiplier,
+    enemies.addAll(RoomEncounterFactory.create(
+      stage: stage,
+      arenaWidth: arenaWidth,
+      arenaHeight: arenaHeight,
+      enemySpeedMultiplier: enemySpeedMultiplier,
+      random: random,
     ));
     if (challenge) {
-      final extraWave = _createStageEncounter(
-        targetStage: stage + 2,
-        speedMultiplier: enemySpeedMultiplier * 1.12,
-      ).take(2);
-      for (final enemy in extraWave) {
-        final hp = enemy['hp'];
-        if (hp is num) enemy['hp'] = hp.toDouble() * 1.2;
-        enemies.add(enemy);
-      }
+      enemies.addAll(RoomEncounterFactory.createChallengeReinforcements(
+        currentStage: stage,
+        arenaWidth: arenaWidth,
+        arenaHeight: arenaHeight,
+        enemySpeedMultiplier: enemySpeedMultiplier,
+        random: random,
+      ));
       challengeRoomRewardPending = true;
     }
 
