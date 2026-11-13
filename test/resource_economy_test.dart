@@ -42,6 +42,40 @@ void main() {
       expect(calls, 0);
     });
 
+    test('can exchange five gems for one key without changing coins', () async {
+      final result = await purchaseChestKeyWithGems(
+        coins: 240,
+        gems: 7,
+        keys: 1,
+        equipmentShards: 5,
+        persist: ({required coins, required gems, required keys, required equipmentShards}) async {
+          expect(coins, 240);
+          expect(gems, 2);
+          expect(keys, 2);
+          expect(equipmentShards, 5);
+        },
+      );
+      expect(result.status, ResourceTransactionStatus.completed);
+      expect(result.coins, 240);
+      expect(result.gems, 2);
+      expect(result.keys, 2);
+    });
+
+    test('gem key exchange leaves wallet unchanged when gems are insufficient', () async {
+      var calls = 0;
+      final result = await purchaseChestKeyWithGems(
+        coins: 90,
+        gems: 4,
+        keys: 0,
+        equipmentShards: 1,
+        persist: ({required coins, required gems, required keys, required equipmentShards}) async { calls++; },
+      );
+      expect(result.status, ResourceTransactionStatus.insufficientCoins);
+      expect(result.gems, 4);
+      expect(result.keys, 0);
+      expect(calls, 0);
+    });
+
     test('keeps the old wallet if persistence fails', () async {
       final result = await purchaseChestKey(
         coins: 300,
