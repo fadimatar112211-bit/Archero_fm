@@ -21,7 +21,6 @@ import 'enemy_attack_rules.dart';
 import 'enemy_projectile_motion.dart';
 import 'combat_collision.dart';
 import 'boss_projectiles.dart';
-import 'game_timers.dart';
 import 'hero_rules.dart';
 import 'combat_damage.dart';
 import 'player_attack.dart';
@@ -29,6 +28,7 @@ import 'player_projectiles.dart';
 import 'game_run_lifecycle.dart';
 import 'game_run_session.dart';
 import 'game_run_state.dart';
+import 'game_timers.dart';
 import 'room_flow.dart';
 import 'player_movement.dart';
 import 'enemy_hit_resolution.dart';
@@ -122,7 +122,7 @@ class _GameScreenState extends State<GameScreen>
   bool get gameOverShown => runLifecycle.isGameOver;
   bool get playerDying => runLifecycle.isPlayerDying;
   bool get stageTransitioning => runLifecycle.isStageTransitioning;
-  final GameTimerRegistry timers = GameTimerRegistry();
+  GameTimerRegistry get timers => runSession.timers;
   bool _pausedForAppLifecycle = false;
 
   List<GameObject> get enemies => runState.enemies;
@@ -909,7 +909,7 @@ class _GameScreenState extends State<GameScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    timers.dispose();
+    runSession.dispose();
     worldAnimationController.dispose();
     super.dispose();
   }
