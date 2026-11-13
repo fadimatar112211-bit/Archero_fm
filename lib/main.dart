@@ -1272,9 +1272,9 @@ class _GameScreenState extends State<GameScreen>
         case SkillId.coinMagnet:
           coinPickupRadius *= 1.45;
         case SkillId.criticalStrike:
-          criticalChance = (criticalChance + 0.15).clamp(0.0, 0.75);
+          criticalChance = (criticalChance + 0.15).clamp(0.0, 0.75).toDouble();
         case SkillId.swiftHands:
-          attackSpeedMultiplier = (attackSpeedMultiplier * 1.18).clamp(1.0, 2.2);
+          attackSpeedMultiplier = (attackSpeedMultiplier * 1.18).clamp(1.0, 2.2).toDouble();
           _restartShootLoop();
         case null:
           break;
