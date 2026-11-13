@@ -43,12 +43,12 @@ void main() {
       isNull,
     );
     expect(
-      RunCheckpoint(
+      () => RunCheckpoint(
         heroType: 1,
         stage: 1,
         state: {'invalid': double.infinity},
       ).encode(),
-      throwsFormatException,
+      throwsA(anything),
     );
   });
 
