@@ -18,6 +18,7 @@ import 'enemy_ai.dart';
 import 'enemy_projectile_motion.dart';
 import 'combat_collision.dart';
 import 'boss_projectiles.dart';
+import 'combat_damage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -840,25 +841,33 @@ class _GameScreenState extends State<GameScreen>
       shot['life'] = step.life;
 
       if (step.hitTarget) {
-        if (playerMoveTicks > 0) {
-          combatEffects.add({'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14});
-        } else {
-          // Preserve the short invulnerability window between projectile hits.
-          final now = DateTime.now();
-          final canTakeDamage = lastDamageAt == null ||
-              now.difference(lastDamageAt!).inMilliseconds >= 260;
-          if (canTakeDamage) {
-            playerHp -= (shot['damage'] as double?) ?? 6.0;
+        // Keep the 260ms hit-protection window in the game loop; collision
+        // outcome and HP mutation are resolved by the pure combat module.
+        final now = DateTime.now();
+        final canTakeDamage = lastDamageAt == null ||
+            now.difference(lastDamageAt!).inMilliseconds >= 260;
+        final resolution = resolveProjectileHit(
+          playerHp: playerHp,
+          projectileDamage: (shot['damage'] as double?) ?? 6.0,
+          isDodging: playerMoveTicks > 0,
+          canTakeDamage: canTakeDamage,
+        );
+        playerHp = resolution.updatedPlayerHp;
+        switch (resolution.status) {
+          case ProjectileHitStatus.damaged:
             lastDamageAt = now;
             combatEffects.add({
               'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
             });
             playRealSound('hit');
-          } else {
+          case ProjectileHitStatus.dodged:
+            combatEffects.add({
+              'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14,
+            });
+          case ProjectileHitStatus.invulnerable:
             combatEffects.add({
               'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 10,
             });
-          }
         }
       }
       if (step.shouldRemove) enemyProjectiles.removeAt(i);
