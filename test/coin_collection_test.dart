@@ -9,7 +9,7 @@ void main() {
         playerY: 10,
         coins: const [
           CoinPosition(x: 10, y: 10),
-          CoinPosition(x: 13, y: 14),
+          CoinPosition(x: 12, y: 13),
           CoinPosition(x: 16, y: 10),
           CoinPosition(x: 10, y: 17),
         ],
