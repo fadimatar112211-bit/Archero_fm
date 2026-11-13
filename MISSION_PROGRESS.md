@@ -531,3 +531,22 @@ Current verification state: world/stage implementation is committed to the featu
 2. If successful, retrieve the artifact from Actions (or publish the first version tag after reviewing the build) and provide the user the direct download path.
 3. Continue repairing PR #47 independently; do not include its changes in the downloadable integrated build until CI passes and it is merged.
 4. Keep the nine-section game roadmap and hands-on Android validation open; this distribution workflow does not mean the game is complete.
+
+
+## Visual overhaul batch — illustrated hero home hub (in progress)
+
+Branch: `feature/visual-overhaul-home-hub`, based on the integrated game branch (through PR #46; PR #47 is intentionally not included).
+
+Implemented in this first visual integration slice:
+- Replaced the generic gamepad/icon masthead with a dedicated illustrated home-hub scene, layered environmental backdrop, framed presentation, central hero artwork, and live resource counters.
+- Added visible left/right quick-navigation controls: **العتاد** scrolls to the existing equipment section and **المتجر** scrolls to the existing upgrade shop section. Existing shop, inventory, chest, achievement, settings, and stage-start flows remain in the same main menu and are not discarded.
+- Registered the new vector environment artwork in Flutter assets and reused the project's current player SVG as the central character pending the full character-art replacement/animation pass.
+- Added stable section keys and a managed scroll controller for the hub shortcuts.
+
+Changed files:
+- `assets/home_hub_scene.svg` (new)
+- `pubspec.yaml`
+- `lib/main_menu_screen.dart`
+- `MISSION_PROGRESS.md`
+
+Verification status: code has been committed to the feature branch; CI/Flutter analysis, full tests, Android build, and device visual review are still pending. This is a first integrated hub redesign slice, **not** completion of the requested visual overhaul. The next visual batch must replace/upgrade the in-game player/enemy/boss art and connect the existing sprite animation assets, then improve biome floor tiles, props, projectiles, equipment display, and combat VFX. Keep all gameplay systems intact.
