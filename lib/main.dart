@@ -15,6 +15,7 @@ import 'combat_stats.dart';
 import 'combat_targeting.dart';
 import 'combat_timing.dart';
 import 'enemy_ai.dart';
+import 'enemy_attack_rules.dart';
 import 'enemy_projectile_motion.dart';
 import 'combat_collision.dart';
 import 'boss_projectiles.dart';
@@ -1014,7 +1015,9 @@ class _GameScreenState extends State<GameScreen>
       var attackCooldown = (enemy['attackCooldown'] as int?) ?? 0;
       if (attackTicks > 0) attackTicks--;
       if (attackCooldown > 0) attackCooldown--;
-      final attackRange = 23 + (enemy['radius'] as double) + 24;
+      final attackRange = EnemyAttackRules.attackRange(
+        enemyRadius: enemy['radius'] as double,
+      );
       var areaAttackTicks = (enemy['areaAttackTicks'] as int?) ?? 0;
       if (areaAttackTicks > 0) areaAttackTicks--;
       if (type == 'ranged' && distance >= 105 && distance <= 255 && attackCooldown == 0) {
@@ -1034,8 +1037,11 @@ class _GameScreenState extends State<GameScreen>
           distance <= 220 &&
           areaAttackTicks == 0 &&
           attackCooldown == 0) {
-        areaAttackTicks = 32;
-        attackCooldown = bossEnraged ? 132 : 180;
+        areaAttackTicks = EnemyAttackRules.attackDurationTicks(isBoss: true);
+        attackCooldown = EnemyAttackRules.attackCooldownTicks(
+          isBoss: true,
+          bossEnraged: bossEnraged,
+        );
         enemy['areaHitDone'] = false;
         combatEffects.add({
           'x': enemy['x'], 'y': enemy['y'],
@@ -1044,8 +1050,11 @@ class _GameScreenState extends State<GameScreen>
       } else if (type != 'boss' && type != 'ranged' &&
           distance <= attackRange &&
           attackCooldown == 0) {
-        attackTicks = 16;
-        attackCooldown = 76;
+        attackTicks = EnemyAttackRules.attackDurationTicks(isBoss: false);
+        attackCooldown = EnemyAttackRules.attackCooldownTicks(
+          isBoss: false,
+          bossEnraged: false,
+        );
         enemy['attackHitDone'] = false;
         combatEffects.add({
           'x': enemy['x'], 'y': enemy['y'],
@@ -1062,13 +1071,17 @@ class _GameScreenState extends State<GameScreen>
         final blastDx = playerX - (enemy['x'] as double);
         final blastDy = playerY - (enemy['y'] as double);
         final blastDistance = sqrt(blastDx * blastDx + blastDy * blastDy);
-        if (blastDistance <= (bossEnraged ? 132 : 112)) {
+        if (blastDistance <= EnemyAttackRules.bossAreaRadius(
+          bossEnraged: bossEnraged,
+        )) {
           if (playerMoveTicks > 0) {
             combatEffects.add({
               'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 18,
             });
           } else {
-            playerHp -= bossEnraged ? 20 : 15;
+            playerHp -= EnemyAttackRules.bossAreaDamage(
+              bossEnraged: bossEnraged,
+            );
             combatEffects.add({
               'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 22,
             });
@@ -1113,8 +1126,12 @@ class _GameScreenState extends State<GameScreen>
       enemy['walkPhase'] = ((enemy['walkPhase'] as double?) ?? 0.0) +
           moveSpeed.abs() * (type == 'runner' ? 0.16 : 0.11);
       // لحظة الضرر تقع في منتصف ضربة الهجوم، مرة واحدة لكل دورة.
-      final impactDistance = 23 + (enemy['radius'] as double) + 14;
-      final impactFrame = type == 'boss' ? 12 : 8;
+      final impactDistance = EnemyAttackRules.impactRange(
+        enemyRadius: enemy['radius'] as double,
+      );
+      final impactFrame = EnemyAttackRules.attackImpactFrame(
+        isBoss: type == 'boss',
+      );
       if (type != 'ranged' && attackTicks == impactFrame &&
           enemy['attackHitDone'] != true &&
           distance <= impactDistance &&
@@ -1133,13 +1150,10 @@ class _GameScreenState extends State<GameScreen>
             now.difference(lastDamageAt!).inMilliseconds >= 220) {
           // ضرر مختلف لكل فئة: الدبابة بطيئة لكنها تضرب بقوة،
           // والعدّاء أخف ضرراً مقابل اندفاعاته المتكررة.
-          final contactDamage = switch (type) {
-            'boss' => bossEnraged ? 12.0 : 10.0,
-            'tank' => 8.0,
-            'stalker' => 6.0,
-            'runner' => 4.0,
-            _ => 5.0,
-          };
+          final contactDamage = EnemyAttackRules.contactDamage(
+            enemyType: type,
+            bossEnraged: bossEnraged,
+          );
           playerHp -= contactDamage;
           lastDamageAt = now;
           enemy['attackHitDone'] = true;
