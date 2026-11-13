@@ -33,6 +33,17 @@ class EquipmentCatalog {
     EquipmentProfile(id:1,slot:EquipmentSlot.relic,name:'قلب الجبل',rarity:'نادر',description:'يزيد الصحة القصوى.',maxHpBonus:25),
     EquipmentProfile(id:2,slot:EquipmentSlot.relic,name:'شعلة الحرب',rarity:'ملحمي',description:'تعزز الهجوم والضربات الحرجة.',attackBonus:.07,criticalChanceBonus:.04),
   ];
+  static const int defaultOwnedMask = 585;
+  static int bitFor(EquipmentSlot slot, int id) => 1 << (slot.index * 3 + id);
+  static bool isOwned(int mask, EquipmentProfile item) => (mask & bitFor(item.slot, item.id)) != 0;
+  static bool canUnlock(int mask, EquipmentProfile item) =>
+      item.id > 0 && (mask & bitFor(item.slot, item.id - 1)) != 0 &&
+      !isOwned(mask, item);
+  static int unlockCost(EquipmentProfile item) => item.id == 1 ? 180 : 450;
+  static int unlock(int mask, EquipmentProfile item) {
+    if (!canUnlock(mask, item)) return mask;
+    return mask | bitFor(item.slot, item.id);
+  }
   static EquipmentProfile byId(EquipmentSlot slot,int id) {
     final items=switch(slot){EquipmentSlot.armor=>armor,EquipmentSlot.helmet=>helmets,EquipmentSlot.ring=>rings,EquipmentSlot.relic=>relics};
     return items.firstWhere((item)=>item.id==id,orElse:()=>items.first);
