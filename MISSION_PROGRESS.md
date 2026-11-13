@@ -577,3 +577,36 @@ Verification status: code has been committed to the feature branch; CI/Flutter a
 - Expanded `integration_test/app_smoke_test.dart` to launch the real app, open hero selection, choose the unlocked starter hero, enter world/stage selection, start stage 1, verify the live arena and pause control, perform a touch drag, activate the special-skill control, and assert no Flutter exception.
 - Changed the emulator workflow to capture a screenshot and logcat even when the integration test fails, preserving debugging evidence.
 - Emulator test execution still pending on the latest commits. It will not be marked passed until the new run completes.
+
+
+## Deterministic gameplay scenario batch — in progress
+
+Branch: `feature/visual-overhaul-home-hub`
+
+Implemented and pushed:
+- Added a stable `player-actor` widget key to the actual rendered hero sprite so automated UI tests can measure its position.
+- Upgraded `integration_test/app_smoke_test.dart`: the Android route now records the hero's rendered center before and after a touch drag and asserts measurable horizontal and vertical movement, instead of merely performing a gesture.
+- Added `test/gameplay_scenarios_test.dart` with deterministic outcome scenarios using the same pure gameplay resolvers used by `GameScreen`:
+  - bounded player movement and dodge-window activation;
+  - arrow advancement and enemy collision followed by a deterministic critical hit and HP calculation;
+  - survival versus lethal enemy damage, coin-drop and score outcomes;
+  - player projectile damage, dodge protection, and invulnerability;
+  - lethal player damage through dying to game-over lifecycle;
+  - boss health thresholds, phase-specific volley size/damage, and fan projectile directions.
+
+Commits on this branch:
+- `de31683da812def3389c7f5826f5552cc41ed4d6` — stable rendered player actor key.
+- `49d222c3f8b0ef5326e5b6790a9d078bf2bd8ac4` — measured drag assertion in emulator integration test.
+- `e06028eefcdbe8abde14f2cb3582d166bae7deef` — initial deterministic scenario suite.
+- `0a74747d49eb3f853ee76c0400ab9c2780f7127b` — corrected survival-vs-lethal expectations in scenario suite.
+
+Verification:
+- The earlier Android Emulator QA run `43514468588` was still running its emulator integration step on the older commit `529c9ab66ae61e4622c11e48e55fc541fd2d098b`; it does not include the new measured-position assertion or scenario suite.
+- Unit/widget tests and Android emulator validation for the latest commits are **pending**. Do not mark this batch verified until CI runs on the latest branch head and the emulator job passes.
+- The deterministic suite verifies the combat/lifecycle resolver outcomes in isolation; it is not a substitute for full end-to-end enemy-hit/death/boss gameplay automation. Next work: expose minimal read-only diagnostic state or deterministic test fixtures at the GameScreen boundary, then drive those real game-loop outcomes in integration tests without changing production balance or weakening assertions.
+
+### Exact resume point
+1. Check the CI runs triggered by commit `0a74747d49eb3f853ee76c0400ab9c2780f7127b`; inspect and fix any failing scenario or integration assertion.
+2. Confirm the Android emulator test measures actual rendered hero movement and review the uploaded screenshot/logcat artifact.
+3. Add deterministic GameScreen-level scenarios for enemy projectile impact, player death animation/game-over, and boss phase/volley transitions; keep test-only controls isolated from release gameplay.
+4. Update this file with exact latest SHA, run IDs, outcomes, and remaining gaps before moving to the next gameplay batch.
