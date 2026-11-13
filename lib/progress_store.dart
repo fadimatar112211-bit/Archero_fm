@@ -32,6 +32,9 @@ class ProgressStore {
     'equippedRingId': 0,
     'equippedRelicId': 0,
     'ownedEquipmentMask': 585,
+    'gems': 0,
+    'keys': 0,
+    'equipmentShards': 0,
   };
 
   // Serialize complete snapshots so overlapping saves cannot interleave.
@@ -92,6 +95,9 @@ class ProgressStore {
       equippedRingId: progress.equippedRingId,
       equippedRelicId: progress.equippedRelicId,
       ownedEquipmentMask: progress.effectiveOwnedEquipmentMask,
+      gems: progress.gems,
+      keys: progress.keys,
+      equipmentShards: progress.equipmentShards,
     );
   }
 
@@ -107,6 +113,9 @@ class ProgressStore {
     int equippedRingId = 0,
     int equippedRelicId = 0,
     int ownedEquipmentMask = 585,
+    int gems = 0,
+    int keys = 0,
+    int equipmentShards = 0,
   }) {
     final values = <String, int>{
       'coins': _validValue('coins', coins),
@@ -120,6 +129,9 @@ class ProgressStore {
       'equippedRingId': _validValue('equippedRingId', equippedRingId),
       'equippedRelicId': _validValue('equippedRelicId', equippedRelicId),
       'ownedEquipmentMask': _validValue('ownedEquipmentMask', ownedEquipmentMask),
+      'gems': _validValue('gems', gems),
+      'keys': _validValue('keys', keys),
+      'equipmentShards': _validValue('equipmentShards', equipmentShards),
     };
 
     final nextWrite = _pendingWrite.then((_) async {
