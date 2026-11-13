@@ -131,6 +131,19 @@ void main() {
     }
   });
 
+  testWidgets('hero selection explains each active and passive ability',
+      (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: HeroSelectionScreen()),
+    );
+
+    expect(find.textContaining('انفجار اللهب'), findsOneWidget);
+    expect(find.textContaining('جلد اللهب'), findsOneWidget);
+    expect(find.textContaining('خطوة الظل'), findsOneWidget);
+    expect(find.textContaining('وتر العاصفة'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('combat aura and projectile painters render without errors',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
