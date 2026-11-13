@@ -19,6 +19,7 @@ import 'enemy_projectile_motion.dart';
 import 'combat_collision.dart';
 import 'boss_projectiles.dart';
 import 'combat_damage.dart';
+import 'player_attack.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -704,23 +705,20 @@ class _GameScreenState extends State<GameScreen>
     final target = enemies[targetIndex];
 
     heroAttackTicks = 12;
-    final totalShots = 1 + extraArrows;
-    for (int i = 0; i < totalShots; i++) {
-      final spread = i == 0 ? 0.0 : (i.isOdd ? 0.20 : -0.20);
-      final velocity = aimedProjectileVelocity(
-        origin: origin,
-        target: CombatPoint(
-          target['x'] as double,
-          target['y'] as double,
-        ),
-        speed: 8.5,
-        angleOffset: spread,
-      );
+    final volley = createPlayerArrowVolley(
+      origin: origin,
+      target: CombatPoint(
+        target['x'] as double,
+        target['y'] as double,
+      ),
+      extraArrows: extraArrows,
+    );
+    for (final arrow in volley) {
       arrows.add({
-        'x': playerX,
-        'y': playerY,
-        'vx': velocity.x,
-        'vy': velocity.y,
+        'x': arrow.origin.x,
+        'y': arrow.origin.y,
+        'vx': arrow.velocity.x,
+        'vy': arrow.velocity.y,
       });
     }
     playRealSound('shoot');
