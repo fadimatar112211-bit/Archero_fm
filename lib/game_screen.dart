@@ -613,22 +613,33 @@ class _GameScreenState extends State<GameScreen>
         final blastDx = playerX - (enemy['x'] as double);
         final blastDy = playerY - (enemy['y'] as double);
         final blastDistance = sqrt(blastDx * blastDx + blastDy * blastDy);
-        if (blastDistance <= EnemyAttackRules.bossAreaRadius(
-          bossEnraged: bossEnraged,
-        )) {
-          if (playerMoveTicks > 0) {
+        final areaHit = resolveAreaAttackHit(
+          playerHp: playerHp,
+          distanceToPlayer: blastDistance,
+          attackRadius: EnemyAttackRules.bossAreaRadius(
+            bossEnraged: bossEnraged,
+          ),
+          damage: EnemyAttackRules.bossAreaDamage(
+            bossEnraged: bossEnraged,
+          ),
+          isDodging: playerMoveTicks > 0,
+          lastDamageAt: lastDamageAt,
+        );
+        switch (areaHit.status) {
+          case AreaAttackHitStatus.outOfRange:
+            break;
+          case AreaAttackHitStatus.dodged:
+          case AreaAttackHitStatus.invulnerable:
             combatEffects.add({
               'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 18,
             });
-          } else {
-            playerHp -= EnemyAttackRules.bossAreaDamage(
-              bossEnraged: bossEnraged,
-            );
+          case AreaAttackHitStatus.damaged:
+            playerHp = areaHit.updatedPlayerHp;
+            lastDamageAt = areaHit.resolvedAt;
             combatEffects.add({
               'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 22,
             });
             playRealSound('hit');
-          }
         }
         combatEffects.add({
           'x': enemy['x'], 'y': enemy['y'],
