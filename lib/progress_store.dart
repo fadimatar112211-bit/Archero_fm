@@ -91,7 +91,7 @@ class ProgressStore {
       equippedHelmetId: progress.equippedHelmetId,
       equippedRingId: progress.equippedRingId,
       equippedRelicId: progress.equippedRelicId,
-      ownedEquipmentMask: progress.ownedEquipmentMask,
+      ownedEquipmentMask: progress.effectiveOwnedEquipmentMask,
     );
   }
 
