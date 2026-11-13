@@ -22,6 +22,7 @@ import 'enemy_ai.dart';
 import 'boss_movement.dart';
 import 'enemy_spawn.dart';
 import 'enemy_attack_rules.dart';
+import 'boss_attack_rules.dart';
 import 'enemy_projectile_motion.dart';
 import 'boss_projectiles.dart';
 import 'combat_damage.dart';
@@ -673,10 +674,9 @@ class _GameScreenState extends State<GameScreen>
           distance <= 220 &&
           areaAttackTicks == 0 &&
           attackCooldown == 0) {
-        areaAttackTicks = EnemyAttackRules.attackDurationTicks(isBoss: true);
-        attackCooldown = EnemyAttackRules.attackCooldownTicks(
-          isBoss: true,
-          bossEnraged: bossEnraged,
+        areaAttackTicks = BossAttackRules.areaAttackDurationTicks;
+        attackCooldown = BossAttackRules.areaAttackCooldownTicks(
+          enraged: bossEnraged,
         );
         enemy['areaHitDone'] = false;
         combatEffects.add({
@@ -686,11 +686,8 @@ class _GameScreenState extends State<GameScreen>
       } else if (type != 'boss' && type != 'ranged' &&
           distance <= attackRange &&
           attackCooldown == 0) {
-        attackTicks = EnemyAttackRules.attackDurationTicks(isBoss: false);
-        attackCooldown = EnemyAttackRules.attackCooldownTicks(
-          isBoss: false,
-          bossEnraged: false,
-        );
+        attackTicks = EnemyAttackRules.attackDurationTicks;
+        attackCooldown = EnemyAttackRules.attackCooldownTicks;
         enemy['attackHitDone'] = false;
         combatEffects.add({
           'x': enemy['x'], 'y': enemy['y'],
@@ -710,11 +707,11 @@ class _GameScreenState extends State<GameScreen>
         final areaHit = resolveAreaAttackHit(
           playerHp: playerHp,
           distanceToPlayer: blastDistance,
-          attackRadius: EnemyAttackRules.bossAreaRadius(
-            bossEnraged: bossEnraged,
+          attackRadius: BossAttackRules.areaDamageRadius(
+            enraged: bossEnraged,
           ),
-          damage: EnemyAttackRules.bossAreaDamage(
-            bossEnraged: bossEnraged,
+          damage: BossAttackRules.areaDamage(
+            enraged: bossEnraged,
           ) * (1 - gearStats.damageReduction),
           isDodging: playerMoveTicks > 0,
           lastDamageAt: lastDamageAt,
@@ -741,14 +738,29 @@ class _GameScreenState extends State<GameScreen>
           'type': 'bossBurst', 'life': 24,
         });
       }
-      final movement = type == 'boss'
-          ? decideBossMovement(baseAngle: angle, animationTicks: animationTicks,
-              enraged: bossEnraged, phaseMovementMultiplier: bossConfig.movementMultiplier)
-          : decideEnemyMovement(type: type, distanceToPlayer: distance,
-              baseAngle: angle, enemyX: enemy['x'] as double, animationTicks: animationTicks);
-      final moveSpeed =
-          (enemy['speed'] as double) * movement.speedMultiplier;
-      final moveAngle = movement.angle;
+      late final double moveAngle;
+      late final double moveSpeedMultiplier;
+      if (type == 'boss') {
+        final movement = decideBossMovement(
+          baseAngle: angle,
+          animationTicks: animationTicks,
+          enraged: bossEnraged,
+          phaseMovementMultiplier: bossConfig.movementMultiplier,
+        );
+        moveAngle = movement.angle;
+        moveSpeedMultiplier = movement.speedMultiplier;
+      } else {
+        final movement = decideEnemyMovement(
+          type: type,
+          distanceToPlayer: distance,
+          baseAngle: angle,
+          enemyX: enemy['x'] as double,
+          animationTicks: animationTicks,
+        );
+        moveAngle = movement.angle;
+        moveSpeedMultiplier = movement.speedMultiplier;
+      }
+      final moveSpeed = (enemy['speed'] as double) * moveSpeedMultiplier;
 
       // Keep telegraph visuals in the game layer; steering itself is pure.
       if (type == 'runner' && animationTicks % 105 == 0) {
@@ -773,9 +785,9 @@ class _GameScreenState extends State<GameScreen>
       final impactDistance = EnemyAttackRules.impactRange(
         enemyRadius: enemy['radius'] as double,
       );
-      final impactFrame = EnemyAttackRules.attackImpactFrame(
-        isBoss: type == 'boss',
-      );
+      final impactFrame = type == 'boss'
+          ? BossAttackRules.contactImpactFrame
+          : EnemyAttackRules.attackImpactFrame;
       final contactHit = resolveEnemyContactHit(
         enemyType: type,
         attackTicks: attackTicks,
@@ -787,10 +799,10 @@ class _GameScreenState extends State<GameScreen>
         lastDamageAt: lastDamageAt,
         // The resolver samples the clock only after confirming an impact.
         now: null,
-        damage: EnemyAttackRules.contactDamage(
-          enemyType: type,
-          bossEnraged: bossEnraged,
-        ) * (1 - gearStats.damageReduction),
+        damage: (type == 'boss'
+            ? BossAttackRules.contactDamage(enraged: bossEnraged)
+            : EnemyAttackRules.contactDamage(enemyType: type)) *
+            (1 - gearStats.damageReduction),
       );
       switch (contactHit.status) {
         case EnemyContactHitStatus.notReady:
