@@ -42,4 +42,42 @@ void main() {
     expect(ShopEconomy.health(75).level, 3);
     expect(ShopEconomy.attack(60).level, 4);
   });
+  
+  group('purchaseUpgrade', () {
+    test('deducts coins and applies upgrade on successful purchase', () {
+      final result = purchaseUpgrade(
+        upgrade: ShopEconomy.health(0),
+        currentCoins: 120,
+        currentUpgradeValue: 0,
+      );
+
+      expect(result.purchased, isTrue);
+      expect(result.remainingCoins, 70);
+      expect(result.updatedUpgradeValue, 25);
+    });
+
+    test('leaves both balances unchanged when coins are insufficient', () {
+      final result = purchaseUpgrade(
+        upgrade: ShopEconomy.attack(0),
+        currentCoins: 69,
+        currentUpgradeValue: 15,
+      );
+
+      expect(result.purchased, isFalse);
+      expect(result.remainingCoins, 69);
+      expect(result.updatedUpgradeValue, 15);
+    });
+
+    test('does not purchase an already maxed upgrade', () {
+      final result = purchaseUpgrade(
+        upgrade: ShopEconomy.attack(225),
+        currentCoins: 10000,
+        currentUpgradeValue: 225,
+      );
+
+      expect(result.purchased, isFalse);
+      expect(result.remainingCoins, 10000);
+      expect(result.updatedUpgradeValue, 225);
+    });
+  });
 }
