@@ -21,6 +21,7 @@ import 'enemy_projectile_motion.dart';
 import 'combat_collision.dart';
 import 'boss_projectiles.dart';
 import 'game_timers.dart';
+import 'hero_rules.dart';
 import 'combat_damage.dart';
 import 'player_attack.dart';
 import 'player_projectiles.dart';
@@ -153,18 +154,16 @@ class _GameScreenState extends State<GameScreen>
       duration: const Duration(seconds: 12),
     )..repeat();
 
-    playerMaxHp += heroHpUpgrade.toDouble();
-    playerHp = playerMaxHp;
-    attackPowerMultiplier += heroAtkUpgrade * 0.08;
-
-    if (widget.heroType == 2) {
-      playerHp += 50;
-      playerMaxHp += 50;
-    } else if (widget.heroType == 3) {
-      playerSpeed = 5.2;
-    } else if (widget.heroType == 4) {
-      extraArrows = 1;
-    }
+    final heroStats = createHeroRunStats(
+      heroType: widget.heroType,
+      hpUpgrade: heroHpUpgrade,
+      attackUpgrade: heroAtkUpgrade,
+    );
+    playerHp = heroStats.playerHp;
+    playerMaxHp = heroStats.playerMaxHp;
+    playerSpeed = heroStats.playerSpeed;
+    attackPowerMultiplier = heroStats.attackPowerMultiplier;
+    extraArrows = heroStats.extraArrows;
 
     timers.periodic('game', const Duration(milliseconds: 16), () {
       if (!mounted || isPaused || showMysteryChest || gameOverShown) return;
