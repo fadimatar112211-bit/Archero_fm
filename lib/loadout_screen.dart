@@ -124,6 +124,7 @@ class _LoadoutScreenState extends State<LoadoutScreen> {
                   Text(weapon.description, style: const TextStyle(color: Colors.white70)),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
+                    key: const ValueKey('weapon-selector'),
                     value: equippedWeaponId,
                     isExpanded: true,
                     decoration: const InputDecoration(labelText: 'اختيار السلاح', border: OutlineInputBorder()),
