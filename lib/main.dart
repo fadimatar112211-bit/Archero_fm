@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'progress_store.dart';
 import 'stage_flow.dart';
 import 'skill_system.dart';
+import 'hero_rules.dart';
 import 'boss_combat.dart';
 import 'world_rules.dart';
 import 'shop_economy.dart';
@@ -562,18 +563,16 @@ class _GameScreenState extends State<GameScreen>
       duration: const Duration(seconds: 12),
     )..repeat();
 
-    playerMaxHp += heroHpUpgrade.toDouble();
-    playerHp = playerMaxHp;
-    attackPowerMultiplier += heroAtkUpgrade * 0.08;
-
-    if (widget.heroType == 2) {
-      playerHp += 50;
-      playerMaxHp += 50;
-    } else if (widget.heroType == 3) {
-      playerSpeed = 5.2;
-    } else if (widget.heroType == 4) {
-      extraArrows = 1;
-    }
+    final heroStats = createHeroRunStats(
+      heroType: widget.heroType,
+      hpUpgrade: heroHpUpgrade,
+      attackUpgrade: heroAtkUpgrade,
+    );
+    playerMaxHp = heroStats.playerMaxHp;
+    playerHp = heroStats.playerHp;
+    playerSpeed = heroStats.playerSpeed;
+    attackPowerMultiplier = heroStats.attackPowerMultiplier;
+    extraArrows = heroStats.extraArrows;
 
     gameLoop = Timer.periodic(const Duration(milliseconds: 16), (_) {
       if (!mounted || isPaused || showMysteryChest || gameOverShown) return;
