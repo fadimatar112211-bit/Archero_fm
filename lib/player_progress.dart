@@ -14,6 +14,7 @@ class PlayerProgress {
     this.gems = 0,
     this.keys = 0,
     this.equipmentShards = 0,
+    this.unlockedHeroesMask = 1,
   });
 
   final int coins;
@@ -27,6 +28,7 @@ class PlayerProgress {
   final int gems;
   final int keys;
   final int equipmentShards;
+  final int unlockedHeroesMask;
 
 
   int get effectiveOwnedEquipmentMask {
@@ -65,6 +67,7 @@ class PlayerProgress {
       gems: (values['gems'] ?? 0).clamp(0, 999999).toInt(),
       keys: (values['keys'] ?? 0).clamp(0, 999999).toInt(),
       equipmentShards: (values['equipmentShards'] ?? 0).clamp(0, 999999).toInt(),
+      unlockedHeroesMask: ((values['unlockedHeroesMask'] ?? 1).clamp(0, 15).toInt() | 1),
     );
   }
 
@@ -83,6 +86,7 @@ class PlayerProgress {
     'gems': gems,
     'keys': keys,
     'equipmentShards': equipmentShards,
+    'unlockedHeroesMask': unlockedHeroesMask | 1,
   };
 
   PlayerProgress copyWith({
@@ -100,6 +104,7 @@ class PlayerProgress {
     int? gems,
     int? keys,
     int? equipmentShards,
+    int? unlockedHeroesMask,
   }) {
     return PlayerProgress(
       coins: coins ?? this.coins,
@@ -116,6 +121,7 @@ class PlayerProgress {
       gems: gems ?? this.gems,
       keys: keys ?? this.keys,
       equipmentShards: equipmentShards ?? this.equipmentShards,
+      unlockedHeroesMask: unlockedHeroesMask ?? this.unlockedHeroesMask,
     );
   }
 }
