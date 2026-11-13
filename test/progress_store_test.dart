@@ -44,6 +44,11 @@ void main() {
         'keys': 0,
         'equipmentShards': 0,
         'unlockedHeroesMask': 1,
+      'totalKills': 0,
+      'totalBosses': 0,
+      'totalChests': 0,
+      'totalRuns': 0,
+      'claimedAchievementsMask': 0,
     });
   });
 
@@ -72,6 +77,11 @@ void main() {
         'keys': 0,
         'equipmentShards': 0,
         'unlockedHeroesMask': 1,
+      'totalKills': 0,
+      'totalBosses': 0,
+      'totalChests': 0,
+      'totalRuns': 0,
+      'claimedAchievementsMask': 0,
     });
   });
 
@@ -109,6 +119,11 @@ void main() {
         'keys': 0,
         'equipmentShards': 0,
         'unlockedHeroesMask': 1,
+      'totalKills': 0,
+      'totalBosses': 0,
+      'totalChests': 0,
+      'totalRuns': 0,
+      'claimedAchievementsMask': 0,
     });
   });
 
@@ -137,6 +152,11 @@ void main() {
         'keys': 0,
         'equipmentShards': 0,
         'unlockedHeroesMask': 1,
+      'totalKills': 0,
+      'totalBosses': 0,
+      'totalChests': 0,
+      'totalRuns': 0,
+      'claimedAchievementsMask': 0,
     });
   });
 
@@ -165,6 +185,11 @@ void main() {
         'keys': 0,
         'equipmentShards': 0,
         'unlockedHeroesMask': 1,
+      'totalKills': 0,
+      'totalBosses': 0,
+      'totalChests': 0,
+      'totalRuns': 0,
+      'claimedAchievementsMask': 0,
     });
   });
 
@@ -186,7 +211,7 @@ void main() {
   });
 
   test('rolls back a partially failed snapshot and keeps the queue usable', () async {
-    final initial = <String, int>{'coins': 200, 'hpUpgrade': 10, 'atkUpgrade': 5, 'bestStage': 3, 'bestScore': 90, 'equippedWeaponId': 0, 'equippedArmorId': 0, 'equippedHelmetId': 0, 'equippedRingId': 0, 'equippedRelicId': 0, 'ownedEquipmentMask': 585, 'gems': 0, 'keys': 0, 'equipmentShards': 0, 'unlockedHeroesMask': 1};
+    final initial = <String, int>{'coins': 200, 'hpUpgrade': 10, 'atkUpgrade': 5, 'bestStage': 3, 'bestScore': 90, 'equippedWeaponId': 0, 'equippedArmorId': 0, 'equippedHelmetId': 0, 'equippedRingId': 0, 'equippedRelicId': 0, 'ownedEquipmentMask': 585, 'gems': 0, 'keys': 0, 'equipmentShards': 0, 'unlockedHeroesMask': 1, 'totalKills': 0, 'totalBosses': 0, 'totalChests': 0, 'totalRuns': 0, 'claimedAchievementsMask': 0};
     final preferences = _FailingProgressPreferences(Map<String, int>.from(initial), failKey: 'atkUpgrade');
     ProgressStore.setPreferencesProviderForTesting(() async => preferences);
     await expectLater(
@@ -223,6 +248,20 @@ void main() {
       unlockedHeroesMask: 0,
     );
     expect((await ProgressStore.loadPlayerProgress()).unlockedHeroesMask, 1);
+  });
+
+  test('round-trips achievement counters and claimed reward bits', () async {
+    await ProgressStore.save(
+      coins: 500, hpUpgrade: 25, atkUpgrade: 15, bestStage: 12, bestScore: 900,
+      totalKills: 120, totalBosses: 4, totalChests: 6, totalRuns: 8,
+      claimedAchievementsMask: 0x155,
+    );
+    final progress = await ProgressStore.loadPlayerProgress();
+    expect(progress.totalKills, 120);
+    expect(progress.totalBosses, 4);
+    expect(progress.totalChests, 6);
+    expect(progress.totalRuns, 8);
+    expect(progress.claimedAchievementsMask, 0x155);
   });
 
   test('normalizes unknown equipped weapon IDs to the default', () async {
