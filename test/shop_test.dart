@@ -1,0 +1,69 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:archero_fm/main.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    globalCoins = 150;
+    heroHpUpgrade = 0;
+    heroAtkUpgrade = 0;
+    bestStage = 1;
+    bestScore = 0;
+  });
+
+  testWidgets('health purchase deducts coins, upgrades health and persists',
+      (tester) async {
+    await tester.pumpWidget(const ArcheroSoundApp());
+
+    await tester.tap(find.text('صحة +25 (50)'));
+    await tester.pumpAndSettle();
+
+    expect(globalCoins, 100);
+    expect(heroHpUpgrade, 25);
+    expect(find.text('رصيدك: 100'), findsOneWidget);
+    expect(find.text('زيادة الصحة الحالية: +25'), findsOneWidget);
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getInt('coins'), 100);
+    expect(prefs.getInt('hpUpgrade'), 25);
+  });
+
+  testWidgets('attack purchase deducts coins, upgrades attack and persists',
+      (tester) async {
+    await tester.pumpWidget(const ArcheroSoundApp());
+
+    await tester.tap(find.text('هجوم +15 (70)'));
+    await tester.pumpAndSettle();
+
+    expect(globalCoins, 80);
+    expect(heroAtkUpgrade, 15);
+    expect(find.text('رصيدك: 80'), findsOneWidget);
+    expect(find.text('زيادة الهجوم الحالية: +15'), findsOneWidget);
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getInt('coins'), 80);
+    expect(prefs.getInt('atkUpgrade'), 15);
+  });
+
+  testWidgets('purchase is rejected when the player has insufficient coins',
+      (tester) async {
+    globalCoins = 40;
+    await tester.pumpWidget(const ArcheroSoundApp());
+
+    await tester.tap(find.text('صحة +25 (50)'));
+    await tester.pumpAndSettle();
+
+    expect(globalCoins, 40);
+    expect(heroHpUpgrade, 0);
+    expect(find.text('رصيدك: 40'), findsOneWidget);
+    expect(find.text('عملاتك لا تكفي لشراء ترقية الصحة.'), findsOneWidget);
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getInt('coins'), isNull);
+    expect(prefs.getInt('hpUpgrade'), isNull);
+  });
+}
