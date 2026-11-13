@@ -17,6 +17,10 @@ void main() {
         'equippedRingId': 0,
         'equippedRelicId': 0,
         'ownedEquipmentMask': 585,
+        'gems': 0,
+        'keys': 0,
+        'equipmentShards': 0,
+        'unlockedHeroesMask': 1,
       });
     });
 
@@ -32,6 +36,7 @@ void main() {
         equippedHelmetId: 2,
         equippedRingId: 1,
         equippedRelicId: 2,
+        unlockedHeroesMask: 15,
       );
       expect(PlayerProgress.fromMap(original.toMap()).toMap(), original.toMap());
     });
@@ -45,6 +50,26 @@ void main() {
       expect(progress.bestScore, 0);
       expect(progress.equippedWeaponId, 0);
       expect(progress.ownedEquipmentMask, 585);
+      expect(progress.unlockedHeroesMask, 1);
+    });
+
+    test('round-trips gem key and equipment shard balances', () {
+      const original = PlayerProgress(gems: 23, keys: 4, equipmentShards: 17);
+      final restored = PlayerProgress.fromMap(original.toMap());
+      expect(restored.gems, 23);
+      expect(restored.keys, 4);
+      expect(restored.equipmentShards, 17);
+    });
+
+    test('normalizes negative resource balances to zero', () {
+      final progress = PlayerProgress.fromMap({
+        'gems': -5,
+        'keys': -2,
+        'equipmentShards': -9,
+      });
+      expect(progress.gems, 0);
+      expect(progress.keys, 0);
+      expect(progress.equipmentShards, 0);
     });
 
     test('legacy equipped items are retained as owned during migration', () {
@@ -55,6 +80,13 @@ void main() {
       expect(progress.equippedArmorId, 2);
       expect(progress.ownedEquipmentMask & (1 << 2), isNonZero);
       expect(progress.ownedEquipmentMask & (1 << 4), isNonZero);
+    });
+
+    test('normalizes unlocked hero masks and always retains the starter hero', () {
+      expect(PlayerProgress.fromMap({'unlockedHeroesMask': 15}).unlockedHeroesMask, 15);
+      expect(PlayerProgress.fromMap({'unlockedHeroesMask': 0}).unlockedHeroesMask, 1);
+      expect(PlayerProgress.fromMap({'unlockedHeroesMask': 99}).unlockedHeroesMask, 15);
+      expect(PlayerProgress.fromMap({'unlockedHeroesMask': -3}).unlockedHeroesMask, 1);
     });
 
     test('copyWith updates selected values without mutating original', () {

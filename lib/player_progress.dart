@@ -11,6 +11,10 @@ class PlayerProgress {
     this.equippedRingId = 0,
     this.equippedRelicId = 0,
     this.ownedEquipmentMask = 585,
+    this.gems = 0,
+    this.keys = 0,
+    this.equipmentShards = 0,
+    this.unlockedHeroesMask = 1,
   });
 
   final int coins;
@@ -21,6 +25,10 @@ class PlayerProgress {
   final int equippedWeaponId;
   final int equippedArmorId, equippedHelmetId, equippedRingId, equippedRelicId;
   final int ownedEquipmentMask;
+  final int gems;
+  final int keys;
+  final int equipmentShards;
+  final int unlockedHeroesMask;
 
 
   int get effectiveOwnedEquipmentMask {
@@ -56,6 +64,10 @@ class PlayerProgress {
       equippedRingId: ringId,
       equippedRelicId: relicId,
       ownedEquipmentMask: ownedMask,
+      gems: (values['gems'] ?? 0).clamp(0, 999999).toInt(),
+      keys: (values['keys'] ?? 0).clamp(0, 999999).toInt(),
+      equipmentShards: (values['equipmentShards'] ?? 0).clamp(0, 999999).toInt(),
+      unlockedHeroesMask: ((values['unlockedHeroesMask'] ?? 1).clamp(0, 15).toInt() | 1),
     );
   }
 
@@ -71,6 +83,10 @@ class PlayerProgress {
     'equippedRingId': equippedRingId,
     'equippedRelicId': equippedRelicId,
     'ownedEquipmentMask': effectiveOwnedEquipmentMask,
+    'gems': gems,
+    'keys': keys,
+    'equipmentShards': equipmentShards,
+    'unlockedHeroesMask': unlockedHeroesMask | 1,
   };
 
   PlayerProgress copyWith({
@@ -85,6 +101,10 @@ class PlayerProgress {
     int? equippedRingId,
     int? equippedRelicId,
     int? ownedEquipmentMask,
+    int? gems,
+    int? keys,
+    int? equipmentShards,
+    int? unlockedHeroesMask,
   }) {
     return PlayerProgress(
       coins: coins ?? this.coins,
@@ -98,6 +118,10 @@ class PlayerProgress {
       equippedRingId: equippedRingId ?? this.equippedRingId,
       equippedRelicId: equippedRelicId ?? this.equippedRelicId,
       ownedEquipmentMask: ownedEquipmentMask ?? this.ownedEquipmentMask,
+      gems: gems ?? this.gems,
+      keys: keys ?? this.keys,
+      equipmentShards: equipmentShards ?? this.equipmentShards,
+      unlockedHeroesMask: unlockedHeroesMask ?? this.unlockedHeroesMask,
     );
   }
 }

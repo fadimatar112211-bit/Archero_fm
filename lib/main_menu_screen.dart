@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import 'game_progress.dart';
@@ -6,6 +8,7 @@ import 'progress_store.dart';
 import 'shop_economy.dart';
 import 'weapon_system.dart';
 import 'equipment_system.dart';
+import 'resource_economy.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -15,7 +18,19 @@ class MainMenuScreen extends StatefulWidget {
 }
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
+  bool _walletBusy = false;
   Future<void> _buyHealth() async {
+    if (_walletBusy) return;
+    setState(() => _walletBusy = true);
+    try {
+      await _buyHealthLocked();
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _buyHealthLocked() async {
     final purchase = await commitUpgradePurchase(
       upgrade: ShopEconomy.health(heroHpUpgrade),
       currentCoins: globalCoins,
@@ -30,6 +45,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         equippedArmorId: equippedArmorId, equippedHelmetId: equippedHelmetId,
         equippedRingId: equippedRingId, equippedRelicId: equippedRelicId,
         ownedEquipmentMask: ownedEquipmentMask,
+        gems: globalGems,
+        keys: globalKeys,
+        equipmentShards: globalEquipmentShards,
+        unlockedHeroesMask: unlockedHeroesMask,
       ),
     );
     if (!purchase.purchased) {
@@ -50,6 +69,17 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Future<void> _buyAttack() async {
+    if (_walletBusy) return;
+    setState(() => _walletBusy = true);
+    try {
+      await _buyAttackLocked();
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _buyAttackLocked() async {
     debugPrint('[Shop] attack purchase requested: coins=$globalCoins upgrade=$heroAtkUpgrade');
     final purchase = await commitUpgradePurchase(
       upgrade: ShopEconomy.attack(heroAtkUpgrade),
@@ -65,6 +95,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         equippedArmorId: equippedArmorId, equippedHelmetId: equippedHelmetId,
         equippedRingId: equippedRingId, equippedRelicId: equippedRelicId,
         ownedEquipmentMask: ownedEquipmentMask,
+        gems: globalGems,
+        keys: globalKeys,
+        equipmentShards: globalEquipmentShards,
       ),
     );
     debugPrint('[Shop] attack purchase result: ${purchase.status} remaining=${purchase.remainingCoins}');
@@ -85,11 +118,143 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     await playRealSound('coin');
   }
 
+
+  Future<void> _persistWallet({
+    required int coins,
+    required int gems,
+    required int keys,
+    required int equipmentShards,
+  }) => ProgressStore.save(
+    coins: coins,
+    hpUpgrade: heroHpUpgrade,
+    atkUpgrade: heroAtkUpgrade,
+    bestStage: bestStage,
+    bestScore: bestScore,
+    equippedWeaponId: equippedWeaponId,
+    equippedArmorId: equippedArmorId,
+    equippedHelmetId: equippedHelmetId,
+    equippedRingId: equippedRingId,
+    equippedRelicId: equippedRelicId,
+    ownedEquipmentMask: ownedEquipmentMask,
+    gems: gems,
+    keys: keys,
+    equipmentShards: equipmentShards,
+    unlockedHeroesMask: unlockedHeroesMask,
+  );
+
+  Future<void> _buyChestKey() async {
+    if (_walletBusy) return;
+    setState(() => _walletBusy = true);
+    try {
+      final result = await purchaseChestKey(
+        coins: globalCoins,
+        gems: globalGems,
+        keys: globalKeys,
+        equipmentShards: globalEquipmentShards,
+        persist: _persistWallet,
+      );
+      if (!result.completed) {
+        _message(result.status == ResourceTransactionStatus.insufficientCoins
+            ? 'تحتاج إلى 180 عملة لشراء مفتاح.'
+            : 'تعذر حفظ شراء المفتاح؛ لم يتم خصم العملات.');
+        return;
+      }
+      globalCoins = result.coins;
+      globalKeys = result.keys;
+      try { await playRealSound('coin'); } catch (_) {}
+      if (mounted) _message('اشتريت مفتاحاً جديداً للصناديق.');
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _buyChestKeyWithGems() async {
+    if (_walletBusy) return;
+    setState(() => _walletBusy = true);
+    try {
+      final result = await purchaseChestKeyWithGems(
+        coins: globalCoins,
+        gems: globalGems,
+        keys: globalKeys,
+        equipmentShards: globalEquipmentShards,
+        persist: _persistWallet,
+      );
+      if (!result.completed) {
+        _message(result.status == ResourceTransactionStatus.insufficientCoins
+            ? 'تحتاج إلى 5 جواهر لشراء مفتاح.'
+            : 'تعذر حفظ شراء المفتاح؛ لم يتم خصم الجواهر.');
+        return;
+      }
+      globalGems = result.gems;
+      globalKeys = result.keys;
+      try { await playRealSound('coin'); } catch (_) {}
+      if (mounted) _message('تم شراء مفتاح باستخدام الجواهر.');
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _openChest(ChestDefinition chest) async {
+    if (_walletBusy || globalKeys < chest.keyCost) return;
+    setState(() => _walletBusy = true);
+    try {
+      final result = await openRewardChest(
+        chest: chest,
+        coins: globalCoins,
+        gems: globalGems,
+        keys: globalKeys,
+        equipmentShards: globalEquipmentShards,
+        random: Random(),
+        persist: _persistWallet,
+      );
+      if (!result.completed) {
+        _message(result.status == ResourceTransactionStatus.insufficientKeys
+            ? 'لا تملك مفاتيح كافية لهذا الصندوق.'
+            : 'تعذر حفظ الصندوق؛ لم يتم استهلاك المفتاح.');
+        return;
+      }
+      globalCoins = result.coins;
+      globalGems = result.gems;
+      globalKeys = result.keys;
+      globalEquipmentShards = result.equipmentShards;
+      try { await playRealSound('special'); } catch (_) {}
+      final reward = result.reward!;
+      if (mounted) {
+        _message('مكافأة الصندوق: +${reward.coins} عملة، +${reward.gems} جوهرة، +${reward.equipmentShards} شظية معدات.');
+      }
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
+    }
+  }
+
   Future<void> _equipWeapon(WeaponProfile weapon) async {
+    if (_walletBusy) return;
+    setState(() => _walletBusy = true);
+    try {
+      await _equipWeaponLocked(weapon);
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _equipWeaponLocked(WeaponProfile weapon) async {
     final previous = equippedWeaponId;
     setState(() => equippedWeaponId = weapon.id);
-    try { await saveProgress(); await playRealSound('special'); }
-    catch (_) { if (!mounted) return; setState(() => equippedWeaponId = previous); _message('تعذر حفظ السلاح المختار. بقي السلاح السابق مجهزاً.'); }
+    try {
+      await saveProgress();
+    } catch (_) {
+      equippedWeaponId = previous;
+      if (mounted) {
+        setState(() {});
+        _message('تعذر حفظ السلاح المختار. بقي السلاح السابق مجهزاً.');
+      }
+      return;
+    }
+    try { await playRealSound('special'); } catch (_) {}
   }
 
   Widget _gearSlot(String title, List<EquipmentProfile> items, int equippedId) => Padding(
@@ -112,7 +277,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('${item.name} · ${item.rarity}', style: TextStyle(color: selected ? Colors.lightBlueAccent : Colors.white, fontWeight: FontWeight.bold)),
               Text(item.description, style: const TextStyle(fontSize: 11, color: Colors.white70)),
-              if (!owned) Text(canUnlock ? 'فتح القطعة: ${EquipmentCatalog.unlockCost(item)} عملة' : 'افتح القطعة السابقة أولاً', style: const TextStyle(fontSize: 11, color: Colors.amber)),
+              if (!owned) Text(canUnlock ? 'فتح: ${EquipmentCatalog.unlockCost(item)} عملة أو ${EquipmentCatalog.shardUnlockCost(item)} شظايا' : 'افتح القطعة السابقة أولاً', style: const TextStyle(fontSize: 11, color: Colors.amber)),
             ])),
             if (selected) const Icon(Icons.check_circle, color: Colors.lightBlueAccent)
             else if (!owned) Icon(canUnlock ? Icons.lock_open : Icons.lock, color: Colors.amber),
@@ -123,17 +288,30 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   );
 
   Future<void> _unlockGear(EquipmentProfile item) async {
-    if (!EquipmentCatalog.canUnlock(ownedEquipmentMask, item)) return;
-    final cost = EquipmentCatalog.unlockCost(item);
-    if (globalCoins < cost) {
-      _message('تحتاج إلى $cost عملة لفتح هذه القطعة.');
+    if (_walletBusy || !EquipmentCatalog.canUnlock(ownedEquipmentMask, item)) return;
+    final shardCost = EquipmentCatalog.shardUnlockCost(item);
+    final coinCost = EquipmentCatalog.unlockCost(item);
+    final useShards = EquipmentCatalog.canUnlockWithShards(
+      ownedEquipmentMask,
+      item,
+      globalEquipmentShards,
+    );
+    if (!useShards && globalCoins < coinCost) {
+      _message('تحتاج إلى $coinCost عملة أو $shardCost شظايا لفتح هذه القطعة.');
       return;
     }
+
     final previousCoins = globalCoins;
+    final previousShards = globalEquipmentShards;
     final previousMask = ownedEquipmentMask;
     final previousSlots = [equippedArmorId, equippedHelmetId, equippedRingId, equippedRelicId];
     setState(() {
-      globalCoins -= cost;
+      _walletBusy = true;
+      if (useShards) {
+        globalEquipmentShards -= shardCost;
+      } else {
+        globalCoins -= coinCost;
+      }
       ownedEquipmentMask = EquipmentCatalog.unlock(ownedEquipmentMask, item);
       switch (item.slot) {
         case EquipmentSlot.armor: equippedArmorId = item.id; break;
@@ -144,28 +322,56 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     });
     try {
       await saveProgress();
-      await playRealSound('coin');
-      if (mounted) _message('تم فتح وتجهيز ${item.name}.');
+      try { await playRealSound('coin'); } catch (_) {}
+      if (mounted) {
+        _message(useShards
+            ? 'تم فتح وتجهيز ${item.name} باستخدام الشظايا.'
+            : 'تم فتح وتجهيز ${item.name}.');
+      }
     } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        globalCoins = previousCoins;
-        ownedEquipmentMask = previousMask;
-        equippedArmorId = previousSlots[0];
-        equippedHelmetId = previousSlots[1];
-        equippedRingId = previousSlots[2];
-        equippedRelicId = previousSlots[3];
-      });
-      _message('تعذر حفظ فتح القطعة. لم يتم اعتماد الخصم.');
+      globalCoins = previousCoins;
+      globalEquipmentShards = previousShards;
+      ownedEquipmentMask = previousMask;
+      equippedArmorId = previousSlots[0];
+      equippedHelmetId = previousSlots[1];
+      equippedRingId = previousSlots[2];
+      equippedRelicId = previousSlots[3];
+      if (mounted) _message('تعذر حفظ فتح القطعة. لم يتم اعتماد الخصم.');
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
     }
   }
 
   Future<void> _equipGear(EquipmentProfile item) async {
+    if (_walletBusy) return;
+    setState(() => _walletBusy = true);
+    try {
+      await _equipGearLocked(item);
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _equipGearLocked(EquipmentProfile item) async {
     if (!EquipmentCatalog.isOwned(ownedEquipmentMask, item)) return;
     final old = [equippedArmorId, equippedHelmetId, equippedRingId, equippedRelicId];
     setState(() { switch (item.slot) { case EquipmentSlot.armor: equippedArmorId=item.id; break; case EquipmentSlot.helmet: equippedHelmetId=item.id; break; case EquipmentSlot.ring: equippedRingId=item.id; break; case EquipmentSlot.relic: equippedRelicId=item.id; break; } });
-    try { await saveProgress(); await playRealSound('special'); }
-    catch (_) { if (!mounted) return; setState(() { equippedArmorId=old[0]; equippedHelmetId=old[1]; equippedRingId=old[2]; equippedRelicId=old[3]; }); _message('تعذر حفظ المعدّات. بقي التجهيز السابق.'); }
+    try {
+      await saveProgress();
+    } catch (_) {
+      equippedArmorId=old[0];
+      equippedHelmetId=old[1];
+      equippedRingId=old[2];
+      equippedRelicId=old[3];
+      if (mounted) {
+        setState(() {});
+        _message('تعذر حفظ المعدّات. بقي التجهيز السابق.');
+      }
+      return;
+    }
+    try { await playRealSound('special'); } catch (_) {}
   }
 
   void _message(String message) {
@@ -312,6 +518,55 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       ),
                     ),
                     const SizedBox(height: 18),
+                    _panel(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            '💎 الموارد والصناديق',
+                            style: TextStyle(color: Colors.amberAccent, fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            alignment: WrapAlignment.spaceAround,
+                            spacing: 14,
+                            runSpacing: 10,
+                            children: [
+                              _resourceBadge(Icons.diamond, 'الجواهر', globalGems, Colors.lightBlueAccent),
+                              _resourceBadge(Icons.vpn_key, 'المفاتيح', globalKeys, Colors.amber),
+                              _resourceBadge(Icons.auto_awesome, 'شظايا المعدات', globalEquipmentShards, Colors.purpleAccent),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            onPressed: _walletBusy ? null : _buyChestKey,
+                            icon: const Icon(Icons.key),
+                            label: Text(_walletBusy ? 'جارٍ حفظ العملية…' : 'شراء مفتاح · 180 عملة'),
+                          ),
+                          const SizedBox(height: 6),
+                          OutlinedButton.icon(
+                            onPressed: _walletBusy || globalGems < 5 ? null : _buyChestKeyWithGems,
+                            icon: const Icon(Icons.diamond),
+                            label: const Text('شراء مفتاح · 5 جواهر'),
+                          ),
+                          const SizedBox(height: 8),
+                          ...chestDefinitions.map((chest) => Padding(
+                            padding: const EdgeInsets.only(bottom: 7),
+                            child: OutlinedButton.icon(
+                              onPressed: !_walletBusy && globalKeys >= chest.keyCost ? () => _openChest(chest) : null,
+                              icon: Icon(chest.type == RewardChestType.relic ? Icons.diamond : Icons.inventory_2),
+                              label: Text('${chest.name} · ${chest.keyCost} مفتاح'),
+                            ),
+                          )),
+                          const Text(
+                            'الصناديق تمنح عملات وجواهر وشظايا معدات، وتُحفظ الموارد قبل اعتماد المكافأة.',
+                            style: TextStyle(fontSize: 11, color: Colors.white70),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
                     _panel(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                       const Text('⚔️ ترسانة الأسلحة',style:TextStyle(color:Colors.amberAccent,fontSize:18,fontWeight:FontWeight.bold)),
                       const SizedBox(height:6),
@@ -370,6 +625,17 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       ),
     );
   }
+
+  Widget _resourceBadge(IconData icon, String label, int value, Color color) =>
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(height: 3),
+          Text('$value', style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+          Text(label, style: const TextStyle(fontSize: 11, color: Colors.white70)),
+        ],
+      );
 
   Widget _panel({required Widget child}) {
     return Container(

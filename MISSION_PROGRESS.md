@@ -194,4 +194,54 @@ Implemented:
 
 Changed files: `lib/special_room_system.dart`, `lib/special_room_dialog.dart`, `lib/game_run_lifecycle.dart`, `lib/game_run_state.dart`, `lib/game_screen.dart`, and related tests.
 
-Validation is pending on the current PR head. This is an initial special-room choice/reward loop; separate room maps, interactable shop/treasure props, and deeper challenge-room mechanics remain open.
+PR #41 is merged into `feature/procedural-game-audio-v2` as commit `81cdd3b947003b0cefa54541b0d948ecbf448c80`. CI runs `43482791474` and `43482784424` both succeeded on the final PR head, including Dart analysis, full Flutter tests, Android project generation, and Android debug APK build. This is an initial special-room choice/reward loop; separate room maps, interactable shop/treasure props, and deeper challenge-room mechanics remain open.
+
+### Follow-up — Section 6: persistent resources and reward chests
+
+Branch: `feature/persistent-resources-and-chest-economy-integrated`
+
+Status: PR #42 is open and not merged yet. Its earlier head passed Dart analysis and Flutter tests, but the Android APK job remained stuck in progress; subsequent commits expanded the feature set and triggered fresh CI runs. Revalidate the current head before merging.
+
+Implemented in this batch:
+- Added persistent player balances for gems, chest keys, and equipment shards.
+- Extended `PlayerProgress` serialization/copying and startup restoration for all three resource balances and the persistent unlocked-hero mask.
+- Extended `ProgressStore` defaults, bounds validation, and complete-snapshot writes to include the new resources.
+- Added two chest tiers: a supply chest costing one key and a relic chest costing two keys, each with bounded randomized coin, gem, and equipment-shard rewards.
+- Added two ways to obtain keys: 180 coins or 5 gems.
+- Chest openings and key purchases persist the full wallet snapshot before committing the in-memory balance; insufficient balances and storage failures leave the wallet unchanged.
+- Added wallet and chest controls to the main menu, including resource counters, purchase buttons, disabled states, and reward feedback.
+- Serialized chest/key, shop upgrade, weapon selection, equipment selection, and equipment unlock UI transactions to prevent overlapping full-wallet snapshots from overwriting one another.
+- Preserved resource balances and unlocked-hero ownership through health and attack shop purchases.
+- Hardened weapon/equipment selection and unlock flows so sound playback errors do not incorrectly roll back already-saved purchases or equipment changes.
+- Added model, persistence, transaction, equipment shard unlock, hero unlock, and widget tests covering defaults, round trips, normalization, bounded chest rewards, insufficient balances, save failure rollback, shard costs/prerequisites, persistent hero unlock purchases, and the visible chest wallet.
+
+Files changed:
+- `lib/hero_selection_screen.dart`
+- `lib/player_progress.dart`
+- `lib/progress_store.dart`
+- `lib/game_progress.dart`
+- `lib/main.dart`
+- `lib/main_menu_screen.dart`
+- `lib/resource_economy.dart` (new)
+- `test/player_progress_test.dart`
+- `test/progress_store_test.dart`
+- `test/resource_economy_test.dart` (new)
+- `test/widget_test.dart`
+
+Equipment shards now unlock equipment tiers as an alternative to coins (8 shards for tier 1, 20 for tier 2), with tier prerequisites and save-failure rollback. Remaining in Section 6: shard-based crafting/merging and duplicate conversion, gem sinks beyond keys, economy balancing against real run rewards, and achievement/progression-linked reward tables. The new chest economy is an initial functional slice, not a complete economy.
+
+Section 7 progress: persistent hero unlocks are now implemented. The starter hero remains unlocked; the other three heroes can be unlocked for 50/75/100 gems. Unlocks and gem deductions are saved in the same complete progression snapshot, failed saves roll back the purchase, and locked heroes cannot start a run. Remaining in Section 7: save/restore the active run, achievement persistence/rewards, world/stage unlock gates, and stronger corruption recovery.
+
+
+### Follow-up — Section 7: persistent hero unlocks
+
+Implemented on the current PR #42 branch:
+- Added a validated four-hero ownership bitmask to `PlayerProgress` and `ProgressStore`, including legacy-safe defaults that keep the starter hero unlocked.
+- Added startup restoration and full-snapshot save support for unlocked heroes.
+- Added hero selection lock states and gem prices: 50 gems for the flame hero, 75 for the shadow hero, and 100 for the storm hero.
+- Locked heroes cannot enter a run. The selected hero becomes available immediately after a successful persistent unlock.
+- Gem deductions and ownership changes are saved together; a storage failure restores the previous balance and ownership mask.
+- Kept hero ownership intact through chest purchases, equipment actions, and health/attack shop upgrades.
+- Added tests for ownership-mask normalization, persistence, and the successful hero unlock UI flow.
+
+Remaining in Section 7: mid-run checkpoint save/restore, achievements and reward claims, world/stage unlock gates, and stronger save corruption recovery.

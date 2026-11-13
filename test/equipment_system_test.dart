@@ -26,6 +26,18 @@ void main(){
    expect(EquipmentCatalog.canUnlock(tier1,armor2),isTrue);
    expect(EquipmentCatalog.unlock(tier1,armor2),tier1 | EquipmentCatalog.bitFor(EquipmentSlot.armor,2));
   });
+  test('higher equipment tiers can be unlocked with shards instead of coins',(){
+    final base = EquipmentCatalog.defaultOwnedMask;
+    final armor1 = EquipmentCatalog.byId(EquipmentSlot.armor,1);
+    final armor2 = EquipmentCatalog.byId(EquipmentSlot.armor,2);
+    expect(EquipmentCatalog.shardUnlockCost(armor1),8);
+    expect(EquipmentCatalog.canUnlockWithShards(base,armor1,8),isTrue);
+    expect(EquipmentCatalog.canUnlockWithShards(base,armor1,7),isFalse);
+    final tier1 = EquipmentCatalog.unlock(base,armor1);
+    expect(EquipmentCatalog.shardUnlockCost(armor2),20);
+    expect(EquipmentCatalog.canUnlockWithShards(tier1,armor2,20),isTrue);
+    expect(EquipmentCatalog.canUnlockWithShards(base,armor2,99),isFalse);
+  });
   test('unknown IDs fall back to base item',(){expect(EquipmentCatalog.byId(EquipmentSlot.relic,99).id,0); expect(EquipmentCatalog.byId(EquipmentSlot.relic,1).maxHpBonus,25);});
  });
 }

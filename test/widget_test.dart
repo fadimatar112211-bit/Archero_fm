@@ -2,6 +2,9 @@ import 'dart:ui' show Size;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:archero_fm/game_progress.dart';
+import 'package:archero_fm/progress_store.dart';
 import 'package:archero_fm/main.dart';
 
 void main() {
@@ -9,6 +12,19 @@ void main() {
     await tester.pumpWidget(const ArcheroSoundApp());
     expect(find.text('ARCHERO: SOUND EDITION'), findsOneWidget);
     expect(find.text('اختيار البطل واللعب'), findsOneWidget);
+  });
+
+  testWidgets('main menu shows resource wallet and disables unopened chests without keys', (tester) async {
+    await tester.pumpWidget(const ArcheroSoundApp());
+    await tester.ensureVisible(find.text('💎 الموارد والصناديق'));
+    expect(find.text('الجواهر'), findsOneWidget);
+    expect(find.text('المفاتيح'), findsOneWidget);
+    expect(find.text('شظايا المعدات'), findsOneWidget);
+    final supplyChest = tester.widget<OutlinedButton>(
+      find.widgetWithText(OutlinedButton, 'صندوق الإمدادات · 1 مفتاح'),
+    );
+    expect(supplyChest.onPressed, isNull);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('main menu adapts to phone and tablet viewports', (tester) async {
@@ -133,6 +149,9 @@ void main() {
 
   testWidgets('hero selection explains each active and passive ability',
       (tester) async {
+    final previousMask = unlockedHeroesMask;
+    unlockedHeroesMask = 15;
+    addTearDown(() => unlockedHeroesMask = previousMask);
     await tester.pumpWidget(
       const MaterialApp(home: HeroSelectionScreen()),
     );
@@ -141,6 +160,54 @@ void main() {
     expect(find.textContaining('جلد اللهب'), findsOneWidget);
     expect(find.textContaining('خطوة الظل'), findsOneWidget);
     expect(find.textContaining('وتر العاصفة'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('hero unlock spends gems only after persistent save succeeds', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    addTearDown(() {
+      globalCoins = 150;
+      globalGems = 0;
+      globalKeys = 0;
+      globalEquipmentShards = 0;
+      unlockedHeroesMask = 1;
+      ownedEquipmentMask = 585;
+      heroHpUpgrade = 0;
+      heroAtkUpgrade = 0;
+      bestStage = 1;
+      bestScore = 0;
+      equippedWeaponId = 0;
+      equippedArmorId = 0;
+      equippedHelmetId = 0;
+      equippedRingId = 0;
+      equippedRelicId = 0;
+      ProgressStore.resetForTesting();
+    });
+    globalCoins = 150;
+    globalGems = 100;
+    globalKeys = 0;
+    globalEquipmentShards = 0;
+    unlockedHeroesMask = 1;
+    ownedEquipmentMask = 585;
+    heroHpUpgrade = 0;
+    heroAtkUpgrade = 0;
+    bestStage = 1;
+    bestScore = 0;
+    equippedWeaponId = 0;
+    equippedArmorId = 0;
+    equippedHelmetId = 0;
+    equippedRingId = 0;
+    equippedRelicId = 0;
+
+    await tester.pumpWidget(const MaterialApp(home: HeroSelectionScreen()));
+    expect(find.text('فارس النارية · مقفل'), findsOneWidget);
+    await tester.tap(find.text('50 💎'));
+    await tester.pumpAndSettle();
+
+    expect(globalGems, 50);
+    expect(unlockedHeroesMask & (1 << 1), isNonZero);
+    expect((await ProgressStore.loadPlayerProgress()).unlockedHeroesMask & (1 << 1), isNonZero);
+    expect(find.text('فارس النارية · مقفل'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

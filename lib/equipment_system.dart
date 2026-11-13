@@ -40,6 +40,9 @@ class EquipmentCatalog {
       item.id > 0 && (mask & bitFor(item.slot, item.id - 1)) != 0 &&
       !isOwned(mask, item);
   static int unlockCost(EquipmentProfile item) => item.id == 1 ? 180 : 450;
+  static int shardUnlockCost(EquipmentProfile item) => item.id == 1 ? 8 : 20;
+  static bool canUnlockWithShards(int mask, EquipmentProfile item, int shards) =>
+      canUnlock(mask, item) && shards >= shardUnlockCost(item);
   static int unlock(int mask, EquipmentProfile item) {
     if (!canUnlock(mask, item)) return mask;
     return mask | bitFor(item.slot, item.id);
