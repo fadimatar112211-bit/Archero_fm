@@ -200,7 +200,7 @@ PR #41 is merged into `feature/procedural-game-audio-v2` as commit `81cdd3b94700
 
 Branch: `feature/persistent-resources-and-chest-economy-integrated`
 
-Status: PR #42 is open and not merged yet. Its earlier head passed Dart analysis and Flutter tests, but the Android APK job remained stuck in progress; subsequent commits expanded the feature set and triggered fresh CI runs. Revalidate the current head before merging.
+Status: PR #42 merged into `feature/procedural-game-audio-v2` as commit `77a2347cbf264e8d2e5760209148bd70b7b34aff`. Final-head CI runs `43488128681` and `43488116406` both completed successfully, including Dart analysis, full Flutter tests, Android project generation, and Android debug APK build.
 
 Implemented in this batch:
 - Added persistent player balances for gems, chest keys, and equipment shards.
@@ -228,9 +228,9 @@ Files changed:
 - `test/resource_economy_test.dart` (new)
 - `test/widget_test.dart`
 
-Equipment shards now unlock equipment tiers as an alternative to coins (8 shards for tier 1, 20 for tier 2), with tier prerequisites and save-failure rollback. Remaining in Section 6: shard-based crafting/merging and duplicate conversion, gem sinks beyond keys, economy balancing against real run rewards, and achievement/progression-linked reward tables. The new chest economy is an initial functional slice, not a complete economy.
+Equipment shards now unlock equipment tiers as an alternative to coins (8 shards for tier 1, 20 for tier 2), with tier prerequisites and save-failure rollback. Remaining in Section 6: shard-based crafting/merging and duplicate conversion, gem sinks beyond keys, economy balancing against real run rewards, and further reward tables. Achievement-linked rewards are now implemented in the current follow-up branch. The new chest economy is an initial functional slice, not a complete economy.
 
-Section 7 progress: persistent hero unlocks are now implemented. The starter hero remains unlocked; the other three heroes can be unlocked for 50/75/100 gems. Unlocks and gem deductions are saved in the same complete progression snapshot, failed saves roll back the purchase, and locked heroes cannot start a run. Remaining in Section 7: save/restore the active run, achievement persistence/rewards, world/stage unlock gates, and stronger corruption recovery.
+Section 7 progress: persistent hero unlocks are now implemented. The starter hero remains unlocked; the other three heroes can be unlocked for 50/75/100 gems. Unlocks and gem deductions are saved in the same complete progression snapshot, failed saves roll back the purchase, and locked heroes cannot start a run. Remaining in Section 7: save/restore the active run, achievement persistence/rewards (implemented in the current follow-up branch but awaiting merge), world/stage unlock gates, and stronger corruption recovery.
 
 
 ### Follow-up — Section 7: persistent hero unlocks
@@ -245,3 +245,37 @@ Implemented on the current PR #42 branch:
 - Added tests for ownership-mask normalization, persistence, and the successful hero unlock UI flow.
 
 Remaining in Section 7: mid-run checkpoint save/restore, achievements and reward claims, world/stage unlock gates, and stronger save corruption recovery.
+
+
+### Follow-up PR #43 — persistent achievements and reward claims
+
+Branch: `feature/persistent-achievements-and-reward-claims`
+
+Status: implementation and tests are committed on this branch. Latest-head CI is running; PR creation and merge are pending successful validation.
+
+Implemented:
+- Added persistent lifetime counters for defeated enemies, defeated bosses, opened reward chests, and completed runs.
+- Added a 10-achievement milestone catalog covering combat kills, boss defeats, chest openings, stage progression, and completed runs.
+- Added persistent one-time reward claim bits so an achievement reward cannot be collected twice.
+- Added rewards in coins, gems, and equipment shards.
+- Added a full achievements board to the main menu showing milestone requirements, progress counters, locked/ready/claimed states, and claim buttons.
+- Achievement claims save the complete progression snapshot (wallet balances and claim bit together) before updating in-memory balances; a storage failure leaves the reward claimable and does not grant unpersisted currency.
+- Enemy and boss counters update on defeats; room progression persists combat counters, run completion persists run totals, and both in-run and menu reward chests count toward chest milestones.
+- Extended PlayerProgress, ProgressStore, startup restoration, and all main-menu shop/wallet save paths to preserve achievement counters and claim flags.
+- Added model/persistence tests, achievement threshold and one-time claim tests, and a widget test for persistent reward claiming.
+
+Changed files:
+- `lib/achievement_system.dart` (new)
+- `lib/player_progress.dart`
+- `lib/progress_store.dart`
+- `lib/game_progress.dart`
+- `lib/main.dart`
+- `lib/game_screen.dart`
+- `lib/main_menu_screen.dart`
+- `test/achievement_system_test.dart` (new)
+- `test/player_progress_test.dart`
+- `test/progress_store_test.dart`
+- `test/progress_store_failure_test.dart`
+- `test/widget_test.dart`
+
+Remaining in Section 7: mid-run checkpoint save/restore, world/stage unlock gates, and stronger save corruption recovery. The achievement system is an initial persistent milestone set; more progression goals and reward tuning remain open.
