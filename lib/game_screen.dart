@@ -742,7 +742,7 @@ class _GameScreenState extends State<GameScreen>
         y: coin['y'] as double,
       )).toList(growable: false),
       pickupRadius: coinPickupRadius,
-      rewardPerCoin: (10 * WorldRules.forStage(stage).coinRewardMultiplier * (1 + gearStats.coinRewardBonus)).round(),
+      rewardPerCoin: 10 * WorldRules.forStage(stage).coinRewardMultiplier * (1 + gearStats.coinRewardBonus),
     );
     globalCoins += collection.reward;
     for (final index in collection.collectedIndices) {
