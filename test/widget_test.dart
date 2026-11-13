@@ -11,6 +11,19 @@ void main() {
     expect(find.text('اختيار البطل واللعب'), findsOneWidget);
   });
 
+  testWidgets('main menu shows resource wallet and disables unopened chests without keys', (tester) async {
+    await tester.pumpWidget(const ArcheroSoundApp());
+    await tester.ensureVisible(find.text('💎 الموارد والصناديق'));
+    expect(find.text('الجواهر'), findsOneWidget);
+    expect(find.text('المفاتيح'), findsOneWidget);
+    expect(find.text('شظايا المعدات'), findsOneWidget);
+    final supplyChest = tester.widget<OutlinedButton>(
+      find.widgetWithText(OutlinedButton, 'صندوق الإمدادات · 1 مفتاح'),
+    );
+    expect(supplyChest.onPressed, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('main menu adapts to phone and tablet viewports', (tester) async {
     const sizes = <Size>[
       Size(360, 640),
