@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -705,7 +706,7 @@ class _GameScreenState extends State<GameScreen>
       coins.removeAt(index);
       playRealSound('coin');
     }
-    if (collection.collectedAny) saveProgress();
+    if (collection.collectedAny) unawaited(saveProgressSafely());
 
     if (playerHp <= 0) {
       playerHp = 0;
@@ -739,7 +740,7 @@ class _GameScreenState extends State<GameScreen>
     stage = transition.nextRoom.stage;
     bestStage = completion.updatedBestStage;
     playerHp = completion.updatedPlayerHp;
-    saveProgress();
+    unawaited(saveProgressSafely());
 
     if (advance.reward == StageRewardType.mysteryChest) {
       setState(() {});
@@ -831,7 +832,7 @@ class _GameScreenState extends State<GameScreen>
       globalCoins += (75 * WorldRules.forStage(max(1, stage - 1)).coinRewardMultiplier).round();
       runLifecycle.collectChest();
     });
-    saveProgress();
+    unawaited(saveProgressSafely());
     playRealSound('coin');
     _spawnEnemies();
   }
@@ -841,7 +842,7 @@ class _GameScreenState extends State<GameScreen>
     runLifecycle.finishRun();
     bestStage = max(bestStage, stage);
     bestScore = max(bestScore, score);
-    saveProgress();
+    unawaited(saveProgressSafely());
     timers.cancelAll();
     playRealSound('hit');
 
