@@ -55,6 +55,16 @@ RunCheckpoint captureRunCheckpoint({
 GameRunState? restoreRunCheckpointState(RunCheckpoint checkpoint) {
   final data = checkpoint.state;
   try {
+    final walletCoins = data['walletCoins'];
+    final hazardCooldown = data['hazardCooldownTicks'];
+    final lastDamageAt = data['lastDamageAt'];
+    if (walletCoins is! int || walletCoins < 0 ||
+        hazardCooldown is! int || hazardCooldown < 0 ||
+        data['arenaInitialized'] is! bool ||
+        data['challengeRoomRewardPending'] is! bool ||
+        (lastDamageAt != null && lastDamageAt is! int)) {
+      return null;
+    }
     final run = GameRunState(initialStage: checkpoint.stage);
     run.arenaWidth = _number(data, 'arenaWidth');
     run.arenaHeight = _number(data, 'arenaHeight');
@@ -64,7 +74,6 @@ GameRunState? restoreRunCheckpointState(RunCheckpoint checkpoint) {
     run.playerHp = _number(data, 'playerHp');
     run.playerMaxHp = _number(data, 'playerMaxHp');
     run.playerSpeed = _number(data, 'playerSpeed');
-    final lastDamageAt = data['lastDamageAt'];
     run.lastDamageAt = lastDamageAt is int
         ? DateTime.fromMillisecondsSinceEpoch(lastDamageAt)
         : null;
