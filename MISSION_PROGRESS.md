@@ -494,3 +494,23 @@ Current verification state: world/stage implementation is committed to the featu
 - Fresh CI run `43501608553` on head `268218b32826bc89aaf3d6d9dd42e5d026c0d94c` failed during Dart analysis because `HapticFeedback` was not imported into `game_screen.dart`.
 - Corrected by importing `HapticFeedback` from Flutter's services library in commit `ab461ca5b88ae98326baa129f87d4474766bd159`.
 - A new full CI run on the corrected latest head is required; the failed run is not a validation pass.
+
+
+## Session checkpoint — 2026-11-13 (PR #46 merged; continue Section 8)
+
+### Section 8 — persistent audio and vibration settings
+- PR #46, “Add persistent in-game audio settings”, has been merged into `feature/procedural-game-audio-v2`.
+- Merge commit: `4e8b65f5af8678cebe3c05c8bf96323a16fe5b91`.
+- Final tested PR head: `dd73a177ad25950ba2dbcf95994d428c8d34b3c6`.
+- Final-head GitHub Actions run `43501788658` (run 890) completed successfully on that exact SHA. Dart analysis, the full Flutter test suite, Android project generation, and Android debug APK build all passed.
+- Integrated functionality: persistent master sound-effects toggle; persistent vibration toggle; Arabic settings screen linked from the main menu; haptic feedback on player damage and active-skill use; malformed preference recovery; unit and widget tests.
+- No physical Android device validation has been performed. Actual vibration and in-game behavior still require hands-on validation; do not describe them as manually verified.
+- The PR is merged; there is no outstanding PR #46 work.
+
+### Exact resume point
+1. Audit the integrated Section 8 experience against the original requirements, starting with weapon/equipment selection, comparison, and whether a dedicated loadout screen is needed.
+2. Inspect the actual integrated code and tests before changing anything; identify the largest concrete gap and implement one coherent slice.
+3. Continue with HUD, win/loss/progression screens, and control customization as needed; keep each batch tested and recorded here.
+4. Then continue Section 9: world-specific music, enemy/boss sounds, combat/death/explosion/skill/upgrade effects, and audio timing/variety.
+5. Require successful analysis, full Flutter tests, Android project generation, and debug APK build on each final PR head before merging.
+6. Physical Android gameplay validation remains outstanding across settings, haptics, checkpoint resume, world/stage selection, menus, combat, and progression. The game remains incomplete until all nine roadmap sections and final device validation are done.
