@@ -69,6 +69,7 @@ class _GameScreenState extends State<GameScreen>
   late final GameRunSession runSession =
       GameRunSession(initialStage: widget.initialStage);
   GameRunState get runState => runSession.state;
+  EquipmentStats get gearStats => EquipmentCatalog.stats(armorId: equippedArmorId, helmetId: equippedHelmetId, ringId: equippedRingId, relicId: equippedRelicId);
 
   double get arenaWidth => runState.arenaWidth;
   set arenaWidth(double value) => runState.arenaWidth = value;
@@ -396,7 +397,7 @@ class _GameScreenState extends State<GameScreen>
             now.difference(lastDamageAt!).inMilliseconds >= 260;
         final resolution = resolveProjectileHit(
           playerHp: playerHp,
-          projectileDamage: ((shot['damage'] as double?) ?? 6.0) * (1 - gear.damageReduction),
+          projectileDamage: ((shot['damage'] as double?) ?? 6.0) * (1 - gearStats.damageReduction),
           isDodging: playerMoveTicks > 0,
           canTakeDamage: canTakeDamage,
         );
@@ -629,7 +630,7 @@ class _GameScreenState extends State<GameScreen>
           ),
           damage: EnemyAttackRules.bossAreaDamage(
             bossEnraged: bossEnraged,
-          ) * (1 - gear.damageReduction),
+          ) * (1 - gearStats.damageReduction),
           isDodging: playerMoveTicks > 0,
           lastDamageAt: lastDamageAt,
         );
@@ -707,7 +708,7 @@ class _GameScreenState extends State<GameScreen>
         damage: EnemyAttackRules.contactDamage(
           enemyType: type,
           bossEnraged: bossEnraged,
-        ) * (1 - gear.damageReduction),
+        ) * (1 - gearStats.damageReduction),
       );
       switch (contactHit.status) {
         case EnemyContactHitStatus.notReady:
@@ -741,7 +742,7 @@ class _GameScreenState extends State<GameScreen>
         y: coin['y'] as double,
       )).toList(growable: false),
       pickupRadius: coinPickupRadius,
-      rewardPerCoin: (10 * WorldRules.forStage(stage).coinRewardMultiplier * (1 + gear.coinRewardBonus)).round(),
+      rewardPerCoin: (10 * WorldRules.forStage(stage).coinRewardMultiplier * (1 + gearStats.coinRewardBonus)).round(),
     );
     globalCoins += collection.reward;
     for (final index in collection.collectedIndices) {
@@ -767,7 +768,7 @@ class _GameScreenState extends State<GameScreen>
           'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 16,
         });
       } else {
-        playerHp = (playerHp - 8 * (1 - gear.damageReduction)).clamp(0.0, playerMaxHp).toDouble();
+        playerHp = (playerHp - 8 * (1 - gearStats.damageReduction)).clamp(0.0, playerMaxHp).toDouble();
         lastDamageAt = DateTime.now();
         combatEffects.add({
           'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
