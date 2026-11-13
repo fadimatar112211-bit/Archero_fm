@@ -23,7 +23,7 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: LoadoutScreen()));
 
     expect(find.text('تجهيزات البطل'), findsOneWidget);
-    expect(find.text('القوس المتوازن'), findsOneWidget);
+    expect(find.text('القوس المتوازن'), findsNWidgets(2));
     expect(find.textContaining('قوة الضرر'), findsOneWidget);
     expect(find.textContaining('درع الرحّالة'), findsOneWidget);
     expect(find.textContaining('إجمالي تأثير المعدات'), findsOneWidget);
@@ -33,10 +33,18 @@ void main() {
   testWidgets('changing weapon persists the selected loadout', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: LoadoutScreen()));
 
-    await tester.tap(find.byType(DropdownButtonFormField<int>).first);
+    final weaponSelector = find.byKey(const ValueKey('weapon-selector'));
+    expect(weaponSelector, findsOneWidget);
+    await tester.ensureVisible(weaponSelector);
+    await tester.tap(weaponSelector);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('القوس النابض').last);
+
+    // Confirm the popup opened before selecting its actual menu entry.
+    final springBowOption = find.text('القوس النابض');
+    expect(springBowOption, findsOneWidget);
+    await tester.tap(springBowOption);
     await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(equippedWeaponId, 1);
     expect((await ProgressStore.loadPlayerProgress()).equippedWeaponId, 1);
