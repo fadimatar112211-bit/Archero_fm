@@ -23,13 +23,11 @@ void main() {
     test('runner dash alternates between charge and recovery speeds', () {
       final dash = decideEnemyMovement(
         type: 'runner', distanceToPlayer: 200, baseAngle: 0,
-        enemyX: 0, animationTicks: 0, bossEnraged: false,
-        bossPhaseMovementMultiplier: 1,
+        enemyX: 0, animationTicks: 0,
       );
       final recovery = decideEnemyMovement(
         type: 'runner', distanceToPlayer: 200, baseAngle: 0,
-        enemyX: 0, animationTicks: 18, bossEnraged: false,
-        bossPhaseMovementMultiplier: 1,
+        enemyX: 0, animationTicks: 18,
       );
 
       expect(dash.speedMultiplier, 2.35);
@@ -39,13 +37,11 @@ void main() {
     test('stalker circles and tank advances more slowly', () {
       final stalker = decideEnemyMovement(
         type: 'stalker', distanceToPlayer: 150, baseAngle: 0,
-        enemyX: 0, animationTicks: 0, bossEnraged: false,
-        bossPhaseMovementMultiplier: 1,
+        enemyX: 0, animationTicks: 0,
       );
       final tank = decideEnemyMovement(
         type: 'tank', distanceToPlayer: 150, baseAngle: 0,
-        enemyX: 0, animationTicks: 0, bossEnraged: false,
-        bossPhaseMovementMultiplier: 1,
+        enemyX: 0, animationTicks: 0,
       );
 
       expect(stalker.angle, closeTo(0.48, 0.000001));
@@ -56,13 +52,11 @@ void main() {
     test('normalizes non-finite steering inputs and negative distances', () {
       final ranged = decideEnemyMovement(
         type: 'ranged', distanceToPlayer: double.nan, baseAngle: double.nan,
-        enemyX: double.infinity, animationTicks: 10, bossEnraged: false,
-        bossPhaseMovementMultiplier: double.nan,
+        enemyX: double.infinity, animationTicks: 10,
       );
       final stalker = decideEnemyMovement(
         type: 'stalker', distanceToPlayer: -10, baseAngle: double.infinity,
-        enemyX: double.nan, animationTicks: 0, bossEnraged: false,
-        bossPhaseMovementMultiplier: 1,
+        enemyX: double.nan, animationTicks: 0,
       );
 
       expect(ranged.angle, 0);
