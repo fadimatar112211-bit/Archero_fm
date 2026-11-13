@@ -72,6 +72,7 @@ class ChestReward {
 enum ResourceTransactionStatus {
   completed,
   insufficientCoins,
+  insufficientGems,
   insufficientKeys,
   persistenceFailed,
 }
@@ -154,7 +155,7 @@ Future<ResourceTransaction> purchaseChestKeyWithGems({
   const cost = 5;
   if (gems < cost) {
     return ResourceTransaction(
-      status: ResourceTransactionStatus.insufficientCoins,
+      status: ResourceTransactionStatus.insufficientGems,
       coins: coins,
       gems: gems,
       keys: keys,

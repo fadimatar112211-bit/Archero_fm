@@ -179,7 +179,8 @@ class ProgressStore {
     final nextWrite = _pendingWrite.then((_) async {
       final prefs = await _preferencesProvider();
       final previousValues = <String, int>{
-        for (final key in values.keys) key: _validValue(key, prefs.getInt(key)),
+        for (final key in values.keys)
+          key: _validValue(key, _readStoredInt(prefs, key)),
       };
       final writtenKeys = <String>[];
 

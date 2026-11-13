@@ -225,6 +225,24 @@ void main() {
     expect(recovered.totalKills, 91);
   });
 
+  test('saves safely when an existing stored field has the wrong type', () async {
+    SharedPreferences.setMockInitialValues({
+      'coins': 'corrupted-coins',
+      'hpUpgrade': 10,
+    });
+    await ProgressStore.save(
+      coins: 250,
+      hpUpgrade: 25,
+      atkUpgrade: 15,
+      bestStage: 3,
+      bestScore: 200,
+    );
+    final saved = await ProgressStore.load();
+    expect(saved['coins'], 250);
+    expect(saved['hpUpgrade'], 25);
+    expect(saved['bestStage'], 3);
+  });
+
   test('does not persist negative values supplied by callers', () async {
     await ProgressStore.save(
       coins: -10,

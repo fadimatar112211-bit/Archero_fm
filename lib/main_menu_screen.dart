@@ -254,7 +254,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         persist: _persistWallet,
       );
       if (!result.completed) {
-        _message(result.status == ResourceTransactionStatus.insufficientCoins
+        _message(result.status == ResourceTransactionStatus.insufficientGems
             ? 'تحتاج إلى 5 جواهر لشراء مفتاح.'
             : 'تعذر حفظ شراء المفتاح؛ لم يتم خصم الجواهر.');
         return;
