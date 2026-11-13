@@ -356,6 +356,8 @@ class _GameScreenState extends State<GameScreen>
           });
           if (hit.dropsCoin) coins.add({'x': x, 'y': y});
           score += hit.scoreAward;
+          totalKills++;
+          if (isBoss) totalBosses++;
           enemies.removeAt(i);
         }
       }
@@ -515,6 +517,8 @@ class _GameScreenState extends State<GameScreen>
         });
         if (hit.dropsCoin) coins.add({'x': enemy['x'], 'y': enemy['y']});
         score += hit.scoreAward;
+        totalKills++;
+        if (enemy['type'] == 'boss') totalBosses++;
         enemies.removeAt(hitIndex);
         playRealSound('hit');
       }
@@ -827,6 +831,8 @@ class _GameScreenState extends State<GameScreen>
         );
       }
     }
+    // Persist kill/boss counters at each cleared room rather than writing on every frame.
+    unawaited(saveProgressSafely());
     final transition = RoomFlow.complete(stage);
     final completion = resolveStageCompletion(
       currentStage: stage,
@@ -1003,6 +1009,7 @@ class _GameScreenState extends State<GameScreen>
     runLifecycle.finishRun();
     bestStage = max(bestStage, stage);
     bestScore = max(bestScore, score);
+    totalRuns++;
     unawaited(saveProgressSafely());
     timers.cancelAll();
     playRealSound('hit');
