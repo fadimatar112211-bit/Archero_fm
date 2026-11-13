@@ -9,6 +9,7 @@ import 'shop_economy.dart';
 import 'weapon_system.dart';
 import 'equipment_system.dart';
 import 'resource_economy.dart';
+import 'achievement_system.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -49,6 +50,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         keys: globalKeys,
         equipmentShards: globalEquipmentShards,
         unlockedHeroesMask: unlockedHeroesMask,
+        totalKills: totalKills,
+        totalBosses: totalBosses,
+        totalChests: totalChests,
+        totalRuns: totalRuns,
+        claimedAchievementsMask: claimedAchievementsMask,
       ),
     );
     if (!purchase.purchased) {
@@ -140,6 +146,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     keys: keys,
     equipmentShards: equipmentShards,
     unlockedHeroesMask: unlockedHeroesMask,
+    totalKills: totalKills,
+    totalBosses: totalBosses,
+    totalChests: totalChests,
+    totalRuns: totalRuns,
+    claimedAchievementsMask: claimedAchievementsMask,
   );
 
   Future<void> _buyChestKey() async {
@@ -219,6 +230,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       globalGems = result.gems;
       globalKeys = result.keys;
       globalEquipmentShards = result.equipmentShards;
+      totalChests++;
+      await saveProgressSafely();
       try { await playRealSound('special'); } catch (_) {}
       final reward = result.reward!;
       if (mounted) {
@@ -228,6 +241,131 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       _walletBusy = false;
       if (mounted) setState(() {});
     }
+  }
+
+  Future<void> _claimAchievement(AchievementDefinition achievement) async {
+    if (_walletBusy) return;
+    final stats = currentAchievementStats(
+      bestStage: bestStage,
+      totalKills: totalKills,
+      totalBosses: totalBosses,
+      totalChests: totalChests,
+      totalRuns: totalRuns,
+    );
+    final current = evaluateAchievements(
+      stats: stats,
+      claimedMask: claimedAchievementsMask,
+    ).firstWhere((entry) => entry.definition.id == achievement.id);
+    if (!current.claimable) return;
+
+    setState(() => _walletBusy = true);
+    final nextCoins = globalCoins + achievement.rewardCoins;
+    final nextGems = globalGems + achievement.rewardGems;
+    final nextShards = globalEquipmentShards + achievement.rewardShards;
+    final nextMask = claimedAchievementsMask | achievement.bit;
+    try {
+      await ProgressStore.save(
+        coins: nextCoins,
+        hpUpgrade: heroHpUpgrade,
+        atkUpgrade: heroAtkUpgrade,
+        bestStage: bestStage,
+        bestScore: bestScore,
+        equippedWeaponId: equippedWeaponId,
+        equippedArmorId: equippedArmorId,
+        equippedHelmetId: equippedHelmetId,
+        equippedRingId: equippedRingId,
+        equippedRelicId: equippedRelicId,
+        ownedEquipmentMask: ownedEquipmentMask,
+        gems: nextGems,
+        keys: globalKeys,
+        equipmentShards: nextShards,
+        unlockedHeroesMask: unlockedHeroesMask,
+        totalKills: totalKills,
+        totalBosses: totalBosses,
+        totalChests: totalChests,
+        totalRuns: totalRuns,
+        claimedAchievementsMask: nextMask,
+      );
+      globalCoins = nextCoins;
+      globalGems = nextGems;
+      globalEquipmentShards = nextShards;
+      claimedAchievementsMask = nextMask;
+      try { await playRealSound('special'); } catch (_) {}
+      if (mounted) _message('استلمت مكافأة «${achievement.title}»: +${achievement.rewardCoins} عملة، +${achievement.rewardGems} جوهرة، +${achievement.rewardShards} شظية.');
+    } catch (_) {
+      if (mounted) _message('تعذر حفظ المكافأة؛ بقي الإنجاز متاحاً للاستلام.');
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  Widget _achievementPanel() {
+    final stats = currentAchievementStats(
+      bestStage: bestStage,
+      totalKills: totalKills,
+      totalBosses: totalBosses,
+      totalChests: totalChests,
+      totalRuns: totalRuns,
+    );
+    final entries = evaluateAchievements(
+      stats: stats,
+      claimedMask: claimedAchievementsMask,
+    );
+    final claimed = entries.where((entry) => entry.claimed).length;
+    final claimable = entries.where((entry) => entry.claimable).length;
+    return _panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('🏆 الإنجازات · $claimed/${achievements.length}',
+              style: const TextStyle(color: Colors.amberAccent, fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 5),
+          Text('الأعداء: $totalKills · الزعماء: $totalBosses · الصناديق: $totalChests · الجولات: $totalRuns',
+              style: const TextStyle(fontSize: 11, color: Colors.white70)),
+          const SizedBox(height: 10),
+          if (claimable > 0)
+            Text('$claimable مكافأة جاهزة للاستلام', style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
+          ...entries.map((entry) {
+            final achievement = entry.definition;
+            final reward = '+${achievement.rewardCoins}🪙  +${achievement.rewardGems}💎  +${achievement.rewardShards} شظايا';
+            return Container(
+              margin: const EdgeInsets.only(top: 7),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: entry.claimed ? Colors.green.withOpacity(.08) : Colors.white.withOpacity(.035),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: entry.claimable ? Colors.amber.withOpacity(.7) : Colors.white10),
+              ),
+              child: Row(
+                children: [
+                  Icon(entry.claimed ? Icons.verified : entry.unlocked ? Icons.card_giftcard : Icons.lock_outline,
+                      color: entry.claimed ? Colors.greenAccent : entry.unlocked ? Colors.amber : Colors.white38),
+                  const SizedBox(width: 9),
+                  Expanded(child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(achievement.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(achievement.description, style: const TextStyle(fontSize: 11, color: Colors.white70)),
+                      Text(reward, style: const TextStyle(fontSize: 10, color: Colors.amberAccent)),
+                    ],
+                  )),
+                  if (entry.claimed)
+                    const Text('تم الاستلام', style: TextStyle(fontSize: 10, color: Colors.greenAccent))
+                  else if (entry.claimable)
+                    FilledButton.tonal(
+                      onPressed: _walletBusy ? null : () => _claimAchievement(achievement),
+                      child: const Text('استلام'),
+                    )
+                  else
+                    const Icon(Icons.lock, size: 16, color: Colors.white30),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
   }
 
   Future<void> _equipWeapon(WeaponProfile weapon) async {
@@ -584,6 +722,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       _gearSlot('الخواتم', EquipmentCatalog.rings, equippedRingId),
                       _gearSlot('الآثار', EquipmentCatalog.relics, equippedRelicId),
                     ])),
+                    const SizedBox(height: 18),
+                    _achievementPanel(),
                     const SizedBox(height: 28),
                     SizedBox(
                       width: double.infinity,
