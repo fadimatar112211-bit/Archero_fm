@@ -160,6 +160,21 @@ void main() {
     });
   });
 
+  test('recovers a wrong-typed field without discarding other valid progress', () async {
+    SharedPreferences.setMockInitialValues({
+      'coins': 875,
+      'bestStage': 'corrupted-stage-value',
+      'gems': 42,
+      'totalKills': 91,
+    });
+
+    final recovered = await ProgressStore.loadPlayerProgress();
+    expect(recovered.coins, 875);
+    expect(recovered.bestStage, 1);
+    expect(recovered.gems, 42);
+    expect(recovered.totalKills, 91);
+  });
+
   test('does not persist negative values supplied by callers', () async {
     await ProgressStore.save(
       coins: -10,
