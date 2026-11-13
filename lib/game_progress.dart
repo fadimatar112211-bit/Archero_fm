@@ -18,6 +18,8 @@ int globalGems = 0;
 int globalKeys = 0;
 int globalEquipmentShards = 0;
 int unlockedHeroesMask = 1;
+int totalKills = 0, totalBosses = 0, totalChests = 0, totalRuns = 0;
+int claimedAchievementsMask = 0;
 
 /// Loads saved progression, falling back to safe defaults if storage is
 /// unavailable so a transient persistence failure cannot block game startup.
@@ -59,6 +61,11 @@ Future<void> saveProgress() async {
         keys: globalKeys,
         equipmentShards: globalEquipmentShards,
         unlockedHeroesMask: unlockedHeroesMask,
+        totalKills: totalKills,
+        totalBosses: totalBosses,
+        totalChests: totalChests,
+        totalRuns: totalRuns,
+        claimedAchievementsMask: claimedAchievementsMask,
       ),
     );
   } catch (error, stackTrace) {
