@@ -12,6 +12,27 @@ int heroAtkUpgrade = 0;
 int bestStage = 1;
 int bestScore = 0;
 
+/// Loads saved progression, falling back to safe defaults if storage is
+/// unavailable so a transient persistence failure cannot block game startup.
+Future<PlayerProgress> loadProgressOrDefaults() async {
+  try {
+    return await ProgressStore.loadPlayerProgress();
+  } catch (error, stackTrace) {
+    GameDiagnostics.record(
+      error,
+      stackTrace,
+      source: 'application_startup',
+    );
+    return const PlayerProgress(
+      coins: 150,
+      hpUpgrade: 0,
+      atkUpgrade: 0,
+      bestStage: 1,
+      bestScore: 0,
+    );
+  }
+}
+
 Future<void> saveProgress() async {
   try {
     await ProgressStore.savePlayerProgress(
