@@ -43,3 +43,77 @@ void main() {
     expect(ShopEconomy.attack(60).level, 4);
   });
 }
+
+
+  group('ShopPurchaseCoordinator', () {
+    test('persists the complete candidate snapshot before reporting purchase', () async {
+      Map<String, int>? persisted;
+      final result = await ShopPurchaseCoordinator.purchase(
+        kind: UpgradeKind.health,
+        coins: 150,
+        hpUpgrade: 0,
+        atkUpgrade: 15,
+        persist: ({required coins, required hpUpgrade, required atkUpgrade}) async {
+          persisted = {
+            'coins': coins,
+            'hpUpgrade': hpUpgrade,
+            'atkUpgrade': atkUpgrade,
+          };
+        },
+      );
+
+      expect(result.status, ShopPurchaseStatus.purchased);
+      expect(result.succeeded, isTrue);
+      expect(result.coins, 100);
+      expect(result.hpUpgrade, 25);
+      expect(result.atkUpgrade, 15);
+      expect(persisted, {'coins': 100, 'hpUpgrade': 25, 'atkUpgrade': 15});
+    });
+
+    test('leaves all player values unchanged when persistence fails', () async {
+      final result = await ShopPurchaseCoordinator.purchase(
+        kind: UpgradeKind.attack,
+        coins: 150,
+        hpUpgrade: 25,
+        atkUpgrade: 0,
+        persist: ({required coins, required hpUpgrade, required atkUpgrade}) {
+          throw StateError('disk unavailable');
+        },
+      );
+
+      expect(result.status, ShopPurchaseStatus.persistenceFailed);
+      expect(result.succeeded, isFalse);
+      expect(result.coins, 150);
+      expect(result.hpUpgrade, 25);
+      expect(result.atkUpgrade, 0);
+      expect(result.error, isA<StateError>());
+    });
+
+    test('does not call persistence for insufficient funds or max level', () async {
+      var calls = 0;
+      Future<void> persist({
+        required int coins,
+        required int hpUpgrade,
+        required int atkUpgrade,
+      }) async { calls++; }
+
+      final poor = await ShopPurchaseCoordinator.purchase(
+        kind: UpgradeKind.health,
+        coins: 49,
+        hpUpgrade: 0,
+        atkUpgrade: 0,
+        persist: persist,
+      );
+      final maxed = await ShopPurchaseCoordinator.purchase(
+        kind: UpgradeKind.health,
+        coins: 10000,
+        hpUpgrade: 500,
+        atkUpgrade: 0,
+        persist: persist,
+      );
+
+      expect(poor.status, ShopPurchaseStatus.insufficientFunds);
+      expect(maxed.status, ShopPurchaseStatus.maxLevel);
+      expect(calls, 0);
+    });
+  });
