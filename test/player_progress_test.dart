@@ -20,6 +20,7 @@ void main() {
         'gems': 0,
         'keys': 0,
         'equipmentShards': 0,
+      'unlockedHeroesMask': 1,
       });
     });
 
