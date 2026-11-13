@@ -29,6 +29,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         equippedWeaponId: equippedWeaponId,
         equippedArmorId: equippedArmorId, equippedHelmetId: equippedHelmetId,
         equippedRingId: equippedRingId, equippedRelicId: equippedRelicId,
+        ownedEquipmentMask: ownedEquipmentMask,
       ),
     );
     if (!purchase.purchased) {
@@ -63,6 +64,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         equippedWeaponId: equippedWeaponId,
         equippedArmorId: equippedArmorId, equippedHelmetId: equippedHelmetId,
         equippedRingId: equippedRingId, equippedRelicId: equippedRelicId,
+        ownedEquipmentMask: ownedEquipmentMask,
       ),
     );
     debugPrint('[Shop] attack purchase result: ${purchase.status} remaining=${purchase.remainingCoins}');
@@ -94,15 +96,72 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     padding: const EdgeInsets.only(bottom: 10),
     child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-      ...items.map((item) { final selected = item.id == equippedId; return OutlinedButton(
-        onPressed: selected ? null : () => _equipGear(item),
-        style: OutlinedButton.styleFrom(alignment: Alignment.centerRight, side: BorderSide(color: selected ? Colors.lightBlueAccent : Colors.white24)),
-        child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('${item.name} · ${item.rarity}', style: TextStyle(color: selected ? Colors.lightBlueAccent : Colors.white, fontWeight: FontWeight.bold)), Text(item.description, style: const TextStyle(fontSize: 11, color: Colors.white70))])), if (selected) const Icon(Icons.check_circle, color: Colors.lightBlueAccent)]),
-      );}),
+      ...items.map((item) {
+        final selected = item.id == equippedId;
+        final owned = EquipmentCatalog.isOwned(ownedEquipmentMask, item);
+        final canUnlock = EquipmentCatalog.canUnlock(ownedEquipmentMask, item);
+        return OutlinedButton(
+          onPressed: owned
+              ? (selected ? null : () => _equipGear(item))
+              : (canUnlock ? () => _unlockGear(item) : null),
+          style: OutlinedButton.styleFrom(
+            alignment: Alignment.centerRight,
+            side: BorderSide(color: selected ? Colors.lightBlueAccent : (owned ? Colors.white24 : Colors.amber.withOpacity(.45))),
+          ),
+          child: Row(children: [
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('${item.name} · ${item.rarity}', style: TextStyle(color: selected ? Colors.lightBlueAccent : Colors.white, fontWeight: FontWeight.bold)),
+              Text(item.description, style: const TextStyle(fontSize: 11, color: Colors.white70)),
+              if (!owned) Text(canUnlock ? 'فتح القطعة: ${EquipmentCatalog.unlockCost(item)} عملة' : 'افتح القطعة السابقة أولاً', style: const TextStyle(fontSize: 11, color: Colors.amber)),
+            ])),
+            if (selected) const Icon(Icons.check_circle, color: Colors.lightBlueAccent)
+            else if (!owned) Icon(canUnlock ? Icons.lock_open : Icons.lock, color: Colors.amber),
+          ]),
+        );
+      }),
     ]),
   );
 
+  Future<void> _unlockGear(EquipmentProfile item) async {
+    if (!EquipmentCatalog.canUnlock(ownedEquipmentMask, item)) return;
+    final cost = EquipmentCatalog.unlockCost(item);
+    if (globalCoins < cost) {
+      _message('تحتاج إلى $cost عملة لفتح هذه القطعة.');
+      return;
+    }
+    final previousCoins = globalCoins;
+    final previousMask = ownedEquipmentMask;
+    final previousSlots = [equippedArmorId, equippedHelmetId, equippedRingId, equippedRelicId];
+    setState(() {
+      globalCoins -= cost;
+      ownedEquipmentMask = EquipmentCatalog.unlock(ownedEquipmentMask, item);
+      switch (item.slot) {
+        case EquipmentSlot.armor: equippedArmorId = item.id; break;
+        case EquipmentSlot.helmet: equippedHelmetId = item.id; break;
+        case EquipmentSlot.ring: equippedRingId = item.id; break;
+        case EquipmentSlot.relic: equippedRelicId = item.id; break;
+      }
+    });
+    try {
+      await saveProgress();
+      await playRealSound('coin');
+      if (mounted) _message('تم فتح وتجهيز ${item.name}.');
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        globalCoins = previousCoins;
+        ownedEquipmentMask = previousMask;
+        equippedArmorId = previousSlots[0];
+        equippedHelmetId = previousSlots[1];
+        equippedRingId = previousSlots[2];
+        equippedRelicId = previousSlots[3];
+      });
+      _message('تعذر حفظ فتح القطعة. لم يتم اعتماد الخصم.');
+    }
+  }
+
   Future<void> _equipGear(EquipmentProfile item) async {
+    if (!EquipmentCatalog.isOwned(ownedEquipmentMask, item)) return;
     final old = [equippedArmorId, equippedHelmetId, equippedRingId, equippedRelicId];
     setState(() { switch (item.slot) { case EquipmentSlot.armor: equippedArmorId=item.id; break; case EquipmentSlot.helmet: equippedHelmetId=item.id; break; case EquipmentSlot.ring: equippedRingId=item.id; break; case EquipmentSlot.relic: equippedRelicId=item.id; break; } });
     try { await saveProgress(); await playRealSound('special'); }

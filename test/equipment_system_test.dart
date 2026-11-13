@@ -13,6 +13,19 @@ void main(){
    final s=EquipmentCatalog.stats(armorId:2,helmetId:2,ringId:2,relicId:2);
    expect(s.maxHpBonus,65);expect(s.attackBonus,closeTo(.11,.0001));expect(s.damageReduction,closeTo(.14,.0001));expect(s.criticalChanceBonus,closeTo(.15,.0001));expect(s.coinPickupRadiusBonus,24);expect(s.coinRewardBonus,.15);
   });
+  test('equipment unlocks follow a paid tier path',(){
+   final base = EquipmentCatalog.defaultOwnedMask;
+   final armor1 = EquipmentCatalog.byId(EquipmentSlot.armor,1);
+   final armor2 = EquipmentCatalog.byId(EquipmentSlot.armor,2);
+   expect(EquipmentCatalog.isOwned(base, EquipmentCatalog.byId(EquipmentSlot.armor,0)),isTrue);
+   expect(EquipmentCatalog.canUnlock(base,armor1),isTrue);
+   expect(EquipmentCatalog.canUnlock(base,armor2),isFalse);
+   expect(EquipmentCatalog.unlockCost(armor1),180);
+   final tier1 = EquipmentCatalog.unlock(base,armor1);
+   expect(EquipmentCatalog.isOwned(tier1,armor1),isTrue);
+   expect(EquipmentCatalog.canUnlock(tier1,armor2),isTrue);
+   expect(EquipmentCatalog.unlock(tier1,armor2),tier1 | EquipmentCatalog.bitFor(EquipmentSlot.armor,2));
+  });
   test('unknown IDs fall back to base item',(){expect(EquipmentCatalog.byId(EquipmentSlot.relic,99).id,0); expect(EquipmentCatalog.byId(EquipmentSlot.relic,1).maxHpBonus,25);});
  });
 }

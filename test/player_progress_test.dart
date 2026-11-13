@@ -16,6 +16,7 @@ void main() {
         'equippedHelmetId': 0,
         'equippedRingId': 0,
         'equippedRelicId': 0,
+        'ownedEquipmentMask': 585,
       });
     });
 
@@ -43,6 +44,17 @@ void main() {
       expect(progress.bestStage, 3);
       expect(progress.bestScore, 0);
       expect(progress.equippedWeaponId, 0);
+      expect(progress.ownedEquipmentMask, 585);
+    });
+
+    test('legacy equipped items are retained as owned during migration', () {
+      final progress = PlayerProgress.fromMap({
+        'equippedArmorId': 2,
+        'equippedHelmetId': 1,
+      });
+      expect(progress.equippedArmorId, 2);
+      expect(progress.ownedEquipmentMask & (1 << 2), isNonZero);
+      expect(progress.ownedEquipmentMask & (1 << 4), isNonZero);
     });
 
     test('copyWith updates selected values without mutating original', () {

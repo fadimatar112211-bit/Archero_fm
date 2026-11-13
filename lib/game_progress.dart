@@ -13,6 +13,7 @@ int bestStage = 1;
 int bestScore = 0;
 int equippedWeaponId = 0;
 int equippedArmorId = 0, equippedHelmetId = 0, equippedRingId = 0, equippedRelicId = 0;
+int ownedEquipmentMask = 585;
 
 /// Loads saved progression, falling back to safe defaults if storage is
 /// unavailable so a transient persistence failure cannot block game startup.
@@ -49,6 +50,7 @@ Future<void> saveProgress() async {
         equippedWeaponId: equippedWeaponId,
         equippedArmorId: equippedArmorId, equippedHelmetId: equippedHelmetId,
         equippedRingId: equippedRingId, equippedRelicId: equippedRelicId,
+        ownedEquipmentMask: ownedEquipmentMask,
       ),
     );
   } catch (error, stackTrace) {
