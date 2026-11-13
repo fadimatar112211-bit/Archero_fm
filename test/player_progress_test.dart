@@ -21,6 +21,11 @@ void main() {
         'keys': 0,
         'equipmentShards': 0,
         'unlockedHeroesMask': 1,
+        'totalKills': 0,
+        'totalBosses': 0,
+        'totalChests': 0,
+        'totalRuns': 0,
+        'claimedAchievementsMask': 0,
       });
     });
 
