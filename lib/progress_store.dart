@@ -89,11 +89,13 @@ class ProgressStore {
 
       try {
         for (final entry in values.entries) {
+          // Include the in-flight key too: a failing backend may have written
+          // the value before reporting its error.
+          writtenKeys.add(entry.key);
           final stored = await prefs.setInt(entry.key, entry.value);
           if (!stored) {
             throw StateError('Failed to persist progression key: ${entry.key}');
           }
-          writtenKeys.add(entry.key);
         }
       } catch (error, stackTrace) {
         Object? rollbackError;
