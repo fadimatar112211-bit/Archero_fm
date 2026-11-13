@@ -61,6 +61,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         bestStage: bestStage,
         bestScore: bestScore,
         equippedWeaponId: equippedWeaponId,
+        equippedArmorId: equippedArmorId, equippedHelmetId: equippedHelmetId,
+        equippedRingId: equippedRingId, equippedRelicId: equippedRelicId,
       ),
     );
     debugPrint('[Shop] attack purchase result: ${purchase.status} remaining=${purchase.remainingCoins}');
@@ -102,7 +104,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   Future<void> _equipGear(EquipmentProfile item) async {
     final old = [equippedArmorId, equippedHelmetId, equippedRingId, equippedRelicId];
-    setState(() { switch (item.slot) { case EquipmentSlot.armor: equippedArmorId=item.id; case EquipmentSlot.helmet: equippedHelmetId=item.id; case EquipmentSlot.ring: equippedRingId=item.id; case EquipmentSlot.relic: equippedRelicId=item.id; } });
+    setState(() { switch (item.slot) { case EquipmentSlot.armor: equippedArmorId=item.id; break; case EquipmentSlot.helmet: equippedHelmetId=item.id; break; case EquipmentSlot.ring: equippedRingId=item.id; break; case EquipmentSlot.relic: equippedRelicId=item.id; break; } });
     try { await saveProgress(); await playRealSound('special'); }
     catch (_) { if (!mounted) return; setState(() { equippedArmorId=old[0]; equippedHelmetId=old[1]; equippedRingId=old[2]; equippedRelicId=old[3]; }); _message('تعذر حفظ المعدّات. بقي التجهيز السابق.'); }
   }
