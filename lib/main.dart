@@ -2266,6 +2266,89 @@ class ArenaPainter extends CustomPainter {
       canvas.drawLine(Offset(stone.left + 3, stone.top + 4),
         Offset(stone.right - 4, stone.top + 4), Paint()..color = Colors.white.withOpacity(.16)..strokeWidth = 2);
     }
+
+    // Forest-only dressing: layered trunks, leafy crowns and roots stay
+    // against the outer rails so the central combat lane remains unobstructed.
+    if (theme.id == 1 && size.width > 80 && size.height > 150) {
+      final bark = Paint()..color = const Color(0xFF382F27);
+      final barkLight = Paint()..color = const Color(0xFF70513A)
+        ..strokeWidth = 2.2..strokeCap = StrokeCap.round;
+      final deepLeaf = Paint()..color = const Color(0xFF183D2C);
+      final leaf = Paint()..color = const Color(0xFF286342);
+      final leafLight = Paint()..color = const Color(0xFF4D8950);
+      final rootPaint = Paint()..color = const Color(0xFF4C6840)
+        ..style = PaintingStyle.stroke..strokeWidth = 4..strokeCap = StrokeCap.round;
+
+      for (final side in [0, 1]) {
+        final x = side == 0 ? 17.0 : size.width - 17.0;
+        final direction = side == 0 ? 1.0 : -1.0;
+        // Two staggered trunks create depth without entering the arena lane.
+        for (var layer = 0; layer < 2; layer++) {
+          final trunkX = x + direction * (layer == 0 ? 0 : 13);
+          final top = 88.0 + layer * 24;
+          final bottom = size.height - (layer == 0 ? 34 : 72);
+          final trunk = Path()
+            ..moveTo(trunkX - 5, top)
+            ..quadraticBezierTo(trunkX - 2, (top + bottom) / 2, trunkX - 7, bottom)
+            ..lineTo(trunkX + 7, bottom)
+            ..quadraticBezierTo(trunkX + 2, (top + bottom) / 2, trunkX + 5, top)
+            ..close();
+          canvas.drawPath(trunk, bark);
+          canvas.drawLine(Offset(trunkX - 1, top + 12),
+            Offset(trunkX - 3, bottom - 12), barkLight);
+          final roots = Path()
+            ..moveTo(trunkX, bottom - 5)
+            ..quadraticBezierTo(trunkX - direction * 8, bottom + 1,
+                trunkX - direction * 13, bottom + 5)
+            ..moveTo(trunkX + direction * 2, bottom - 4)
+            ..quadraticBezierTo(trunkX + direction * 10, bottom,
+                trunkX + direction * 16, bottom + 3);
+          canvas.drawPath(roots, rootPaint);
+        }
+
+        // Overlapping leaf clusters form a soft canopy at the top corners.
+        for (var i = 0; i < 6; i++) {
+          final cx = x + direction * (i % 3) * 11;
+          final cy = 87.0 + (i ~/ 3) * 13;
+          canvas.drawCircle(Offset(cx, cy), 15 - (i % 2) * 2, deepLeaf);
+          canvas.drawCircle(Offset(cx + direction * 3, cy - 3),
+              9, i.isEven ? leaf : leafLight);
+        }
+
+        // Thin hanging vines and small fern fronds along the side rail.
+        final vine = Paint()..color = const Color(0xFF75A653)
+          ..style = PaintingStyle.stroke..strokeWidth = 2
+          ..strokeCap = StrokeCap.round;
+        final vinePath = Path()
+          ..moveTo(x + direction * 5, 103)
+          ..cubicTo(x - direction * 7, 128, x + direction * 12, 143,
+              x + direction * 3, 164);
+        canvas.drawPath(vinePath, vine);
+        for (var i = 0; i < 4; i++) {
+          final fy = 119.0 + i * 10;
+          canvas.drawLine(Offset(x + direction * 3, fy),
+              Offset(x + direction * (12 + (i % 2) * 3), fy - 6), vine);
+          canvas.drawLine(Offset(x + direction * 3, fy),
+              Offset(x - direction * 5, fy + 5), vine);
+        }
+
+        // Tiny mushrooms and luminous spores near the lower corners.
+        final cap = Paint()..color = const Color(0xFFC96A55);
+        final stem = Paint()..color = const Color(0xFFE5D8B5);
+        final mushroomX = x + direction * 8;
+        final mushroomY = size.height - 53.0;
+        canvas.drawRRect(RRect.fromRectAndRadius(
+          Rect.fromLTWH(mushroomX - 2, mushroomY, 4, 9),
+          const Radius.circular(2)), stem);
+        canvas.drawArc(Rect.fromLTWH(mushroomX - 8, mushroomY - 7, 16, 12),
+            3.14, 3.14, true, cap);
+        canvas.drawCircle(Offset(x + direction * 23, size.height - 88),
+            2.2, Paint()..color = const Color(0xFFB6E878).withOpacity(.65));
+        canvas.drawCircle(Offset(x + direction * 29, size.height - 103),
+            1.4, Paint()..color = const Color(0xFFD9F6A0).withOpacity(.55));
+      }
+    }
+
     final vignette = Paint()
       ..shader = RadialGradient(colors: [Colors.transparent, Colors.black.withOpacity(.48)],
         stops: const [0.55, 1]).createShader(rect);
@@ -2273,7 +2356,8 @@ class ArenaPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant ArenaPainter oldDelegate) => false;
+  bool shouldRepaint(covariant ArenaPainter oldDelegate) =>
+      oldDelegate.theme.id != theme.id;
 }
 
 /// Displays one cell from a horizontal vector sprite sheet.
