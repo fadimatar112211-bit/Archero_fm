@@ -1,3 +1,5 @@
+export 'game_painters.dart';
+
 import 'dart:async';
 import 'dart:math';
 
