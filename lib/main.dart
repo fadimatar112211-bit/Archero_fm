@@ -418,12 +418,42 @@ class HeroSelectionScreen extends StatelessWidget {
                   child: Text(hero.description),
                 ),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 17),
-                onTap: () {
+                onTap: () async {
                   playRealSound('special');
+                  var selectedStage = 1;
+                  if (bestStage > 1) {
+                    final choice = await showDialog<int>(
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
+                        title: const Text('اختر طريقة اللعب'),
+                        content: Text(
+                          'أفضل تقدم محفوظ لديك هو المرحلة $bestStage.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext, 1),
+                            child: const Text('مغامرة جديدة'),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(
+                              dialogContext,
+                              bestStage,
+                            ),
+                            child: Text('متابعة من المرحلة $bestStage'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (!context.mounted || choice == null) return;
+                    selectedStage = choice;
+                  }
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => GameScreen(heroType: hero.id),
+                      builder: (_) => GameScreen(
+                        heroType: hero.id,
+                        initialStage: selectedStage,
+                      ),
                     ),
                   );
                 },
@@ -444,8 +474,13 @@ typedef GameObject = Map<String, dynamic>;
 
 class GameScreen extends StatefulWidget {
   final int heroType;
+  final int initialStage;
 
-  const GameScreen({super.key, required this.heroType});
+  const GameScreen({
+    super.key,
+    required this.heroType,
+    this.initialStage = 1,
+  });
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -476,7 +511,7 @@ class _GameScreenState extends State<GameScreen> {
   final List<Map<String, dynamic>> defeatedSprites = [];
 
   int score = 0;
-  int stage = 1;
+  late int stage = widget.initialStage;
   int specialCooldown = 0;
 
   bool isPaused = false;
