@@ -40,6 +40,6 @@ class EquipmentCatalog {
   static EquipmentStats stats({required int armorId,required int helmetId,required int ringId,required int relicId}) {
     final items=[byId(EquipmentSlot.armor,armorId),byId(EquipmentSlot.helmet,helmetId),byId(EquipmentSlot.ring,ringId),byId(EquipmentSlot.relic,relicId)];
     double sum(double Function(EquipmentProfile) read)=>items.fold(0.0,(v,item)=>v+read(item));
-    return EquipmentStats(maxHpBonus:sum((i)=>i.maxHpBonus),attackBonus:sum((i)=>i.attackBonus),damageReduction:sum((i)=>i.damageReduction).clamp(0.0,.35),criticalChanceBonus:sum((i)=>i.criticalChanceBonus).clamp(0.0,.5),coinPickupRadiusBonus:sum((i)=>i.coinPickupRadiusBonus),coinRewardBonus:sum((i)=>i.coinRewardBonus).clamp(0.0,.5));
+    return EquipmentStats(maxHpBonus:sum((i)=>i.maxHpBonus),attackBonus:sum((i)=>i.attackBonus),damageReduction:sum((i)=>i.damageReduction).clamp(0.0,.35).toDouble(),criticalChanceBonus:sum((i)=>i.criticalChanceBonus).clamp(0.0,.5).toDouble(),coinPickupRadiusBonus:sum((i)=>i.coinPickupRadiusBonus),coinRewardBonus:sum((i)=>i.coinRewardBonus).clamp(0.0,.5).toDouble());
   }
 }

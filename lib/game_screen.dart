@@ -174,7 +174,7 @@ class _GameScreenState extends State<GameScreen>
     playerSpeed = heroStats.playerSpeed;
     attackPowerMultiplier = heroStats.attackPowerMultiplier * (1 + gear.attackBonus);
     extraArrows = heroStats.extraArrows;
-    criticalChance = (heroStats.criticalChance + gear.criticalChanceBonus).clamp(0.0, 0.75);
+    criticalChance = (heroStats.criticalChance + gear.criticalChanceBonus).clamp(0.0, 0.75).toDouble();
     coinPickupRadius += gear.coinPickupRadiusBonus;
 
     timers.periodic('game', const Duration(milliseconds: 16), () {
