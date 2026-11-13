@@ -13,7 +13,7 @@ RunCheckpoint captureRunCheckpoint({
     heroType: heroType,
     stage: run.stage,
     state: {
-      'coins': coins,
+      'walletCoins': coins,
       'arenaWidth': run.arenaWidth,
       'arenaHeight': run.arenaHeight,
       'arenaInitialized': run.arenaInitialized,
