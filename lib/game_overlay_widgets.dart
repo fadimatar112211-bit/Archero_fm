@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'game_render_rules.dart';
+
 class GameHudWidget extends StatelessWidget {
   const GameHudWidget({
     super.key,
@@ -58,9 +60,10 @@ class GameHudWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               child: LinearProgressIndicator(
                 minHeight: 10,
-                value: playerMaxHp > 0
-                    ? (playerHp / playerMaxHp).clamp(0.0, 1.0)
-                    : 0,
+                value: normalizedHealthRatio(
+                  current: playerHp,
+                  maximum: playerMaxHp,
+                ),
                 backgroundColor: Colors.red.shade900,
                 color: Colors.greenAccent,
               ),

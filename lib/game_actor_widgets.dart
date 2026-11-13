@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'game_painters.dart';
+import 'game_render_rules.dart';
 
 typedef GameActorData = Map<String, dynamic>;
 
@@ -100,9 +101,10 @@ class EnemyActorWidget extends StatelessWidget {
     final attackLean = enemyAttacking
         ? (enemyType == 'boss' ? -0.16 : -0.24)
         : gait * 0.045 * gaitStrength;
-    final hpRatio = ((enemy['hp'] as double) /
-            (enemy['maxHp'] as double))
-        .clamp(0.0, 1.0);
+    final hpRatio = normalizedHealthRatio(
+      current: (enemy['hp'] as double?) ?? 0,
+      maximum: (enemy['maxHp'] as double?) ?? 0,
+    );
 
     return Positioned(
       left: (enemy['x'] as double) - radius,

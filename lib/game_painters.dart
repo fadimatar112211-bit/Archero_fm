@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'world_theme.dart';
+import 'game_render_rules.dart';
 
 class EnemyAuraPainter extends CustomPainter {
   final String type;
@@ -1050,7 +1051,11 @@ class SpriteSheetFrame extends StatelessWidget {
         if (!width.isFinite || !height.isFinite || width <= 0 || height <= 0) {
           return const SizedBox.expand();
         }
-        final frame = frameIndex % frameCount;
+        final safeFrameCount = frameCount > 0 ? frameCount : 1;
+        final frame = normalizedSpriteFrameIndex(
+          frameIndex: frameIndex,
+          frameCount: safeFrameCount,
+        );
         return ClipRect(
           child: SizedBox(
             width: width,
@@ -1064,7 +1069,7 @@ class SpriteSheetFrame extends StatelessWidget {
               child: Transform.translate(
                 offset: Offset(-width * frame, 0),
                 child: SizedBox(
-                  width: width * frameCount,
+                  width: width * safeFrameCount,
                   height: height,
                   child: SvgPicture.asset(asset, fit: BoxFit.fill),
                 ),
