@@ -1253,32 +1253,32 @@ class _GameScreenState extends State<GameScreen>
     );
 
     if (!mounted || gameOverShown) return;
+    final upgrade = applySkillUpgrade(
+      current: SkillRuntimeStats(
+        extraArrows: extraArrows,
+        attackPowerMultiplier: attackPowerMultiplier,
+        playerHp: playerHp,
+        playerMaxHp: playerMaxHp,
+        enemySpeedMultiplier: enemySpeedMultiplier,
+        coinPickupRadius: coinPickupRadius,
+        criticalChance: criticalChance,
+        attackSpeedMultiplier: attackSpeedMultiplier,
+      ),
+      choice: choice,
+    );
     setState(() {
-      switch (choice) {
-        case SkillId.extraArrow:
-          extraArrows++;
-        case SkillId.attackPower:
-          attackPowerMultiplier += 0.25;
-        case SkillId.healing:
-          playerHp = min(playerMaxHp, playerHp + 55);
-        case SkillId.vitality:
-          playerMaxHp += 25;
-          playerHp = min(playerMaxHp, playerHp + 25);
-        case SkillId.frostAura:
-          enemySpeedMultiplier *= 0.9;
-        case SkillId.coinMagnet:
-          coinPickupRadius *= 1.45;
-        case SkillId.criticalStrike:
-          criticalChance = (criticalChance + 0.15).clamp(0.0, 0.75).toDouble();
-        case SkillId.swiftHands:
-          attackSpeedMultiplier = (attackSpeedMultiplier * 1.18).clamp(1.0, 2.2).toDouble();
-          _restartShootLoop();
-        case null:
-          break;
-      }
+      extraArrows = upgrade.stats.extraArrows;
+      attackPowerMultiplier = upgrade.stats.attackPowerMultiplier;
+      playerHp = upgrade.stats.playerHp;
+      playerMaxHp = upgrade.stats.playerMaxHp;
+      enemySpeedMultiplier = upgrade.stats.enemySpeedMultiplier;
+      coinPickupRadius = upgrade.stats.coinPickupRadius;
+      criticalChance = upgrade.stats.criticalChance;
+      attackSpeedMultiplier = upgrade.stats.attackSpeedMultiplier;
       isPaused = false;
       stageTransitioning = false;
     });
+    if (upgrade.requiresAttackLoopRestart) _restartShootLoop();
     _spawnEnemies();
   }
 
