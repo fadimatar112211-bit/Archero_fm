@@ -9,6 +9,9 @@ class ProgressStore {
     'bestScore': 0,
   };
 
+  // Serialize complete snapshots so overlapping saves cannot interleave.
+  static Future<void> _pendingWrite = Future<void>.value();
+
   static int _validValue(String key, int? value) {
     final fallback = _defaults[key]!;
     final candidate = value ?? fallback;
@@ -30,8 +33,7 @@ class ProgressStore {
     required int atkUpgrade,
     required int bestStage,
     required int bestScore,
-  }) async {
-    final prefs = await SharedPreferences.getInstance();
+  }) {
     final values = <String, int>{
       'coins': _validValue('coins', coins),
       'hpUpgrade': _validValue('hpUpgrade', hpUpgrade),
@@ -40,9 +42,16 @@ class ProgressStore {
       'bestScore': _validValue('bestScore', bestScore),
     };
 
-    // Await every write so callers can safely rely on persistence completion.
-    await Future.wait(values.entries.map(
-      (entry) => prefs.setInt(entry.key, entry.value),
-    ));
+    final nextWrite = _pendingWrite.then((_) async {
+      final prefs = await SharedPreferences.getInstance();
+      for (final entry in values.entries) {
+        await prefs.setInt(entry.key, entry.value);
+      }
+    });
+
+    // Keep the queue usable after a failure, while returning that failure
+    // to the caller that initiated this particular save.
+    _pendingWrite = nextWrite.catchError((Object _) {});
+    return nextWrite;
   }
 }
