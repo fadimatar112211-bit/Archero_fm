@@ -15,6 +15,7 @@ import 'combat_stats.dart';
 import 'combat_targeting.dart';
 import 'combat_timing.dart';
 import 'enemy_ai.dart';
+import 'enemy_projectile_motion.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -821,17 +822,26 @@ class _GameScreenState extends State<GameScreen>
     // تحريك مقذوفات الأعداء وفحص إصابة اللاعب.
     for (int i = enemyProjectiles.length - 1; i >= 0; i--) {
       final shot = enemyProjectiles[i];
-      shot['x'] = (shot['x'] as double) + (shot['vx'] as double);
-      shot['y'] = (shot['y'] as double) + (shot['vy'] as double);
-      shot['life'] = (shot['life'] as int) - 1;
-      final sx = (shot['x'] as double) - playerX;
-      final sy = (shot['y'] as double) - playerY;
-      if (sqrt(sx * sx + sy * sy) < 19) {
+      final step = advanceEnemyProjectile(
+        x: shot['x'] as double,
+        y: shot['y'] as double,
+        velocityX: shot['vx'] as double,
+        velocityY: shot['vy'] as double,
+        life: shot['life'] as int,
+        targetX: playerX,
+        targetY: playerY,
+        arenaWidth: arenaWidth,
+        arenaHeight: arenaHeight,
+      );
+      shot['x'] = step.x;
+      shot['y'] = step.y;
+      shot['life'] = step.life;
+
+      if (step.hitTarget) {
         if (playerMoveTicks > 0) {
           combatEffects.add({'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14});
         } else {
-          // مهلة قصيرة بين الإصابات تمنع تكدّس المقذوفات في نفس اللحظة،
-          // من دون إلغاء فرصة إصابة اللاعب بمقذوفات لاحقة.
+          // Preserve the short invulnerability window between projectile hits.
           final now = DateTime.now();
           final canTakeDamage = lastDamageAt == null ||
               now.difference(lastDamageAt!).inMilliseconds >= 260;
@@ -848,12 +858,8 @@ class _GameScreenState extends State<GameScreen>
             });
           }
         }
-        enemyProjectiles.removeAt(i);
-      } else if ((shot['life'] as int) <= 0 ||
-          (shot['x'] as double) < -20 || (shot['x'] as double) > arenaWidth + 20 ||
-          (shot['y'] as double) < -20 || (shot['y'] as double) > arenaHeight + 20) {
-        enemyProjectiles.removeAt(i);
       }
+      if (step.shouldRemove) enemyProjectiles.removeAt(i);
     }
 
     // تحريك الأسهم وفحص اصطدامها بالأعداء.
