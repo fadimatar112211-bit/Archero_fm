@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import 'game_diagnostics.dart';
 import 'game_progress.dart';
+import 'hero_rules.dart';
 import 'game_screen.dart';
 import 'progress_store.dart';
 import 'shop_economy.dart';
@@ -408,6 +409,7 @@ class HeroSelectionScreen extends StatelessWidget {
           itemCount: heroChoices.length,
           itemBuilder: (context, index) {
             final hero = heroChoices[index];
+            final profile = HeroProfile.forType(hero.id);
             return Card(
               clipBehavior: Clip.antiAlias,
               color: const Color(0xFF111725),
@@ -451,7 +453,12 @@ class HeroSelectionScreen extends StatelessWidget {
                 ),
                 subtitle: Padding(
                   padding: const EdgeInsets.only(top: 5),
-                  child: Text(hero.description),
+                  child: Text(
+                    '${hero.description}\n'
+                    'النشطة: ${profile.activeSkillName} — ${profile.activeSkillDescription}\n'
+                    'السلبية: ${profile.passiveSkillName} — ${profile.passiveSkillDescription}',
+                    style: const TextStyle(fontSize: 12, height: 1.35),
+                  ),
                 ),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 17),
                 onTap: () async {
