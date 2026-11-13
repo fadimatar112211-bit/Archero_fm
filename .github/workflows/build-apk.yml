@@ -72,7 +72,7 @@ jobs:
       - name: Upload APK build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: archero-fm-${{ github.ref_name }}-${{ github.run_number }}
+          name: archero-fm-${{ github.run_number }}-${{ github.run_id }}
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30
