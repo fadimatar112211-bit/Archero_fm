@@ -16,6 +16,7 @@ void main() {
         'equippedHelmetId': 0,
         'equippedRingId': 0,
         'equippedRelicId': 0,
+        'ownedEquipmentMask': 585,
       });
     });
 
@@ -43,6 +44,7 @@ void main() {
       expect(progress.bestStage, 3);
       expect(progress.bestScore, 0);
       expect(progress.equippedWeaponId, 0);
+      expect(progress.ownedEquipmentMask, 585);
     });
 
     test('copyWith updates selected values without mutating original', () {
