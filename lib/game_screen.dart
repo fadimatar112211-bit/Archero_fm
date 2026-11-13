@@ -21,6 +21,7 @@ import 'enemy_ai.dart';
 import 'enemy_spawn.dart';
 import 'enemy_attack_rules.dart';
 import 'boss_attack_rules.dart';
+import 'boss_projectiles.dart';
 import 'boss_system.dart';
 import 'enemy_projectile_motion.dart';
 import 'combat_damage.dart';
@@ -442,6 +443,98 @@ class _GameScreenState extends State<GameScreen>
     });
   }
 
+  void _advanceBossProjectiles() {
+    _advanceProjectileGroup(bossProjectiles: true);
+  }
+
+  void _advanceEnemyProjectiles() {
+    _advanceProjectileGroup(bossProjectiles: false);
+  }
+
+  void _advanceProjectileGroup({required bool bossProjectiles}) {
+    for (int i = enemyProjectiles.length - 1; i >= 0; i--) {
+      final shot = enemyProjectiles[i];
+      final isBossProjectile = shot['source'] == 'boss';
+      if (isBossProjectile != bossProjectiles) continue;
+
+      final motion = {
+        'x': shot['x'] as double,
+        'y': shot['y'] as double,
+        'velocityX': shot['vx'] as double,
+        'velocityY': shot['vy'] as double,
+        'life': shot['life'] as int,
+        'targetX': playerX,
+        'targetY': playerY,
+        'arenaWidth': arenaWidth,
+        'arenaHeight': arenaHeight,
+      };
+      final step = bossProjectiles
+          ? advanceBossProjectile(
+              x: motion['x'] as double,
+              y: motion['y'] as double,
+              velocityX: motion['velocityX'] as double,
+              velocityY: motion['velocityY'] as double,
+              life: motion['life'] as int,
+              targetX: motion['targetX'] as double,
+              targetY: motion['targetY'] as double,
+              arenaWidth: motion['arenaWidth'] as double,
+              arenaHeight: motion['arenaHeight'] as double,
+            )
+          : advanceEnemyProjectile(
+              x: motion['x'] as double,
+              y: motion['y'] as double,
+              velocityX: motion['velocityX'] as double,
+              velocityY: motion['velocityY'] as double,
+              life: motion['life'] as int,
+              targetX: motion['targetX'] as double,
+              targetY: motion['targetY'] as double,
+              arenaWidth: motion['arenaWidth'] as double,
+              arenaHeight: motion['arenaHeight'] as double,
+            );
+      shot['x'] = step.x;
+      shot['y'] = step.y;
+      shot['life'] = step.life;
+
+      if (step.hitTarget) {
+        _resolveProjectileHit(shot);
+      }
+      if (step.shouldRemove) enemyProjectiles.removeAt(i);
+    }
+  }
+
+  void _resolveProjectileHit(GameObject shot) {
+    // Keep the 260ms hit-protection window in the game loop; collision
+    // outcome and HP mutation are resolved by the pure combat module.
+    final now = DateTime.now();
+    final canTakeDamage = lastDamageAt == null ||
+        now.difference(lastDamageAt!).inMilliseconds >= 260;
+    final resolution = resolveProjectileHit(
+      playerHp: playerHp,
+      projectileDamage: ((shot['damage'] as double?) ?? 6.0) *
+          (1 - gearStats.damageReduction),
+      isDodging: playerMoveTicks > 0,
+      canTakeDamage: canTakeDamage,
+    );
+    playerHp = resolution.updatedPlayerHp;
+    switch (resolution.status) {
+      case ProjectileHitStatus.damaged:
+        _triggerHaptic();
+        lastDamageAt = now;
+        combatEffects.add({
+          'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
+        });
+        playRealSound('hit');
+      case ProjectileHitStatus.dodged:
+        combatEffects.add({
+          'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14,
+        });
+      case ProjectileHitStatus.invulnerable:
+        combatEffects.add({
+          'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 10,
+        });
+    }
+  }
+
   void _updateBossEnemy(GameObject enemy) {
     final update = BossSystem.advance(
       x: enemy['x'] as double,
@@ -583,57 +676,9 @@ class _GameScreenState extends State<GameScreen>
     CombatEffectManager.advance(defeatedSprites);
     CombatEffectManager.advance(combatEffects);
 
-    // تحريك مقذوفات الأعداء وفحص إصابة اللاعب.
-    for (int i = enemyProjectiles.length - 1; i >= 0; i--) {
-      final shot = enemyProjectiles[i];
-      final step = advanceEnemyProjectile(
-        x: shot['x'] as double,
-        y: shot['y'] as double,
-        velocityX: shot['vx'] as double,
-        velocityY: shot['vy'] as double,
-        life: shot['life'] as int,
-        targetX: playerX,
-        targetY: playerY,
-        arenaWidth: arenaWidth,
-        arenaHeight: arenaHeight,
-      );
-      shot['x'] = step.x;
-      shot['y'] = step.y;
-      shot['life'] = step.life;
-
-      if (step.hitTarget) {
-        // Keep the 260ms hit-protection window in the game loop; collision
-        // outcome and HP mutation are resolved by the pure combat module.
-        final now = DateTime.now();
-        final canTakeDamage = lastDamageAt == null ||
-            now.difference(lastDamageAt!).inMilliseconds >= 260;
-        final resolution = resolveProjectileHit(
-          playerHp: playerHp,
-          projectileDamage: ((shot['damage'] as double?) ?? 6.0) * (1 - gearStats.damageReduction),
-          isDodging: playerMoveTicks > 0,
-          canTakeDamage: canTakeDamage,
-        );
-        playerHp = resolution.updatedPlayerHp;
-        switch (resolution.status) {
-          case ProjectileHitStatus.damaged:
-            _triggerHaptic();
-            lastDamageAt = now;
-            combatEffects.add({
-              'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
-            });
-            playRealSound('hit');
-          case ProjectileHitStatus.dodged:
-            combatEffects.add({
-              'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14,
-            });
-          case ProjectileHitStatus.invulnerable:
-            combatEffects.add({
-              'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 10,
-            });
-        }
-      }
-      if (step.shouldRemove) enemyProjectiles.removeAt(i);
-    }
+    // Boss and regular enemy projectiles advance through separate systems.
+    _advanceBossProjectiles();
+    _advanceEnemyProjectiles();
 
     // تحريك الأسهم وفحص اصطدامها بالأعداء.
     for (int i = arrows.length - 1; i >= 0; i--) {
