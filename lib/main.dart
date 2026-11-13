@@ -2416,7 +2416,6 @@ class ArenaPainter extends CustomPainter {
         final left = side == 0;
         final direction = left ? 1.0 : -1.0;
         final railX = left ? 8.0 : size.width - 8.0;
-        final innerX = left ? railWidth : size.width - railWidth;
         if (theme.id == 2) {
           // Volcano: basalt shards and glowing lava seams.
           final basalt = Paint()..color = const Color(0xFF34252A);
@@ -2432,7 +2431,7 @@ class ArenaPainter extends CustomPainter {
               ..lineTo(railX + direction * 8, y + 29)..close();
             canvas.drawPath(shard, basalt);
             final seam = Path()
-              ..moveTo(innerX * (left ? 0.65 : 1) + (left ? 0 : 0), y + 22)
+              ..moveTo(railX + direction * 31, y + 22)
               ..lineTo(railX + direction * 9, y + 14)
               ..lineTo(railX + direction * 15, y + 19);
             canvas.drawPath(seam, lava);
