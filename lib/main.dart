@@ -90,7 +90,7 @@ class MainMenuScreen extends StatefulWidget {
 }
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
-  void _buyHealth() {
+  Future<void> _buyHealth() async {
     if (globalCoins < 50) {
       _message('عملاتك لا تكفي لشراء ترقية الصحة.');
       return;
@@ -99,11 +99,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       globalCoins -= 50;
       heroHpUpgrade += 25;
     });
-    saveProgress();
-    playRealSound('coin');
+    await saveProgress();
+    await playRealSound('coin');
   }
 
-  void _buyAttack() {
+  Future<void> _buyAttack() async {
     if (globalCoins < 70) {
       _message('عملاتك لا تكفي لشراء ترقية الهجوم.');
       return;
@@ -112,8 +112,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       globalCoins -= 70;
       heroAtkUpgrade += 15;
     });
-    saveProgress();
-    playRealSound('coin');
+    await saveProgress();
+    await playRealSound('coin');
   }
 
   void _message(String message) {
