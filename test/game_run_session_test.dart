@@ -14,13 +14,13 @@ void main() {
     test('keeps separate sessions isolated', () {
       final first = GameRunSession(initialStage: 3);
       final second = GameRunSession(initialStage: 8);
-      first.state.coins.add({'value': 1});
+      first.state.enemies.add({'hp': 1});
       first.lifecycle.finishRun();
 
       expect(first.isTerminal, isTrue);
       expect(second.isTerminal, isFalse);
       expect(second.state.stage, 8);
-      expect(second.state.coins, isEmpty);
+      expect(second.state.enemies, isEmpty);
     });
   });
 }
