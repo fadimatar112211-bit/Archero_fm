@@ -19,6 +19,7 @@ import 'combat_stats.dart';
 import 'combat_effects.dart';
 import 'coin_collection.dart';
 import 'enemy_ai.dart';
+import 'boss_movement.dart';
 import 'enemy_spawn.dart';
 import 'enemy_attack_rules.dart';
 import 'enemy_projectile_motion.dart';
@@ -740,15 +741,11 @@ class _GameScreenState extends State<GameScreen>
           'type': 'bossBurst', 'life': 24,
         });
       }
-      final movement = decideEnemyMovement(
-        type: type,
-        distanceToPlayer: distance,
-        baseAngle: angle,
-        enemyX: enemy['x'] as double,
-        animationTicks: animationTicks,
-        bossEnraged: bossEnraged,
-        bossPhaseMovementMultiplier: bossConfig.movementMultiplier,
-      );
+      final movement = type == 'boss'
+          ? decideBossMovement(baseAngle: angle, animationTicks: animationTicks,
+              enraged: bossEnraged, phaseMovementMultiplier: bossConfig.movementMultiplier)
+          : decideEnemyMovement(type: type, distanceToPlayer: distance,
+              baseAngle: angle, enemyX: enemy['x'] as double, animationTicks: animationTicks);
       final moveSpeed =
           (enemy['speed'] as double) * movement.speedMultiplier;
       final moveAngle = movement.angle;
