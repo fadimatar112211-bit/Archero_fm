@@ -1062,18 +1062,22 @@ class _GameScreenState extends State<GameScreen>
         final blastDx = playerX - (enemy['x'] as double);
         final blastDy = playerY - (enemy['y'] as double);
         final blastDistance = sqrt(blastDx * blastDx + blastDy * blastDy);
-        if (blastDistance <= (bossEnraged ? 132 : 112)) {
-          if (playerMoveTicks > 0) {
-            combatEffects.add({
-              'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 18,
-            });
-          } else {
-            playerHp -= bossEnraged ? 20 : 15;
-            combatEffects.add({
-              'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 22,
-            });
-            playRealSound('hit');
-          }
+        final blastResolution = resolveBossAreaHit(
+          playerHp: playerHp,
+          distanceToPlayer: blastDistance,
+          isDodging: playerMoveTicks > 0,
+          bossEnraged: bossEnraged,
+        );
+        playerHp = blastResolution.updatedPlayerHp;
+        if (blastResolution.status == ContactHitStatus.dodged) {
+          combatEffects.add({
+            'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 18,
+          });
+        } else if (blastResolution.status == ContactHitStatus.damaged) {
+          combatEffects.add({
+            'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 22,
+          });
+          playRealSound('hit');
         }
         combatEffects.add({
           'x': enemy['x'], 'y': enemy['y'],
@@ -1117,30 +1121,24 @@ class _GameScreenState extends State<GameScreen>
       final impactFrame = type == 'boss' ? 12 : 8;
       if (type != 'ranged' && attackTicks == impactFrame &&
           enemy['attackHitDone'] != true &&
-          distance <= impactDistance &&
-          playerMoveTicks > 0) {
-        enemy['attackHitDone'] = true;
-        combatEffects.add({
-          'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14,
-        });
-      }
-      if (type != 'ranged' && attackTicks == impactFrame &&
-          enemy['attackHitDone'] != true &&
-          distance <= impactDistance &&
-          playerMoveTicks <= 0) {
+          distance <= impactDistance) {
         final now = DateTime.now();
-        if (lastDamageAt == null ||
-            now.difference(lastDamageAt!).inMilliseconds >= 220) {
-          // ضرر مختلف لكل فئة: الدبابة بطيئة لكنها تضرب بقوة،
-          // والعدّاء أخف ضرراً مقابل اندفاعاته المتكررة.
-          final contactDamage = switch (type) {
-            'boss' => bossEnraged ? 12.0 : 10.0,
-            'tank' => 8.0,
-            'stalker' => 6.0,
-            'runner' => 4.0,
-            _ => 5.0,
-          };
-          playerHp -= contactDamage;
+        final canTakeDamage = lastDamageAt == null ||
+            now.difference(lastDamageAt!).inMilliseconds >= 220;
+        final resolution = resolveEnemyContactHit(
+          playerHp: playerHp,
+          enemyType: type,
+          bossEnraged: bossEnraged,
+          isDodging: playerMoveTicks > 0,
+          canTakeDamage: canTakeDamage,
+        );
+        playerHp = resolution.updatedPlayerHp;
+        if (resolution.status == ContactHitStatus.dodged) {
+          enemy['attackHitDone'] = true;
+          combatEffects.add({
+            'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14,
+          });
+        } else if (resolution.status == ContactHitStatus.damaged) {
           lastDamageAt = now;
           enemy['attackHitDone'] = true;
           combatEffects.add({
