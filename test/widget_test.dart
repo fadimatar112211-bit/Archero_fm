@@ -51,6 +51,25 @@ void main() {
     tester.view.resetDevicePixelRatio();
   });
 
+  testWidgets('combat pauses in background and resumes only its own pause',
+      (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: GameScreen(heroType: 1)),
+    );
+    await tester.pump(const Duration(milliseconds: 32));
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    expect(find.text('متابعة اللعب'), findsOneWidget);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(find.text('متابعة اللعب'), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('critical character and enemy sprite sheets render all four frames',
       (tester) async {
     const assets = <String>[
