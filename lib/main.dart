@@ -9,6 +9,7 @@ import 'stage_flow.dart';
 import 'skill_system.dart';
 import 'boss_combat.dart';
 import 'world_rules.dart';
+import 'shop_economy.dart';
 import 'world_theme.dart';
 
 Future<void> main() async {
@@ -96,26 +97,36 @@ class MainMenuScreen extends StatefulWidget {
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
   Future<void> _buyHealth() async {
-    if (globalCoins < 50) {
-      _message('عملاتك لا تكفي لشراء ترقية الصحة.');
+    final upgrade = ShopEconomy.health(heroHpUpgrade);
+    if (!upgrade.canPurchase(globalCoins)) {
+      _message(
+        upgrade.isMaxed
+            ? 'وصلت إلى الحد الأقصى لترقية الصحة.'
+            : 'عملاتك لا تكفي لشراء ترقية الصحة.',
+      );
       return;
     }
     setState(() {
-      globalCoins -= 50;
-      heroHpUpgrade += 25;
+      globalCoins -= upgrade.cost;
+      heroHpUpgrade += upgrade.increase;
     });
     await saveProgress();
     await playRealSound('coin');
   }
 
   Future<void> _buyAttack() async {
-    if (globalCoins < 70) {
-      _message('عملاتك لا تكفي لشراء ترقية الهجوم.');
+    final upgrade = ShopEconomy.attack(heroAtkUpgrade);
+    if (!upgrade.canPurchase(globalCoins)) {
+      _message(
+        upgrade.isMaxed
+            ? 'وصلت إلى الحد الأقصى لترقية الهجوم.'
+            : 'عملاتك لا تكفي لشراء ترقية الهجوم.',
+      );
       return;
     }
     setState(() {
-      globalCoins -= 70;
-      heroAtkUpgrade += 15;
+      globalCoins -= upgrade.cost;
+      heroAtkUpgrade += upgrade.increase;
     });
     await saveProgress();
     await playRealSound('coin');
@@ -236,17 +247,17 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             runSpacing: 10,
                             children: [
                               FilledButton.icon(
-                                onPressed: _buyHealth,
+                                onPressed: ShopEconomy.health(heroHpUpgrade).canPurchase(globalCoins)\n                                    ? _buyHealth\n                                    : null,
                                 icon: const Icon(Icons.favorite),
-                                label: const Text('صحة +25 (50)'),
+                                label: Text(ShopEconomy.health(heroHpUpgrade).isMaxed\n                                    ? 'الصحة: الحد الأقصى'\n                                    : 'صحة +25 · المستوى ${ShopEconomy.health(heroHpUpgrade).level}/${ShopEconomy.health(heroHpUpgrade).maxLevel} · ${ShopEconomy.health(heroHpUpgrade).cost} عملة'),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: Colors.blue.shade800,
                                 ),
                               ),
                               FilledButton.icon(
-                                onPressed: _buyAttack,
+                                onPressed: ShopEconomy.attack(heroAtkUpgrade).canPurchase(globalCoins)\n                                    ? _buyAttack\n                                    : null,
                                 icon: const Icon(Icons.flash_on),
-                                label: const Text('هجوم +15 (70)'),
+                                label: Text(ShopEconomy.attack(heroAtkUpgrade).isMaxed\n                                    ? 'الهجوم: الحد الأقصى'\n                                    : 'هجوم +15 · المستوى ${ShopEconomy.attack(heroAtkUpgrade).level}/${ShopEconomy.attack(heroAtkUpgrade).maxLevel} · ${ShopEconomy.attack(heroAtkUpgrade).cost} عملة'),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: Colors.deepOrange.shade800,
                                 ),
