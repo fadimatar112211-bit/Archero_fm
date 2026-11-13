@@ -247,17 +247,25 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             runSpacing: 10,
                             children: [
                               FilledButton.icon(
-                                onPressed: ShopEconomy.health(heroHpUpgrade).canPurchase(globalCoins)\n                                    ? _buyHealth\n                                    : null,
+                                onPressed: ShopEconomy.health(heroHpUpgrade).canPurchase(globalCoins)
+                                    ? _buyHealth
+                                    : null,
                                 icon: const Icon(Icons.favorite),
-                                label: Text(ShopEconomy.health(heroHpUpgrade).isMaxed\n                                    ? 'الصحة: الحد الأقصى'\n                                    : 'صحة +25 · المستوى ${ShopEconomy.health(heroHpUpgrade).level}/${ShopEconomy.health(heroHpUpgrade).maxLevel} · ${ShopEconomy.health(heroHpUpgrade).cost} عملة'),
+                                label: Text(ShopEconomy.health(heroHpUpgrade).isMaxed
+                                    ? 'الصحة: الحد الأقصى'
+                                    : 'صحة +25 · المستوى ${ShopEconomy.health(heroHpUpgrade).level}/${ShopEconomy.health(heroHpUpgrade).maxLevel} · ${ShopEconomy.health(heroHpUpgrade).cost} عملة'),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: Colors.blue.shade800,
                                 ),
                               ),
                               FilledButton.icon(
-                                onPressed: ShopEconomy.attack(heroAtkUpgrade).canPurchase(globalCoins)\n                                    ? _buyAttack\n                                    : null,
+                                onPressed: ShopEconomy.attack(heroAtkUpgrade).canPurchase(globalCoins)
+                                    ? _buyAttack
+                                    : null,
                                 icon: const Icon(Icons.flash_on),
-                                label: Text(ShopEconomy.attack(heroAtkUpgrade).isMaxed\n                                    ? 'الهجوم: الحد الأقصى'\n                                    : 'هجوم +15 · المستوى ${ShopEconomy.attack(heroAtkUpgrade).level}/${ShopEconomy.attack(heroAtkUpgrade).maxLevel} · ${ShopEconomy.attack(heroAtkUpgrade).cost} عملة'),
+                                label: Text(ShopEconomy.attack(heroAtkUpgrade).isMaxed
+                                    ? 'الهجوم: الحد الأقصى'
+                                    : 'هجوم +15 · المستوى ${ShopEconomy.attack(heroAtkUpgrade).level}/${ShopEconomy.attack(heroAtkUpgrade).maxLevel} · ${ShopEconomy.attack(heroAtkUpgrade).cost} عملة'),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: Colors.deepOrange.shade800,
                                 ),
