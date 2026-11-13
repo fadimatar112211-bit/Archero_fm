@@ -523,7 +523,7 @@ class _GameScreenState extends State<GameScreen>
   double get arenaHeight => runState.arenaHeight;
   set arenaHeight(double value) => runState.arenaHeight = value;
 
-  bool get _arenaInitialized => runState._arenaInitialized;
+  bool get _arenaInitialized => runState.arenaInitialized;
   set _arenaInitialized(bool value) => runState._arenaInitialized = value;
 
   double get playerX => runState.playerX;
