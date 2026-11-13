@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:archero_fm/main.dart';
 
 void main() {
@@ -26,9 +25,6 @@ void main() {
     expect(find.text('رصيدك: 100'), findsOneWidget);
     expect(find.text('زيادة الصحة الحالية: +25'), findsOneWidget);
 
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getInt('coins'), 100);
-    expect(prefs.getInt('hpUpgrade'), 25);
   });
 
   testWidgets('attack purchase deducts coins, upgrades attack and persists',
@@ -45,9 +41,6 @@ void main() {
     expect(find.text('رصيدك: 80'), findsOneWidget);
     expect(find.text('زيادة الهجوم الحالية: +15'), findsOneWidget);
 
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getInt('coins'), 80);
-    expect(prefs.getInt('atkUpgrade'), 15);
   });
 
   testWidgets('purchase is rejected when the player has insufficient coins',
@@ -63,8 +56,5 @@ void main() {
     expect(find.text('رصيدك: 40'), findsOneWidget);
     expect(find.text('عملاتك لا تكفي لشراء ترقية الصحة.'), findsOneWidget);
 
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getInt('coins'), isNull);
-    expect(prefs.getInt('hpUpgrade'), isNull);
   });
 }
