@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
@@ -42,16 +43,18 @@ Future<void> saveProgress() => ProgressStore.save(
   bestScore: bestScore,
 );
 
-final AudioPlayer globalAudioPlayer = AudioPlayer();
-
+final Map<String, AudioPlayer> _soundPlayers = {};
+final Map<String, Uint8List> _soundWavCache = {};
 
 Future<void> playRealSound(String type) async {
   const soundTypes = {'shoot', 'hit', 'coin', 'special'};
   if (!soundTypes.contains(type)) return;
 
   try {
-    await globalAudioPlayer.stop();
-    await globalAudioPlayer.play(BytesSource(buildToneWav(type)));
+    final player = _soundPlayers.putIfAbsent(type, AudioPlayer.new);
+    final wav = _soundWavCache.putIfAbsent(type, () => buildToneWav(type));
+    await player.stop();
+    await player.play(BytesSource(wav));
   } catch (_) {
     // Audio is optional; gameplay continues if the device cannot play it.
   }
