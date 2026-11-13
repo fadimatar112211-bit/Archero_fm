@@ -733,7 +733,7 @@ class _GameScreenState extends State<GameScreen> {
           final canTakeDamage = lastDamageAt == null ||
               now.difference(lastDamageAt!).inMilliseconds >= 260;
           if (canTakeDamage) {
-            playerHp -= 7.0;
+            playerHp -= (shot['damage'] as double?) ?? 6.0;
             lastDamageAt = now;
             combatEffects.add({
               'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
@@ -834,8 +834,10 @@ class _GameScreenState extends State<GameScreen> {
         final shotAngle = atan2(dy, dx);
         enemyProjectiles.add({
           'x': enemy['x'], 'y': enemy['y'],
-          'vx': cos(shotAngle) * 4.2, 'vy': sin(shotAngle) * 4.2,
-          'life': 100,
+          // مقذوف أبطأ قليلاً ليمنح اللاعب وقتاً أوضح للمراوغة.
+          'vx': cos(shotAngle) * 3.8, 'vy': sin(shotAngle) * 3.8,
+          'damage': 6.0,
+          'life': 110,
         });
         attackTicks = 12;
         attackCooldown = 108;
