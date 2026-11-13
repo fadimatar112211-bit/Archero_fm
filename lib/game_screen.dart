@@ -164,6 +164,7 @@ class _GameScreenState extends State<GameScreen>
     playerSpeed = heroStats.playerSpeed;
     attackPowerMultiplier = heroStats.attackPowerMultiplier;
     extraArrows = heroStats.extraArrows;
+    criticalChance = heroStats.criticalChance;
 
     timers.periodic('game', const Duration(milliseconds: 16), () {
       if (!mounted || isPaused || showMysteryChest || gameOverShown) return;
