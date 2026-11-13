@@ -71,6 +71,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         equippedArmorId: equippedArmorId, equippedHelmetId: equippedHelmetId,
         equippedRingId: equippedRingId, equippedRelicId: equippedRelicId,
         ownedEquipmentMask: ownedEquipmentMask,
+        gems: globalGems,
+        keys: globalKeys,
+        equipmentShards: globalEquipmentShards,
       ),
     );
     debugPrint('[Shop] attack purchase result: ${purchase.status} remaining=${purchase.remainingCoins}');
