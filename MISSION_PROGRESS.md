@@ -279,3 +279,22 @@ Changed files:
 - `test/widget_test.dart`
 
 Remaining in Section 7: mid-run checkpoint save/restore, world/stage unlock gates, and stronger save corruption recovery. The achievement system is an initial persistent milestone set; more progression goals and reward tuning remain open.
+
+
+## Session checkpoint — 2026-11-13 (latest verified state)
+
+This checkpoint was added after reviewing GitHub PRs #41, #42, and #43 and the current contents of this progress file. Use it as the resume point next session; do not repeat the completed work listed above.
+
+### Verified PR states
+- PR #41, “Add boss-gated special room choices and rewards”: **merged** into `feature/procedural-game-audio-v2` on 2026-11-13. Merge commit: `81cdd3b947003b0cefa54541b0d948ecbf448c80`. Final-head CI runs `43482791474` and `43482784424` succeeded (Dart analysis, Flutter tests, Android project generation, Android debug APK build).
+- PR #42, “Add persistent resource wallet and reward chests”: **merged** into `feature/procedural-game-audio-v2` on 2026-11-13. Merge commit: `77a2347cbf264e8d2e5760209148bd70b7b34aff`. Final-head CI runs `43488128681` and `43488116406` succeeded (Dart analysis, Flutter tests, Android project generation, Android debug APK build).
+- PR #43, “Add persistent achievements and one-time reward claims”: **open, not merged** at this checkpoint. Branch: `feature/persistent-achievements-and-reward-claims`. Head commit: `9be87b14d4a93e2244d4b55d23e264e406510aa3`. The two GitHub Actions check runs on this head (`43491077166` and `43491060914`) are completed successfully. PR #43 changes 14 files, including the achievement implementation, persistence integration, tests, and this progress file. Do not describe PR #43 as merged until GitHub confirms the merge.
+
+### Exact resume point
+- The latest implementation batch is PR #43: persistent achievements and one-time reward claims (details and changed-file list are recorded in the section above).
+- The next action is to review PR #43's latest diff and CI result, then merge it only after confirming the checks are green and the branch/base integration is safe. After merge, verify the integrated branch state and record the merge commit here.
+- After PR #43, continue Section 7 with mid-run checkpoint save/restore, then world/stage unlock gates, and stronger save-corruption recovery. Keep Section 7 marked partial until these requirements are implemented and verified.
+- Other still-open requirements remain as recorded in the nine-section roadmap above; merging PRs #41–#43 does not mean the full game is complete.
+
+### Progress-recording rule for future sessions
+After every coherent implementation batch, update this `MISSION_PROGRESS.md` in the active working branch with: roadmap section/item, what changed, exact files, tests and build results, CI run IDs and outcomes, PR number/state, merge commit (if merged), remaining gaps, and the exact next action. Keep statuses evidence-based (implemented, tested, built, manually gameplay-verified are distinct). Before stopping a session, write a fresh “Session checkpoint” so the next session can resume without asking the user to reconstruct the history.
