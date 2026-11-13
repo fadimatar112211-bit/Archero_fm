@@ -22,9 +22,9 @@ void main() {
   });
 
   test('arena painter repaints only when the world changes', () {
-    const forestPainter = ArenaPainter(theme: WorldTheme.forest);
-    const sameForestPainter = ArenaPainter(theme: WorldTheme.forest);
-    const volcanoPainter = ArenaPainter(theme: WorldTheme.volcano);
+    final forestPainter = ArenaPainter(theme: WorldTheme.forest);
+    final sameForestPainter = ArenaPainter(theme: WorldTheme.forest);
+    final volcanoPainter = ArenaPainter(theme: WorldTheme.volcano);
 
     expect(forestPainter.shouldRepaint(sameForestPainter), isFalse);
     expect(forestPainter.shouldRepaint(volcanoPainter), isTrue);
