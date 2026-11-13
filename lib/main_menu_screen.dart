@@ -64,6 +64,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         equippedWeaponId: equippedWeaponId,
         equippedArmorId: equippedArmorId, equippedHelmetId: equippedHelmetId,
         equippedRingId: equippedRingId, equippedRelicId: equippedRelicId,
+        ownedEquipmentMask: ownedEquipmentMask,
       ),
     );
     debugPrint('[Shop] attack purchase result: ${purchase.status} remaining=${purchase.remainingCoins}');
