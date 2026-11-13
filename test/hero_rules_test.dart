@@ -2,6 +2,29 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:archero_fm/hero_rules.dart';
 
 void main() {
+  group('HeroProfile', () {
+    test('defines unique active and passive abilities for every hero', () {
+      expect(HeroProfile.all, hasLength(4));
+      expect(
+        HeroProfile.all.map((profile) => profile.activeSkillName).toSet(),
+        hasLength(4),
+      );
+      expect(
+        HeroProfile.all.map((profile) => profile.passiveSkillName).toSet(),
+        hasLength(4),
+      );
+      for (final profile in HeroProfile.all) {
+        expect(profile.activeSkillDescription, isNotEmpty);
+        expect(profile.passiveSkillDescription, isNotEmpty);
+      }
+    });
+
+    test('unknown hero ids safely use the balanced profile', () {
+      expect(HeroProfile.forType(0), HeroProfile.balanced);
+      expect(HeroProfile.forType(99), HeroProfile.balanced);
+    });
+  });
+
   group('createHeroRunStats', () {
     test('applies permanent upgrades to the base hero', () {
       final stats = createHeroRunStats(
@@ -15,6 +38,7 @@ void main() {
       expect(stats.playerSpeed, 3.5);
       expect(stats.attackPowerMultiplier, 1.24);
       expect(stats.extraArrows, 0);
+      expect(stats.criticalChance, 0.05);
     });
 
     test('applies flame hero health bonus without changing attack upgrades', () {
