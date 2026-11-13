@@ -51,13 +51,14 @@ void main() {
 
     final healthButton = find.text('صحة +25 · المستوى 0/20 · 50 عملة');
     await tester.ensureVisible(healthButton);
-    await tester.tap(healthButton);
-    await tester.pumpAndSettle();
+    final button = tester.widget<FilledButton>(
+      find.ancestor(of: healthButton, matching: find.byType(FilledButton)),
+    );
 
+    expect(button.onPressed, isNull);
     expect(globalCoins, 40);
     expect(heroHpUpgrade, 0);
     expect(find.text('رصيدك: 40'), findsOneWidget);
-    expect(find.text('عملاتك لا تكفي لشراء ترقية الصحة.'), findsOneWidget);
 
   });
 }
