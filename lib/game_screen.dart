@@ -862,6 +862,61 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
+  Future<void> _showSpecialRoomChoice() async {
+    final selected = await showDialog<SpecialRoomType>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const SpecialRoomChoiceDialog(),
+    );
+    if (!mounted || gameOverShown) return;
+
+    var challenge = false;
+    switch (selected) {
+      case SpecialRoomType.treasure:
+        globalCoins += 120;
+        break;
+      case SpecialRoomType.healing:
+        playerHp = (playerHp + playerMaxHp * .4)
+            .clamp(0.0, playerMaxHp).toDouble();
+        break;
+      case SpecialRoomType.merchant:
+        final purchase = await showDialog<MerchantPurchase>(
+          context: context,
+          builder: (_) => MerchantRoomDialog(coins: globalCoins),
+        );
+        if (!mounted || gameOverShown) return;
+        if (purchase != null) {
+          final result = resolveMerchantPurchase(
+            purchase: purchase,
+            coins: globalCoins,
+            hp: playerHp,
+            maxHp: playerMaxHp,
+            attackMultiplier: attackPowerMultiplier,
+          );
+          if (result.purchased) {
+            globalCoins = result.remainingCoins;
+            playerHp = result.updatedHp;
+            attackPowerMultiplier = result.updatedAttackMultiplier;
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('عملاتك لا تكفي لهذا الشراء.')),
+            );
+          }
+        }
+        break;
+      case SpecialRoomType.challenge:
+        challenge = true;
+        break;
+      case null:
+        break;
+    }
+
+    runLifecycle.completeSpecialRoomChoice();
+    unawaited(saveProgressSafely());
+    _spawnEnemies(challenge: challenge);
+    if (mounted) setState(() {});
+  }
+
   Future<void> _showPerksDialog() async {
     if (!mounted || gameOverShown) return;
     setState(() {});
