@@ -2,6 +2,9 @@ import 'dart:ui' show Size;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:archero_fm/game_progress.dart';
+import 'package:archero_fm/progress_store.dart';
 import 'package:archero_fm/main.dart';
 
 void main() {
@@ -154,6 +157,36 @@ void main() {
     expect(find.textContaining('جلد اللهب'), findsOneWidget);
     expect(find.textContaining('خطوة الظل'), findsOneWidget);
     expect(find.textContaining('وتر العاصفة'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('hero unlock spends gems only after persistent save succeeds', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    globalCoins = 150;
+    globalGems = 100;
+    globalKeys = 0;
+    globalEquipmentShards = 0;
+    unlockedHeroesMask = 1;
+    ownedEquipmentMask = 585;
+    heroHpUpgrade = 0;
+    heroAtkUpgrade = 0;
+    bestStage = 1;
+    bestScore = 0;
+    equippedWeaponId = 0;
+    equippedArmorId = 0;
+    equippedHelmetId = 0;
+    equippedRingId = 0;
+    equippedRelicId = 0;
+
+    await tester.pumpWidget(const MaterialApp(home: HeroSelectionScreen()));
+    expect(find.text('فارس النارية · مقفل'), findsOneWidget);
+    await tester.tap(find.text('50 💎'));
+    await tester.pumpAndSettle();
+
+    expect(globalGems, 50);
+    expect(unlockedHeroesMask & (1 << 1), isNonZero);
+    expect((await ProgressStore.loadPlayerProgress()).unlockedHeroesMask & (1 << 1), isNonZero);
+    expect(find.text('فارس النارية · مقفل'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
