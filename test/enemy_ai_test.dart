@@ -69,7 +69,7 @@ void main() {
 
       expect(ranged.angle, 0);
       expect(ranged.speedMultiplier, 0.72);
-      expect(stalker.angle, isFinite);
+      expect(stalker.angle.isFinite, isTrue);
       expect(stalker.speedMultiplier, 0.72);
     });
 
