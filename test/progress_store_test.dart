@@ -170,6 +170,9 @@ void main() {
       atkUpgrade: 45,
       bestStage: 12,
       bestScore: 2300,
+      gems: 31,
+      keys: 2,
+      equipmentShards: 14,
     );
 
     await ProgressStore.savePlayerProgress(snapshot);
