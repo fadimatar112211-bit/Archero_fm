@@ -2,6 +2,9 @@ import 'dart:ui' show Size;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:archero_fm/game_progress.dart';
+import 'package:archero_fm/progress_store.dart';
 import 'package:archero_fm/main.dart';
 
 void main() {
@@ -9,6 +12,19 @@ void main() {
     await tester.pumpWidget(const ArcheroSoundApp());
     expect(find.text('ARCHERO: SOUND EDITION'), findsOneWidget);
     expect(find.text('اختيار البطل واللعب'), findsOneWidget);
+  });
+
+  testWidgets('main menu shows resource wallet and disables unopened chests without keys', (tester) async {
+    await tester.pumpWidget(const ArcheroSoundApp());
+    await tester.ensureVisible(find.text('💎 الموارد والصناديق'));
+    expect(find.text('الجواهر'), findsOneWidget);
+    expect(find.text('المفاتيح'), findsOneWidget);
+    expect(find.text('شظايا المعدات'), findsOneWidget);
+    final supplyChest = tester.widget<OutlinedButton>(
+      find.widgetWithText(OutlinedButton, 'صندوق الإمدادات · 1 مفتاح'),
+    );
+    expect(supplyChest.onPressed, isNull);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('main menu adapts to phone and tablet viewports', (tester) async {
@@ -49,6 +65,38 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     tester.view.resetPhysicalSize();
     tester.view.resetDevicePixelRatio();
+  });
+
+  testWidgets('combat pauses in background and resumes only its own pause',
+      (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: GameScreen(heroType: 1)),
+    );
+    await tester.pump(const Duration(milliseconds: 32));
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    expect(find.text('متابعة اللعب'), findsOneWidget);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(find.text('متابعة اللعب'), findsNothing);
+
+    // A pause initiated by the player must not be auto-dismissed by resume.
+    await tester.tap(find.byIcon(Icons.pause));
+    await tester.pump();
+    expect(find.text('متابعة اللعب'), findsOneWidget);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(find.text('متابعة اللعب'), findsOneWidget);
+    await tester.tap(find.text('متابعة اللعب'));
+    await tester.pump();
+
+    expect(find.text('متابعة اللعب'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 
   testWidgets('critical character and enemy sprite sheets render all four frames',
@@ -97,6 +145,131 @@ void main() {
         expect(tester.takeException(), isNull, reason: '$asset frame $frame');
       }
     }
+  });
+
+  testWidgets('hero selection explains each active and passive ability',
+      (tester) async {
+    final previousMask = unlockedHeroesMask;
+    unlockedHeroesMask = 15;
+    addTearDown(() => unlockedHeroesMask = previousMask);
+    await tester.pumpWidget(
+      const MaterialApp(home: HeroSelectionScreen()),
+    );
+
+    expect(find.textContaining('انفجار اللهب'), findsOneWidget);
+    expect(find.textContaining('جلد اللهب'), findsOneWidget);
+    expect(find.textContaining('خطوة الظل'), findsOneWidget);
+    expect(find.textContaining('وتر العاصفة'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('hero unlock spends gems only after persistent save succeeds', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    addTearDown(() {
+      globalCoins = 150;
+      globalGems = 0;
+      globalKeys = 0;
+      globalEquipmentShards = 0;
+      unlockedHeroesMask = 1;
+      totalKills = 0;
+      totalBosses = 0;
+      totalChests = 0;
+      totalRuns = 0;
+      claimedAchievementsMask = 0;
+      ownedEquipmentMask = 585;
+      heroHpUpgrade = 0;
+      heroAtkUpgrade = 0;
+      bestStage = 1;
+      bestScore = 0;
+      equippedWeaponId = 0;
+      equippedArmorId = 0;
+      equippedHelmetId = 0;
+      equippedRingId = 0;
+      equippedRelicId = 0;
+      ProgressStore.resetForTesting();
+    });
+    globalCoins = 150;
+    globalGems = 100;
+    globalKeys = 0;
+    globalEquipmentShards = 0;
+    unlockedHeroesMask = 1;
+    totalKills = 0;
+    totalBosses = 0;
+    totalChests = 0;
+    totalRuns = 0;
+    claimedAchievementsMask = 0;
+    ownedEquipmentMask = 585;
+    heroHpUpgrade = 0;
+    heroAtkUpgrade = 0;
+    bestStage = 1;
+    bestScore = 0;
+    equippedWeaponId = 0;
+    equippedArmorId = 0;
+    equippedHelmetId = 0;
+    equippedRingId = 0;
+    equippedRelicId = 0;
+
+    await tester.pumpWidget(const MaterialApp(home: HeroSelectionScreen()));
+    expect(find.text('فارس النارية · مقفل'), findsOneWidget);
+    await tester.tap(find.text('50 💎'));
+    await tester.pumpAndSettle();
+
+    expect(globalGems, 50);
+    expect(unlockedHeroesMask & (1 << 1), isNonZero);
+    expect((await ProgressStore.loadPlayerProgress()).unlockedHeroesMask & (1 << 1), isNonZero);
+    expect(find.text('فارس النارية · مقفل'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('achievement reward is claimed once and persisted with the wallet', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    ProgressStore.resetForTesting();
+    globalCoins = 150;
+    globalGems = 0;
+    globalEquipmentShards = 0;
+    globalKeys = 0;
+    bestStage = 1;
+    bestScore = 0;
+    totalKills = 10;
+    totalBosses = 0;
+    totalChests = 0;
+    totalRuns = 0;
+    claimedAchievementsMask = 0;
+    unlockedHeroesMask = 1;
+    ownedEquipmentMask = 585;
+    heroHpUpgrade = 0;
+    heroAtkUpgrade = 0;
+    equippedWeaponId = 0;
+    equippedArmorId = 0;
+    equippedHelmetId = 0;
+    equippedRingId = 0;
+    equippedRelicId = 0;
+    addTearDown(() {
+      globalCoins = 150;
+      globalGems = 0;
+      globalEquipmentShards = 0;
+      globalKeys = 0;
+      totalKills = 0;
+      totalBosses = 0;
+      totalChests = 0;
+      totalRuns = 0;
+      claimedAchievementsMask = 0;
+      ProgressStore.resetForTesting();
+    });
+
+    await tester.pumpWidget(const ArcheroSoundApp());
+    await tester.ensureVisible(find.text('🏆 الإنجازات · 0/10'));
+    expect(find.text('أول انتصار'), findsOneWidget);
+    await tester.tap(find.text('استلام').first);
+    await tester.pumpAndSettle();
+
+    expect(globalCoins, 230);
+    expect(claimedAchievementsMask & 1, 1);
+    final saved = await ProgressStore.loadPlayerProgress();
+    expect(saved.coins, 230);
+    expect(saved.claimedAchievementsMask & 1, 1);
+    expect(find.text('تم الاستلام'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('combat aura and projectile painters render without errors',

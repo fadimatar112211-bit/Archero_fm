@@ -1,4 +1,23 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'player_progress.dart';
+
+abstract interface class ProgressPreferences {
+  int? getInt(String key);
+  Future<bool> setInt(String key, int value);
+}
+
+class _SharedPreferencesProgressPreferences implements ProgressPreferences {
+  _SharedPreferencesProgressPreferences(this.preferences);
+
+  final SharedPreferences preferences;
+
+  @override
+  int? getInt(String key) => preferences.getInt(key);
+
+  @override
+  Future<bool> setInt(String key, int value) =>
+      preferences.setInt(key, value);
+}
 
 class ProgressStore {
   static const Map<String, int> _defaults = {
@@ -7,24 +26,106 @@ class ProgressStore {
     'atkUpgrade': 0,
     'bestStage': 1,
     'bestScore': 0,
+    'equippedWeaponId': 0,
+    'equippedArmorId': 0,
+    'equippedHelmetId': 0,
+    'equippedRingId': 0,
+    'equippedRelicId': 0,
+    'ownedEquipmentMask': 585,
+    'gems': 0,
+    'keys': 0,
+    'equipmentShards': 0,
+    'unlockedHeroesMask': 1,
+    'totalKills': 0,
+    'totalBosses': 0,
+    'totalChests': 0,
+    'totalRuns': 0,
+    'claimedAchievementsMask': 0,
   };
 
   // Serialize complete snapshots so overlapping saves cannot interleave.
   static Future<void> _pendingWrite = Future<void>.value();
+  static Future<ProgressPreferences> Function() _preferencesProvider =
+      _sharedPreferencesProvider;
+
+  static Future<ProgressPreferences> _sharedPreferencesProvider() async {
+    final preferences = await SharedPreferences.getInstance();
+    return _SharedPreferencesProgressPreferences(preferences);
+  }
+
+  /// Allows deterministic storage failure tests without changing production IO.
+  static void setPreferencesProviderForTesting(
+    Future<ProgressPreferences> Function() provider,
+  ) {
+    _preferencesProvider = provider;
+    _pendingWrite = Future<void>.value();
+  }
+
+  static void resetForTesting() {
+    _preferencesProvider = _sharedPreferencesProvider;
+    _pendingWrite = Future<void>.value();
+  }
 
   static int _validValue(String key, int? value) {
     final fallback = _defaults[key]!;
     final candidate = value ?? fallback;
+    if (key == 'equippedWeaponId') return candidate >= 0 && candidate <= 3 ? candidate : 0;
+    if (key == 'ownedEquipmentMask') return candidate.clamp(0, 4095).toInt();
+    if (key == 'unlockedHeroesMask') return (candidate.clamp(0, 15).toInt() | 1);
+    if (key == 'claimedAchievementsMask') return candidate.clamp(0, 65535).toInt();
+    if (key == 'totalKills' || key == 'totalBosses' || key == 'totalChests' || key == 'totalRuns') return candidate.clamp(0, 999999999).toInt();
+    if (key == 'gems' || key == 'keys' || key == 'equipmentShards') return candidate.clamp(0, 999999).toInt();
+    if (key.startsWith('equipped')) return candidate >= 0 && candidate <= 2 ? candidate : 0;
     if (key == 'bestStage') return candidate < 1 ? 1 : candidate;
     return candidate < 0 ? 0 : candidate;
   }
 
+  static int? _readStoredInt(ProgressPreferences preferences, String key) {
+    // SharedPreferences throws when an old/corrupted entry has a different
+    // runtime type. Isolate that failure to this key so valid progress in
+    // every other field can still be recovered.
+    try {
+      return preferences.getInt(key);
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Future<Map<String, int>> load() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _preferencesProvider();
     return {
       for (final key in _defaults.keys)
-        key: _validValue(key, prefs.getInt(key)),
+        key: _validValue(key, _readStoredInt(prefs, key)),
     };
+  }
+
+  static Future<PlayerProgress> loadPlayerProgress() async {
+    return PlayerProgress.fromMap(await load());
+  }
+
+  static Future<void> savePlayerProgress(PlayerProgress progress) {
+    return save(
+      coins: progress.coins,
+      hpUpgrade: progress.hpUpgrade,
+      atkUpgrade: progress.atkUpgrade,
+      bestStage: progress.bestStage,
+      bestScore: progress.bestScore,
+      equippedWeaponId: progress.equippedWeaponId,
+      equippedArmorId: progress.equippedArmorId,
+      equippedHelmetId: progress.equippedHelmetId,
+      equippedRingId: progress.equippedRingId,
+      equippedRelicId: progress.equippedRelicId,
+      ownedEquipmentMask: progress.effectiveOwnedEquipmentMask,
+      gems: progress.gems,
+      keys: progress.keys,
+      equipmentShards: progress.equipmentShards,
+      unlockedHeroesMask: progress.unlockedHeroesMask,
+      totalKills: progress.totalKills,
+      totalBosses: progress.totalBosses,
+      totalChests: progress.totalChests,
+      totalRuns: progress.totalRuns,
+      claimedAchievementsMask: progress.claimedAchievementsMask,
+    );
   }
 
   static Future<void> save({
@@ -33,6 +134,21 @@ class ProgressStore {
     required int atkUpgrade,
     required int bestStage,
     required int bestScore,
+    int equippedWeaponId = 0,
+    int equippedArmorId = 0,
+    int equippedHelmetId = 0,
+    int equippedRingId = 0,
+    int equippedRelicId = 0,
+    int ownedEquipmentMask = 585,
+    int gems = 0,
+    int keys = 0,
+    int equipmentShards = 0,
+    int unlockedHeroesMask = 1,
+    int totalKills = 0,
+    int totalBosses = 0,
+    int totalChests = 0,
+    int totalRuns = 0,
+    int claimedAchievementsMask = 0,
   }) {
     final values = <String, int>{
       'coins': _validValue('coins', coins),
@@ -40,12 +156,58 @@ class ProgressStore {
       'atkUpgrade': _validValue('atkUpgrade', atkUpgrade),
       'bestStage': _validValue('bestStage', bestStage),
       'bestScore': _validValue('bestScore', bestScore),
+      'equippedWeaponId': _validValue('equippedWeaponId', equippedWeaponId),
+      'equippedArmorId': _validValue('equippedArmorId', equippedArmorId),
+      'equippedHelmetId': _validValue('equippedHelmetId', equippedHelmetId),
+      'equippedRingId': _validValue('equippedRingId', equippedRingId),
+      'equippedRelicId': _validValue('equippedRelicId', equippedRelicId),
+      'ownedEquipmentMask': _validValue('ownedEquipmentMask', ownedEquipmentMask),
+      'gems': _validValue('gems', gems),
+      'keys': _validValue('keys', keys),
+      'equipmentShards': _validValue('equipmentShards', equipmentShards),
+      'unlockedHeroesMask': _validValue('unlockedHeroesMask', unlockedHeroesMask),
+      'totalKills': _validValue('totalKills', totalKills),
+      'totalBosses': _validValue('totalBosses', totalBosses),
+      'totalChests': _validValue('totalChests', totalChests),
+      'totalRuns': _validValue('totalRuns', totalRuns),
+      'claimedAchievementsMask': _validValue('claimedAchievementsMask', claimedAchievementsMask),
     };
 
     final nextWrite = _pendingWrite.then((_) async {
-      final prefs = await SharedPreferences.getInstance();
-      for (final entry in values.entries) {
-        await prefs.setInt(entry.key, entry.value);
+      final prefs = await _preferencesProvider();
+      final previousValues = <String, int>{
+        for (final key in values.keys) key: _validValue(key, prefs.getInt(key)),
+      };
+      final writtenKeys = <String>[];
+
+      try {
+        for (final entry in values.entries) {
+          // Include the in-flight key too: a failing backend may have written
+          // the value before reporting its error.
+          writtenKeys.add(entry.key);
+          final stored = await prefs.setInt(entry.key, entry.value);
+          if (!stored) {
+            throw StateError('Failed to persist progression key: ${entry.key}');
+          }
+        }
+      } catch (error, stackTrace) {
+        Object? rollbackError;
+        for (final key in writtenKeys.reversed) {
+          try {
+            final restored = await prefs.setInt(key, previousValues[key]!);
+            if (!restored) {
+              throw StateError('Failed to restore progression key: $key');
+            }
+          } catch (error) {
+            rollbackError ??= error;
+          }
+        }
+        if (rollbackError != null) {
+          throw StateError(
+            'Progress save failed and rollback was incomplete: $rollbackError',
+          );
+        }
+        Error.throwWithStackTrace(error, stackTrace);
       }
     });
 

@@ -23,7 +23,7 @@ class BossCombat {
     required double hp,
     required double maxHp,
   }) {
-    if (maxHp <= 0) return 3;
+    if (!maxHp.isFinite || maxHp <= 0 || !hp.isFinite) return 3;
     final ratio = (hp / maxHp).clamp(0.0, 1.0);
     if (ratio <= 0.35) return 3;
     if (ratio <= 0.65) return 2;

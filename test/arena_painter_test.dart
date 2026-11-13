@@ -4,6 +4,7 @@ import 'package:flutter/animation.dart';
 
 import 'package:archero_fm/main.dart';
 import 'package:archero_fm/world_theme.dart';
+import 'package:archero_fm/room_layout.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -33,6 +34,15 @@ void main() {
 
     expect(forestPainter.shouldRepaint(sameForestPainter), isFalse);
     expect(forestPainter.shouldRepaint(volcanoPainter), isTrue);
+  });
+
+  test('arena painter repaints when the room layout changes', () {
+    final first = ArenaPainter(roomLayout: RoomLayout.forStage(1));
+    final same = ArenaPainter(roomLayout: RoomLayout.forStage(1));
+    final nextRoom = ArenaPainter(roomLayout: RoomLayout.forStage(2));
+
+    expect(first.shouldRepaint(same), isFalse);
+    expect(first.shouldRepaint(nextRoom), isTrue);
   });
 
   test('arena painter repaints when its animation delegate changes', () {

@@ -3,15 +3,23 @@ name: Build Android APK
 on:
   push:
     branches:
-      - main
+      - feature/procedural-game-audio-v2
+    tags:
+      - "v*"
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
+    name: Build and publish Android APK
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,7 +28,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -39,8 +47,8 @@ jobs:
       - name: Analyze Dart code
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
-      - name: Run tests
-        run: flutter test
+      - name: Run Flutter tests
+        run: flutter test --reporter expanded
 
       - name: Install Android NDK with retry
         run: |
@@ -61,9 +69,18 @@ jobs:
       - name: Build release APK
         run: flutter build apk --release
 
-      - name: Upload release APK
+      - name: Upload APK build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: archero-fm-release
+          name: archero-fm-${{ github.run_number }}-${{ github.run_id }}
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release for version tags
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Archero FM ${{ github.ref_name }}
+          generate_release_notes: true
+          files: build/app/outputs/flutter-apk/app-release.apk
