@@ -42,5 +42,13 @@ PlayerProjectileStep advancePlayerProjectile({
     x: nextX,
     y: nextY,
     shouldRemove: shouldRemove,
+    hitTargetIndex: shouldRemove
+        ? null
+        : firstOverlappingTargetIndex(
+            projectileX: nextX,
+            projectileY: nextY,
+            targets: targets,
+            projectileRadius: projectileRadius,
+          ),
   );
 }
