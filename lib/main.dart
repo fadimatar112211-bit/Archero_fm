@@ -2531,8 +2531,8 @@ class ArenaPainter extends CustomPainter {
         ..strokeWidth = 2..strokeCap = StrokeCap.round;
       for (var arm = 0; arm < 6; arm++) {
         final angle = arm * 3.141592653589793 / 3;
-        final tip = Offset(center.dx + 12 * math.cos(angle),
-            center.dy + 12 * math.sin(angle));
+        final tip = Offset(center.dx + 12 * cos(angle),
+            center.dy + 12 * sin(angle));
         canvas.drawLine(center, tip, frost);
       }
     } else if (theme.id == 4) {
