@@ -1,21 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:archero_fm/main.dart';
 import 'package:archero_fm/progress_store.dart';
 
+class _MemoryProgressPreferences implements ProgressPreferences {
+  final Map<String, int> values = {};
+
+  @override
+  int? getInt(String key) => values[key];
+
+  @override
+  Future<bool> setInt(String key, int value) async {
+    values[key] = value;
+    return true;
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  late _MemoryProgressPreferences preferences;
 
   setUp(() {
-    ProgressStore.resetForTesting();
-    SharedPreferences.setMockInitialValues({});
+    preferences = _MemoryProgressPreferences();
+    ProgressStore.setPreferencesProviderForTesting(() async => preferences);
     globalCoins = 150;
     heroHpUpgrade = 0;
     heroAtkUpgrade = 0;
     bestStage = 1;
     bestScore = 0;
   });
+
+  tearDown(ProgressStore.resetForTesting);
 
   testWidgets('health purchase deducts coins, upgrades health and persists',
       (tester) async {
