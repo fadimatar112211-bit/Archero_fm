@@ -88,38 +88,62 @@ class MainMenuScreen extends StatefulWidget {
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
   Future<void> _buyHealth() async {
-    final upgrade = ShopEconomy.health(heroHpUpgrade);
-    if (!upgrade.canPurchase(globalCoins)) {
-      _message(
-        upgrade.isMaxed
-            ? 'وصلت إلى الحد الأقصى لترقية الصحة.'
-            : 'عملاتك لا تكفي لشراء ترقية الصحة.',
-      );
+    final purchase = await commitUpgradePurchase(
+      upgrade: ShopEconomy.health(heroHpUpgrade),
+      currentCoins: globalCoins,
+      currentUpgradeValue: heroHpUpgrade,
+      persist: (coins, upgradeValue) => ProgressStore.save(
+        coins: coins,
+        hpUpgrade: upgradeValue,
+        atkUpgrade: heroAtkUpgrade,
+        bestStage: bestStage,
+        bestScore: bestScore,
+      ),
+    );
+    if (!purchase.purchased) {
+      _message(switch (purchase.status) {
+        ShopPurchaseStatus.maxLevel => 'وصلت إلى الحد الأقصى لترقية الصحة.',
+        ShopPurchaseStatus.insufficientFunds => 'عملاتك لا تكفي لشراء ترقية الصحة.',
+        ShopPurchaseStatus.persistenceFailed => 'تعذر حفظ عملية الشراء. لم يتم خصم العملات.',
+        ShopPurchaseStatus.purchased => '',
+      });
       return;
     }
+    if (!mounted) return;
     setState(() {
-      globalCoins -= upgrade.cost;
-      heroHpUpgrade += upgrade.increase;
+      globalCoins = purchase.remainingCoins;
+      heroHpUpgrade = purchase.updatedUpgradeValue;
     });
-    await saveProgress();
     await playRealSound('coin');
   }
 
   Future<void> _buyAttack() async {
-    final upgrade = ShopEconomy.attack(heroAtkUpgrade);
-    if (!upgrade.canPurchase(globalCoins)) {
-      _message(
-        upgrade.isMaxed
-            ? 'وصلت إلى الحد الأقصى لترقية الهجوم.'
-            : 'عملاتك لا تكفي لشراء ترقية الهجوم.',
-      );
+    final purchase = await commitUpgradePurchase(
+      upgrade: ShopEconomy.attack(heroAtkUpgrade),
+      currentCoins: globalCoins,
+      currentUpgradeValue: heroAtkUpgrade,
+      persist: (coins, upgradeValue) => ProgressStore.save(
+        coins: coins,
+        hpUpgrade: heroHpUpgrade,
+        atkUpgrade: upgradeValue,
+        bestStage: bestStage,
+        bestScore: bestScore,
+      ),
+    );
+    if (!purchase.purchased) {
+      _message(switch (purchase.status) {
+        ShopPurchaseStatus.maxLevel => 'وصلت إلى الحد الأقصى لترقية الهجوم.',
+        ShopPurchaseStatus.insufficientFunds => 'عملاتك لا تكفي لشراء ترقية الهجوم.',
+        ShopPurchaseStatus.persistenceFailed => 'تعذر حفظ عملية الشراء. لم يتم خصم العملات.',
+        ShopPurchaseStatus.purchased => '',
+      });
       return;
     }
+    if (!mounted) return;
     setState(() {
-      globalCoins -= upgrade.cost;
-      heroAtkUpgrade += upgrade.increase;
+      globalCoins = purchase.remainingCoins;
+      heroAtkUpgrade = purchase.updatedUpgradeValue;
     });
-    await saveProgress();
     await playRealSound('coin');
   }
 
