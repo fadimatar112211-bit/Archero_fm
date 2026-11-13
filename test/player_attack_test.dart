@@ -29,8 +29,8 @@ void main() {
       expect(volley, hasLength(4));
       final angles = volley
           .map((arrow) => math.atan2(
-                arrow.velocity.dy,
-                arrow.velocity.dx,
+                arrow.velocity.y,
+                arrow.velocity.x,
               ))
           .toList();
       expect(angles[0], closeTo(0, 0.000001));
@@ -49,8 +49,8 @@ void main() {
       );
 
       expect(volley, hasLength(2));
-      expect(volley[0].velocity.dy, closeTo(12, 0.000001));
-      expect(volley[1].velocity.dx, closeTo(-12 * math.sin(0.3), 0.000001));
+      expect(volley[0].velocity.y, closeTo(12, 0.000001));
+      expect(volley[1].velocity.x, closeTo(-12 * math.sin(0.3), 0.000001));
     });
 
     test('returns an empty volley for a non-positive shot count', () {
