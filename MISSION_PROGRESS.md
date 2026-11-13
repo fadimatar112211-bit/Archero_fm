@@ -610,3 +610,8 @@ Verification:
 2. Confirm the Android emulator test measures actual rendered hero movement and review the uploaded screenshot/logcat artifact.
 3. Add deterministic GameScreen-level scenarios for enemy projectile impact, player death animation/game-over, and boss phase/volley transitions; keep test-only controls isolated from release gameplay.
 4. Update this file with exact latest SHA, run IDs, outcomes, and remaining gaps before moving to the next gameplay batch.
+
+
+## القائمة التفصيلية الرسمية للمهمات
+
+تم حفظ القائمة التفصيلية الكاملة التي أرسلها المستخدم بتاريخ 2026-11-14 في الملف DETAILED_GAME_ROADMAP.md، وتشمل الأقسام 1 إلى 10 وجميع البنود الفرعية وترقيمها كما وردت، بما في ذلك الاختبارات النهائية وضمان الجودة. هذا الملف هو المرجع التفصيلي المعتمد للتنفيذ. يجب تحديث حالة البنود فيه أو تسجيلها في هذا الملف دون تغيير نص المتطلبات أو ترقيمها.
