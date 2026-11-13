@@ -52,8 +52,90 @@ const heroChoices = <HeroInfo>[
   ),
 ];
 
-class HeroSelectionScreen extends StatelessWidget {
+class HeroSelectionScreen extends StatefulWidget {
   const HeroSelectionScreen({super.key});
+
+  @override
+  State<HeroSelectionScreen> createState() => _HeroSelectionScreenState();
+}
+
+class _HeroSelectionScreenState extends State<HeroSelectionScreen> {
+  bool _savingUnlock = false;
+
+  bool _isUnlocked(int heroId) => (unlockedHeroesMask & (1 << (heroId - 1))) != 0;
+
+  int _unlockCost(int heroId) => switch (heroId) { 2 => 50, 3 => 75, 4 => 100, _ => 0 };
+
+  Future<void> _unlockHero(HeroInfo hero) async {
+    if (_savingUnlock || _isUnlocked(hero.id)) return;
+    final cost = _unlockCost(hero.id);
+    if (globalGems < cost) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تحتاج إلى $cost جوهرة لفتح هذا البطل.')),
+      );
+      return;
+    }
+    final oldGems = globalGems;
+    final oldMask = unlockedHeroesMask;
+    setState(() {
+      _savingUnlock = true;
+      globalGems -= cost;
+      unlockedHeroesMask |= 1 << (hero.id - 1);
+    });
+    try {
+      await saveProgress();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('تم فتح ${hero.name} بنجاح!')),
+        );
+      }
+    } catch (_) {
+      globalGems = oldGems;
+      unlockedHeroesMask = oldMask;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تعذر حفظ فتح البطل؛ لم يتم اعتماد الخصم.')),
+        );
+      }
+    } finally {
+      _savingUnlock = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _startHero(HeroInfo hero) async {
+    if (!_isUnlocked(hero.id) || _savingUnlock) return;
+    try { await playRealSound('special'); } catch (_) {}
+    var selectedStage = 1;
+    if (bestStage > 1) {
+      final choice = await showDialog<int>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('اختر طريقة اللعب'),
+          content: Text('أفضل تقدم محفوظ لديك هو المرحلة $bestStage.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 1),
+              child: const Text('مغامرة جديدة'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, bestStage),
+              child: Text('متابعة من المرحلة $bestStage'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || choice == null) return;
+      selectedStage = choice;
+    }
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => GameScreen(heroType: hero.id, initialStage: selectedStage),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,9 +148,11 @@ class HeroSelectionScreen extends StatelessWidget {
           itemBuilder: (context, index) {
             final hero = heroChoices[index];
             final profile = HeroProfile.forType(hero.id);
+            final unlocked = _isUnlocked(hero.id);
+            final cost = _unlockCost(hero.id);
             return Card(
               clipBehavior: Clip.antiAlias,
-              color: const Color(0xFF111725),
+              color: unlocked ? const Color(0xFF111725) : const Color(0xFF171923),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(19),
                 side: BorderSide(color: hero.color.withOpacity(.9), width: 1.4),
@@ -104,7 +188,7 @@ class HeroSelectionScreen extends StatelessWidget {
                   ),
                 ),
                 title: Text(
-                  hero.name,
+                  '${hero.name}${unlocked ? '' : ' · مقفل'}',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Padding(
@@ -116,46 +200,14 @@ class HeroSelectionScreen extends StatelessWidget {
                     style: const TextStyle(fontSize: 12, height: 1.35),
                   ),
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 17),
-                onTap: () async {
-                  playRealSound('special');
-                  var selectedStage = 1;
-                  if (bestStage > 1) {
-                    final choice = await showDialog<int>(
-                      context: context,
-                      builder: (dialogContext) => AlertDialog(
-                        title: const Text('اختر طريقة اللعب'),
-                        content: Text(
-                          'أفضل تقدم محفوظ لديك هو المرحلة $bestStage.',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(dialogContext, 1),
-                            child: const Text('مغامرة جديدة'),
-                          ),
-                          FilledButton(
-                            onPressed: () => Navigator.pop(
-                              dialogContext,
-                              bestStage,
-                            ),
-                            child: Text('متابعة من المرحلة $bestStage'),
-                          ),
-                        ],
+                trailing: unlocked
+                    ? const Icon(Icons.arrow_forward_ios, size: 17)
+                    : FilledButton.tonalIcon(
+                        onPressed: _savingUnlock ? null : () => _unlockHero(hero),
+                        icon: const Icon(Icons.lock_open, size: 16),
+                        label: Text('$cost 💎'),
                       ),
-                    );
-                    if (!context.mounted || choice == null) return;
-                    selectedStage = choice;
-                  }
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => GameScreen(
-                        heroType: hero.id,
-                        initialStage: selectedStage,
-                      ),
-                    ),
-                  );
-                },
+                onTap: unlocked ? () => _startHero(hero) : () => _unlockHero(hero),
               ),
             );
           },
