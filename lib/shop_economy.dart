@@ -49,3 +49,37 @@ class ShopEconomy {
     );
   }
 }
+
+
+/// Result of attempting to purchase one permanent shop upgrade.
+class ShopPurchaseResult {
+  final int remainingCoins;
+  final int updatedUpgradeValue;
+  final bool purchased;
+
+  const ShopPurchaseResult({
+    required this.remainingCoins,
+    required this.updatedUpgradeValue,
+    required this.purchased,
+  });
+}
+
+/// Applies an upgrade purchase atomically without mutating global game state.
+ShopPurchaseResult purchaseUpgrade({
+  required ShopUpgradeInfo upgrade,
+  required int currentCoins,
+  required int currentUpgradeValue,
+}) {
+  if (!upgrade.canPurchase(currentCoins)) {
+    return ShopPurchaseResult(
+      remainingCoins: currentCoins,
+      updatedUpgradeValue: currentUpgradeValue,
+      purchased: false,
+    );
+  }
+  return ShopPurchaseResult(
+    remainingCoins: currentCoins - upgrade.cost,
+    updatedUpgradeValue: currentUpgradeValue + upgrade.increase,
+    purchased: true,
+  );
+}

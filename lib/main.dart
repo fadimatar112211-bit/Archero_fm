@@ -89,7 +89,12 @@ class MainMenuScreen extends StatefulWidget {
 class _MainMenuScreenState extends State<MainMenuScreen> {
   Future<void> _buyHealth() async {
     final upgrade = ShopEconomy.health(heroHpUpgrade);
-    if (!upgrade.canPurchase(globalCoins)) {
+    final purchase = purchaseUpgrade(
+      upgrade: upgrade,
+      currentCoins: globalCoins,
+      currentUpgradeValue: heroHpUpgrade,
+    );
+    if (!purchase.purchased) {
       _message(
         upgrade.isMaxed
             ? 'وصلت إلى الحد الأقصى لترقية الصحة.'
@@ -98,8 +103,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       return;
     }
     setState(() {
-      globalCoins -= upgrade.cost;
-      heroHpUpgrade += upgrade.increase;
+      globalCoins = purchase.remainingCoins;
+      heroHpUpgrade = purchase.updatedUpgradeValue;
     });
     await saveProgress();
     await playRealSound('coin');
@@ -107,7 +112,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   Future<void> _buyAttack() async {
     final upgrade = ShopEconomy.attack(heroAtkUpgrade);
-    if (!upgrade.canPurchase(globalCoins)) {
+    final purchase = purchaseUpgrade(
+      upgrade: upgrade,
+      currentCoins: globalCoins,
+      currentUpgradeValue: heroAtkUpgrade,
+    );
+    if (!purchase.purchased) {
       _message(
         upgrade.isMaxed
             ? 'وصلت إلى الحد الأقصى لترقية الهجوم.'
@@ -116,8 +126,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       return;
     }
     setState(() {
-      globalCoins -= upgrade.cost;
-      heroAtkUpgrade += upgrade.increase;
+      globalCoins = purchase.remainingCoins;
+      heroAtkUpgrade = purchase.updatedUpgradeValue;
     });
     await saveProgress();
     await playRealSound('coin');
@@ -1161,7 +1171,7 @@ class _GameScreenState extends State<GameScreen>
       final dy = playerY - (coins[i]['y'] as double);
       if (sqrt(dx * dx + dy * dy) < coinPickupRadius) {
         globalCoins +=
-            (10 * WorldRules.forStage(stage).coinRewardMultiplier).round();
+            WorldRules.forStage(stage).pickupCoinReward;
         collectedCoin = true;
         coins.removeAt(i);
         playRealSound('coin');
@@ -1284,7 +1294,7 @@ class _GameScreenState extends State<GameScreen>
 
   void _collectChest() {
     setState(() {
-      globalCoins += (75 * WorldRules.forStage(max(1, stage - 1)).coinRewardMultiplier).round();
+      globalCoins += WorldRules.forStage(max(1, stage - 1)).mysteryChestReward;
       showMysteryChest = false;
       stageTransitioning = false;
     });
