@@ -884,6 +884,11 @@ class _GameScreenState extends State<GameScreen>
         velocityY: arrow['vy'] as double,
         arenaWidth: arenaWidth,
         arenaHeight: arenaHeight,
+        targets: enemies.map((enemy) => CombatCircle(
+          x: enemy['x'] as double,
+          y: enemy['y'] as double,
+          radius: enemy['radius'] as double,
+        )).toList(growable: false),
       );
       arrow['x'] = movement.x;
       arrow['y'] = movement.y;
@@ -893,15 +898,7 @@ class _GameScreenState extends State<GameScreen>
         continue;
       }
 
-      final hitIndex = firstOverlappingTargetIndex(
-        projectileX: arrow['x'] as double,
-        projectileY: arrow['y'] as double,
-        targets: enemies.map((enemy) => CombatCircle(
-          x: enemy['x'] as double,
-          y: enemy['y'] as double,
-          radius: enemy['radius'] as double,
-        )).toList(growable: false),
-      );
+      final hitIndex = movement.hitTargetIndex;
       if (hitIndex == null) continue;
 
       final enemy = enemies[hitIndex];
