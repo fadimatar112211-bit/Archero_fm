@@ -40,4 +40,13 @@ void main() {
       }
     });
   });
+  
+  test('calculates scaled pickup and mystery chest rewards', () {
+    expect(WorldRules.forest.pickupCoinReward, 10);
+    expect(WorldRules.forest.mysteryChestReward, 75);
+    expect(WorldRules.volcano.pickupCoinReward, 12);
+    expect(WorldRules.volcano.mysteryChestReward, 86);
+    expect(WorldRules.citadel.pickupCoinReward, 14);
+    expect(WorldRules.citadel.mysteryChestReward, 101);
+  });
 }
