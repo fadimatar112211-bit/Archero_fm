@@ -33,27 +33,12 @@ Future<void> main() async {
   };
 
   await runZonedGuarded<Future<void>>(() async {
-    try {
-      final progress = await ProgressStore.loadPlayerProgress();
-      globalCoins = progress.coins;
-      heroHpUpgrade = progress.hpUpgrade;
-      heroAtkUpgrade = progress.atkUpgrade;
-      bestStage = progress.bestStage;
-      bestScore = progress.bestScore;
-    } catch (error, stackTrace) {
-      GameDiagnostics.record(
-        error,
-        stackTrace,
-        source: 'application_startup',
-      );
-      // Storage failure must not prevent the player from entering the game.
-      // Start from safe defaults; a later successful save can restore progress.
-      globalCoins = 150;
-      heroHpUpgrade = 0;
-      heroAtkUpgrade = 0;
-      bestStage = 1;
-      bestScore = 0;
-    }
+    final progress = await loadProgressOrDefaults();
+    globalCoins = progress.coins;
+    heroHpUpgrade = progress.hpUpgrade;
+    heroAtkUpgrade = progress.atkUpgrade;
+    bestStage = progress.bestStage;
+    bestScore = progress.bestScore;
     runApp(const ArcheroSoundApp());
   }, (error, stackTrace) {
     GameDiagnostics.record(
