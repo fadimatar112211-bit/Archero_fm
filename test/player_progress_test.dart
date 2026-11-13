@@ -17,6 +17,9 @@ void main() {
         'equippedRingId': 0,
         'equippedRelicId': 0,
         'ownedEquipmentMask': 585,
+        'gems': 0,
+        'keys': 0,
+        'equipmentShards': 0,
       });
     });
 
@@ -45,6 +48,25 @@ void main() {
       expect(progress.bestScore, 0);
       expect(progress.equippedWeaponId, 0);
       expect(progress.ownedEquipmentMask, 585);
+    });
+
+    test('round-trips gem key and equipment shard balances', () {
+      const original = PlayerProgress(gems: 23, keys: 4, equipmentShards: 17);
+      final restored = PlayerProgress.fromMap(original.toMap());
+      expect(restored.gems, 23);
+      expect(restored.keys, 4);
+      expect(restored.equipmentShards, 17);
+    });
+
+    test('normalizes negative resource balances to zero', () {
+      final progress = PlayerProgress.fromMap({
+        'gems': -5,
+        'keys': -2,
+        'equipmentShards': -9,
+      });
+      expect(progress.gems, 0);
+      expect(progress.keys, 0);
+      expect(progress.equipmentShards, 0);
     });
 
     test('legacy equipped items are retained as owned during migration', () {
