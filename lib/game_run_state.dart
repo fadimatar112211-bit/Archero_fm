@@ -33,6 +33,7 @@ class GameRunState {
   int stage;
   int specialCooldown = 0;
   int playerDeathTicks = 0;
+  bool challengeRoomRewardPending = false;
 
   final List<GameRunEntity> enemies = [];
   final List<GameRunEntity> arrows = [];

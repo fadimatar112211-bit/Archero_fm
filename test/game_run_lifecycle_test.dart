@@ -29,6 +29,20 @@ void main() {
       expect(lifecycle.phase, GameRunPhase.active);
     });
 
+    test('special room selection locks combat until a destination is chosen', () {
+      final lifecycle = GameRunLifecycle();
+      expect(lifecycle.beginSpecialRoomChoice(), isTrue);
+      expect(lifecycle.phase, GameRunPhase.specialRoomChoice);
+      expect(lifecycle.isPaused, isTrue);
+      expect(lifecycle.isStageTransitioning, isTrue);
+      expect(lifecycle.canPerformActions, isFalse);
+      expect(lifecycle.canAdvanceGameClock, isFalse);
+      expect(lifecycle.beginSpecialRoomChoice(), isFalse);
+      expect(lifecycle.completeSpecialRoomChoice(), isTrue);
+      expect(lifecycle.phase, GameRunPhase.active);
+      expect(lifecycle.canPerformActions, isTrue);
+    });
+
     test('death and game over block gameplay transitions', () {
       final lifecycle = GameRunLifecycle();
       expect(lifecycle.beginPlayerDeath(), isTrue);

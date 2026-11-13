@@ -37,6 +37,8 @@ import 'player_movement.dart';
 import 'enemy_hit_resolution.dart';
 import 'skill_selection_dialog.dart';
 import 'game_arena_view.dart';
+import 'special_room_system.dart';
+import 'special_room_dialog.dart';
 
 typedef GameObject = Map<String, dynamic>;
 
@@ -118,6 +120,8 @@ class _GameScreenState extends State<GameScreen>
   int get specialCooldown => runState.specialCooldown;
   set specialCooldown(int value) => runState.specialCooldown = value;
   int get playerDeathTicks => runState.playerDeathTicks;
+  bool get challengeRoomRewardPending => runState.challengeRoomRewardPending;
+  set challengeRoomRewardPending(bool value) => runState.challengeRoomRewardPending = value;
   set playerDeathTicks(int value) => runState.playerDeathTicks = value;
 
   GameRunLifecycle get runLifecycle => runSession.lifecycle;
@@ -192,7 +196,7 @@ class _GameScreenState extends State<GameScreen>
     _restartShootLoop();
   }
 
-  void _spawnEnemies({bool notify = true}) {
+  void _spawnEnemies({bool notify = true, bool challenge = false}) {
     enemies.clear();
     arrows.clear();
     enemyProjectiles.clear();
@@ -203,6 +207,21 @@ class _GameScreenState extends State<GameScreen>
       enemySpeedMultiplier: enemySpeedMultiplier,
       random: random,
     ));
+    if (challenge) {
+      final extraWave = createEnemyWave(
+        stage: stage + 2,
+        arenaWidth: arenaWidth,
+        arenaHeight: arenaHeight,
+        enemySpeedMultiplier: enemySpeedMultiplier * 1.12,
+        random: random,
+      ).take(2);
+      for (final enemy in extraWave) {
+        final hp = enemy['hp'];
+        if (hp is num) enemy['hp'] = hp.toDouble() * 1.2;
+        enemies.add(enemy);
+      }
+      challengeRoomRewardPending = true;
+    }
 
     if (notify && mounted) setState(() {});
   }
@@ -796,6 +815,18 @@ class _GameScreenState extends State<GameScreen>
 
   void _checkStageComplete() {
     if (stageTransitioning || enemies.isNotEmpty || gameOverShown) return;
+    if (challengeRoomRewardPending) {
+      challengeRoomRewardPending = false;
+      globalCoins += 150;
+      // The normal stage-completion save below persists this reward together
+      // with the stage/best-stage update as one ordered snapshot.
+      playRealSound('coin');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('أنهيت التحدي! حصلت على 150 عملة إضافية.')),
+        );
+      }
+    }
     final transition = RoomFlow.complete(stage);
     final completion = resolveStageCompletion(
       currentStage: stage,
@@ -804,6 +835,17 @@ class _GameScreenState extends State<GameScreen>
       bestStage: bestStage,
     );
     final advance = transition.stageAdvance;
+    if (transition.currentRoom.isBoss && runLifecycle.beginSpecialRoomChoice()) {
+      stage = transition.nextRoom.stage;
+      _roomHazardCooldownTicks = 0;
+      bestStage = completion.updatedBestStage;
+      playerHp = completion.updatedPlayerHp;
+      unawaited(saveProgressSafely());
+      setState(() {});
+      playRealSound('special');
+      unawaited(_showSpecialRoomChoice());
+      return;
+    }
     runLifecycle.beginStageReward(
       mysteryChest: advance.reward == StageRewardType.mysteryChest,
     );
@@ -819,6 +861,74 @@ class _GameScreenState extends State<GameScreen>
     } else {
       _showPerksDialog();
     }
+  }
+
+  Future<void> _showSpecialRoomChoice() async {
+    final selected = await showDialog<SpecialRoomType>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const SpecialRoomChoiceDialog(),
+    );
+    if (!mounted || gameOverShown) return;
+
+    final previousCoins = globalCoins;
+    final previousHp = playerHp;
+    final previousAttackMultiplier = attackPowerMultiplier;
+    var challenge = false;
+    switch (selected) {
+      case SpecialRoomType.treasure:
+        globalCoins += 120;
+        break;
+      case SpecialRoomType.healing:
+        playerHp = (playerHp + playerMaxHp * .4)
+            .clamp(0.0, playerMaxHp).toDouble();
+        break;
+      case SpecialRoomType.merchant:
+        final purchase = await showDialog<MerchantPurchase>(
+          context: context,
+          builder: (_) => MerchantRoomDialog(coins: globalCoins),
+        );
+        if (!mounted || gameOverShown) return;
+        if (purchase != null) {
+          final result = resolveMerchantPurchase(
+            purchase: purchase,
+            coins: globalCoins,
+            hp: playerHp,
+            maxHp: playerMaxHp,
+            attackMultiplier: attackPowerMultiplier,
+          );
+          if (result.purchased) {
+            globalCoins = result.remainingCoins;
+            playerHp = result.updatedHp;
+            attackPowerMultiplier = result.updatedAttackMultiplier;
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('عملاتك لا تكفي لهذا الشراء.')),
+            );
+          }
+        }
+        break;
+      case SpecialRoomType.challenge:
+        challenge = true;
+        break;
+      case null:
+        break;
+    }
+
+    final saved = await saveProgressSafely();
+    if (!saved) {
+      globalCoins = previousCoins;
+      playerHp = previousHp;
+      attackPowerMultiplier = previousAttackMultiplier;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تعذر حفظ مكافأة الغرفة؛ تمت استعادة الحالة السابقة.')),
+        );
+      }
+    }
+    runLifecycle.completeSpecialRoomChoice();
+    _spawnEnemies(challenge: challenge);
+    if (mounted) setState(() {});
   }
 
   Future<void> _showPerksDialog() async {

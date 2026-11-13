@@ -3,6 +3,7 @@ enum GameRunPhase {
   paused,
   chestReward,
   skillReward,
+  specialRoomChoice,
   dying,
   gameOver,
 }
@@ -21,13 +22,16 @@ class GameRunLifecycle {
   bool get canAdvanceGameClock =>
       _phase == GameRunPhase.active || _phase == GameRunPhase.dying;
   bool get isPaused =>
-      _phase == GameRunPhase.paused || _phase == GameRunPhase.skillReward;
+      _phase == GameRunPhase.paused ||
+      _phase == GameRunPhase.skillReward ||
+      _phase == GameRunPhase.specialRoomChoice;
   bool get showMysteryChest => _phase == GameRunPhase.chestReward;
   bool get isGameOver => _phase == GameRunPhase.gameOver;
   bool get isPlayerDying => _phase == GameRunPhase.dying;
   bool get isStageTransitioning =>
       _phase == GameRunPhase.chestReward ||
-      _phase == GameRunPhase.skillReward;
+      _phase == GameRunPhase.skillReward ||
+      _phase == GameRunPhase.specialRoomChoice;
 
   bool pause() {
     if (_phase != GameRunPhase.active) return false;
@@ -58,6 +62,18 @@ class GameRunLifecycle {
     _phase = mysteryChest
         ? GameRunPhase.chestReward
         : GameRunPhase.skillReward;
+    return true;
+  }
+
+  bool beginSpecialRoomChoice() {
+    if (_phase != GameRunPhase.active) return false;
+    _phase = GameRunPhase.specialRoomChoice;
+    return true;
+  }
+
+  bool completeSpecialRoomChoice() {
+    if (_phase != GameRunPhase.specialRoomChoice) return false;
+    _phase = GameRunPhase.active;
     return true;
   }
 
