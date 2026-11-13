@@ -10,7 +10,6 @@ import 'stage_flow.dart';
 import 'skill_system.dart';
 import 'boss_combat.dart';
 import 'world_rules.dart';
-import 'world_theme.dart';
 import 'combat_stats.dart';
 import 'combat_targeting.dart';
 import 'combat_effects.dart';
@@ -32,10 +31,8 @@ import 'game_run_state.dart';
 import 'room_flow.dart';
 import 'player_movement.dart';
 import 'enemy_hit_resolution.dart';
-import 'game_painters.dart';
-import 'game_actor_widgets.dart';
-import 'game_overlay_widgets.dart';
 import 'skill_selection_dialog.dart';
+import 'game_arena_view.dart';
 
 typedef GameObject = Map<String, dynamic>;
 
