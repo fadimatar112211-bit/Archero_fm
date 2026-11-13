@@ -46,6 +46,11 @@ void main() {
       'atkUpgrade': 0,
       'bestStage': 1,
       'bestScore': 0,
+      'equippedWeaponId': 0,
+        'equippedArmorId': 0,
+        'equippedHelmetId': 0,
+        'equippedRingId': 0,
+        'equippedRelicId': 0,
     });
     expect(GameDiagnostics.entries, hasLength(1));
     expect(GameDiagnostics.entries.single.source, 'application_startup');

@@ -11,6 +11,11 @@ void main() {
         'atkUpgrade': 0,
         'bestStage': 1,
         'bestScore': 0,
+        'equippedWeaponId': 0,
+        'equippedArmorId': 0,
+        'equippedHelmetId': 0,
+        'equippedRingId': 0,
+        'equippedRelicId': 0,
       });
     });
 
@@ -21,6 +26,11 @@ void main() {
         atkUpgrade: 30,
         bestStage: 8,
         bestScore: 1240,
+        equippedWeaponId: 2,
+        equippedArmorId: 1,
+        equippedHelmetId: 2,
+        equippedRingId: 1,
+        equippedRelicId: 2,
       );
       expect(PlayerProgress.fromMap(original.toMap()).toMap(), original.toMap());
     });
@@ -32,14 +42,16 @@ void main() {
       expect(progress.atkUpgrade, 0);
       expect(progress.bestStage, 3);
       expect(progress.bestScore, 0);
+      expect(progress.equippedWeaponId, 0);
     });
 
     test('copyWith updates selected values without mutating original', () {
       const original = PlayerProgress(coins: 150, bestStage: 2);
-      final updated = original.copyWith(coins: 220, bestScore: 500);
+      final updated = original.copyWith(coins: 220, bestScore: 500, equippedWeaponId: 3);
       expect(updated.coins, 220);
       expect(updated.bestStage, 2);
       expect(updated.bestScore, 500);
+      expect(updated.equippedWeaponId, 3);
       expect(original.coins, 150);
       expect(original.bestScore, 0);
     });
