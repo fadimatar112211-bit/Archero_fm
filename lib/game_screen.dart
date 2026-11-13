@@ -815,6 +815,17 @@ class _GameScreenState extends State<GameScreen>
 
   void _checkStageComplete() {
     if (stageTransitioning || enemies.isNotEmpty || gameOverShown) return;
+    if (challengeRoomRewardPending) {
+      challengeRoomRewardPending = false;
+      globalCoins += 150;
+      unawaited(saveProgressSafely());
+      playRealSound('coin');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('أنهيت التحدي! حصلت على 150 عملة إضافية.')),
+        );
+      }
+    }
     final transition = RoomFlow.complete(stage);
     final completion = resolveStageCompletion(
       currentStage: stage,
@@ -823,6 +834,17 @@ class _GameScreenState extends State<GameScreen>
       bestStage: bestStage,
     );
     final advance = transition.stageAdvance;
+    if (transition.currentRoom.isBoss && runLifecycle.beginSpecialRoomChoice()) {
+      stage = transition.nextRoom.stage;
+      _roomHazardCooldownTicks = 0;
+      bestStage = completion.updatedBestStage;
+      playerHp = completion.updatedPlayerHp;
+      unawaited(saveProgressSafely());
+      setState(() {});
+      playRealSound('special');
+      unawaited(_showSpecialRoomChoice());
+      return;
+    }
     runLifecycle.beginStageReward(
       mysteryChest: advance.reward == StageRewardType.mysteryChest,
     );
