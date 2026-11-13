@@ -74,21 +74,6 @@ class _GameSettingsScreenState extends State<GameSettingsScreen> {
               padding: EdgeInsets.all(16),
               child: Center(child: CircularProgressIndicator()),
             ),
-          const SizedBox(height: 12),
-          const Card(
-            child: ListTile(
-              leading: Icon(Icons.tune, color: Colors.lightBlueAccent),
-              title: Text('إعدادات التحكم'),
-              subtitle: Text('خيارات تخصيص التحكم قيد التطوير.'),
-            ),
-          ),
-          const Card(
-            child: ListTile(
-              leading: Icon(Icons.vibration, color: Colors.lightBlueAccent),
-              title: Text('الاهتزاز'),
-              subtitle: Text('سيُضاف التحكم بالاهتزاز ضمن تحديث التحكم القادم.'),
-            ),
-          ),
         ],
       ),
     );
