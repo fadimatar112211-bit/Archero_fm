@@ -162,8 +162,11 @@ class _GameScreenState extends State<GameScreen>
         state == AppLifecycleState.paused) {
       if (runLifecycle.pause()) {
         _pausedForAppLifecycle = true;
-        unawaited(_persistRunCheckpoint());
         if (mounted) setState(() {});
+      }
+      if (runLifecycle.phase == GameRunPhase.active ||
+          runLifecycle.phase == GameRunPhase.paused) {
+        unawaited(_persistRunCheckpoint());
       }
     }
   }
@@ -220,7 +223,9 @@ class _GameScreenState extends State<GameScreen>
   }
 
   Future<void> _persistRunCheckpoint() async {
-    if (gameOverShown || !runSession.isRestored && !runLifecycle.canAdvanceGameClock && !isPaused) return;
+    if (gameOverShown ||
+        (runLifecycle.phase != GameRunPhase.active &&
+            runLifecycle.phase != GameRunPhase.paused)) return;
     try {
       await RunCheckpointStore.save(captureRunCheckpoint(
         heroType: widget.heroType,
@@ -877,6 +882,7 @@ class _GameScreenState extends State<GameScreen>
     );
     final advance = transition.stageAdvance;
     if (transition.currentRoom.isBoss && runLifecycle.beginSpecialRoomChoice()) {
+      unawaited(RunCheckpointStore.clear());
       stage = transition.nextRoom.stage;
       _roomHazardCooldownTicks = 0;
       bestStage = completion.updatedBestStage;
@@ -890,6 +896,7 @@ class _GameScreenState extends State<GameScreen>
     runLifecycle.beginStageReward(
       mysteryChest: advance.reward == StageRewardType.mysteryChest,
     );
+    unawaited(RunCheckpointStore.clear());
     stage = transition.nextRoom.stage;
     _roomHazardCooldownTicks = 0;
     bestStage = completion.updatedBestStage;
@@ -970,6 +977,7 @@ class _GameScreenState extends State<GameScreen>
     runLifecycle.completeSpecialRoomChoice();
     _spawnEnemies(challenge: challenge);
     if (mounted) setState(() {});
+    await _persistRunCheckpoint();
   }
 
   Future<void> _showPerksDialog() async {
@@ -1027,6 +1035,7 @@ class _GameScreenState extends State<GameScreen>
       );
     }
     _spawnEnemies();
+    await _persistRunCheckpoint();
   }
 
   void _collectChest() {
