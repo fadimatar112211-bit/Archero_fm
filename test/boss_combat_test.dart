@@ -21,6 +21,8 @@ void main() {
     test('handles invalid maximum health safely', () {
       expect(BossCombat.phaseForHealth(hp: 0, maxHp: 0), 3);
       expect(BossCombat.phaseForHealth(hp: 100, maxHp: -1), 3);
+      expect(BossCombat.phaseForHealth(hp: double.nan, maxHp: 100), 3);
+      expect(BossCombat.phaseForHealth(hp: 100, maxHp: double.infinity), 3);
     });
   });
 

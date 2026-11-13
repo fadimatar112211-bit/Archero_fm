@@ -38,4 +38,141 @@ void main() {
       expect(EnemyAttackRules.impactRange(enemyRadius: 18), 55);
     });
   });
+
+  group('resolveEnemyContactHit', () {
+    final now = DateTime.utc(2026, 1, 1);
+
+    test('only resolves a contact hit on its configured impact frame', () {
+      final result = resolveEnemyContactHit(
+        enemyType: 'runner',
+        attackTicks: 7,
+        impactFrame: 8,
+        hitAlreadyResolved: false,
+        distanceToPlayer: 30,
+        impactRange: 55,
+        playerIsDodging: false,
+        lastDamageAt: null,
+        now: now,
+        damage: 4,
+      );
+
+      expect(result.status, EnemyContactHitStatus.notReady);
+      expect(result.damageApplied, 0);
+    });
+
+    test('consumes the impact when the player dodges', () {
+      final result = resolveEnemyContactHit(
+        enemyType: 'tank',
+        attackTicks: 8,
+        impactFrame: 8,
+        hitAlreadyResolved: false,
+        distanceToPlayer: 50,
+        impactRange: 55,
+        playerIsDodging: true,
+        lastDamageAt: null,
+        now: now,
+        damage: 8,
+      );
+
+      expect(result.status, EnemyContactHitStatus.dodged);
+      expect(result.damageApplied, 0);
+    });
+
+    test('keeps an impact pending during the invulnerability window', () {
+      final result = resolveEnemyContactHit(
+        enemyType: 'stalker',
+        attackTicks: 8,
+        impactFrame: 8,
+        hitAlreadyResolved: false,
+        distanceToPlayer: 50,
+        impactRange: 55,
+        playerIsDodging: false,
+        lastDamageAt: now.subtract(const Duration(milliseconds: 100)),
+        now: now,
+        damage: 6,
+      );
+
+      expect(result.status, EnemyContactHitStatus.invulnerable);
+      expect(result.damageApplied, 0);
+    });
+
+    test('applies archetype damage after invulnerability expires', () {
+      final result = resolveEnemyContactHit(
+        enemyType: 'tank',
+        attackTicks: 8,
+        impactFrame: 8,
+        hitAlreadyResolved: false,
+        distanceToPlayer: 50,
+        impactRange: 55,
+        playerIsDodging: false,
+        lastDamageAt: now.subtract(const Duration(milliseconds: 220)),
+        now: now,
+        damage: 8,
+      );
+
+      expect(result.status, EnemyContactHitStatus.damaged);
+      expect(result.damageApplied, 8);
+      expect(result.resolvedAt, now);
+    });
+
+
+    test('does not sample wall-clock time for a non-impact tick', () {
+      final result = resolveEnemyContactHit(
+        enemyType: 'runner',
+        attackTicks: 7,
+        impactFrame: 8,
+        hitAlreadyResolved: false,
+        distanceToPlayer: 20,
+        impactRange: 55,
+        playerIsDodging: false,
+        lastDamageAt: null,
+        damage: 4,
+      );
+      expect(result.status, EnemyContactHitStatus.notReady);
+      expect(result.resolvedAt, isNull);
+    });
+
+    test('rejects negative distances and negative ranges', () {
+      for (final values in [
+        {'distance': -1.0, 'range': 55.0},
+        {'distance': 20.0, 'range': -1.0},
+      ]) {
+        final result = resolveEnemyContactHit(
+          enemyType: 'runner',
+          attackTicks: 8,
+          impactFrame: 8,
+          hitAlreadyResolved: false,
+          distanceToPlayer: values['distance']!,
+          impactRange: values['range']!,
+          playerIsDodging: false,
+          lastDamageAt: null,
+          now: now,
+          damage: 4,
+        );
+        expect(result.status, EnemyContactHitStatus.notReady);
+      }
+    });
+
+    test('rejects ranged, distant, and already-resolved contacts', () {
+      for (final input in [
+        {'type': 'ranged', 'distance': 20.0, 'done': false},
+        {'type': 'runner', 'distance': 80.0, 'done': false},
+        {'type': 'runner', 'distance': 20.0, 'done': true},
+      ]) {
+        final result = resolveEnemyContactHit(
+          enemyType: input['type']! as String,
+          attackTicks: 8,
+          impactFrame: 8,
+          hitAlreadyResolved: input['done']! as bool,
+          distanceToPlayer: input['distance']! as double,
+          impactRange: 55,
+          playerIsDodging: false,
+          lastDamageAt: null,
+          now: now,
+          damage: 5,
+        );
+        expect(result.status, EnemyContactHitStatus.notReady);
+      }
+    });
+  });
 }

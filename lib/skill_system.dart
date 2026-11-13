@@ -11,6 +11,32 @@ enum SkillId {
   swiftHands,
 }
 
+enum SkillSynergyId { stormVolley, shatterpoint, treasureHeart }
+
+String skillSynergyName(SkillSynergyId synergy) => switch (synergy) {
+  SkillSynergyId.stormVolley => 'وابل العاصفة',
+  SkillSynergyId.shatterpoint => 'نقطة الانهيار',
+  SkillSynergyId.treasureHeart => 'قلب الكنوز',
+};
+
+String skillSynergyDescription(SkillSynergyId synergy) => switch (synergy) {
+  SkillSynergyId.stormVolley => 'زيادة سرعة الإطلاق 10% عند جمع وابل السهام وسرعة الرامي.',
+  SkillSynergyId.shatterpoint => 'زيادة فرصة الضربة الحرجة 5% عند جمع الصقيع والضربة الحرجة.',
+  SkillSynergyId.treasureHeart => 'زيادة الصحة القصوى والحالية 15 عند جمع جاذب الكنوز وقلب العملاق.',
+};
+
+Set<SkillSynergyId> resolveSkillSynergies(Iterable<SkillId> skills) {
+  final selected = skills.toSet();
+  return {
+    if (selected.contains(SkillId.extraArrow) && selected.contains(SkillId.swiftHands))
+      SkillSynergyId.stormVolley,
+    if (selected.contains(SkillId.frostAura) && selected.contains(SkillId.criticalStrike))
+      SkillSynergyId.shatterpoint,
+    if (selected.contains(SkillId.coinMagnet) && selected.contains(SkillId.vitality))
+      SkillSynergyId.treasureHeart,
+  };
+}
+
 enum SkillRarity { common, rare, epic }
 
 class SkillOption {
@@ -85,8 +111,17 @@ class SkillSystem {
     required int stage,
     required Random random,
     int count = 3,
+    double? currentHp,
+    double? maxHp,
   }) {
-    final remaining = List<SkillOption>.of(_catalog);
+    final healthIsFull = currentHp != null &&
+        maxHp != null &&
+        currentHp.isFinite &&
+        maxHp.isFinite &&
+        currentHp >= maxHp;
+    final remaining = _catalog
+        .where((skill) => !(healthIsFull && skill.id == SkillId.healing))
+        .toList();
     final offers = <SkillOption>[];
     final safeCount = count.clamp(1, remaining.length);
 
@@ -115,4 +150,116 @@ class SkillSystem {
 
     return List<SkillOption>.unmodifiable(offers);
   }
+}
+
+class SkillRuntimeStats {
+  const SkillRuntimeStats({
+    required this.extraArrows,
+    required this.attackPowerMultiplier,
+    required this.playerHp,
+    required this.playerMaxHp,
+    required this.enemySpeedMultiplier,
+    required this.coinPickupRadius,
+    required this.criticalChance,
+    required this.attackSpeedMultiplier,
+    this.selectedSkills = const [],
+    this.activeSynergies = const {},
+  });
+
+  final int extraArrows;
+  final double attackPowerMultiplier;
+  final double playerHp;
+  final double playerMaxHp;
+  final double enemySpeedMultiplier;
+  final double coinPickupRadius;
+  final double criticalChance;
+  final double attackSpeedMultiplier;
+  final List<SkillId> selectedSkills;
+  final Set<SkillSynergyId> activeSynergies;
+}
+
+class SkillUpgradeResolution {
+  const SkillUpgradeResolution({
+    required this.stats,
+    required this.requiresAttackLoopRestart,
+  });
+
+  final SkillRuntimeStats stats;
+  final bool requiresAttackLoopRestart;
+}
+
+/// Applies a selected in-run upgrade without mutating widget state.
+/// A null choice (for example, a dismissed dialog) leaves all stats unchanged.
+SkillUpgradeResolution applySkillUpgrade({
+  required SkillRuntimeStats current,
+  required SkillId? choice,
+}) {
+  var extraArrows = current.extraArrows;
+  var attackPowerMultiplier = current.attackPowerMultiplier;
+  var playerHp = current.playerHp;
+  var playerMaxHp = current.playerMaxHp;
+  var enemySpeedMultiplier = current.enemySpeedMultiplier;
+  var coinPickupRadius = current.coinPickupRadius;
+  var criticalChance = current.criticalChance;
+  var attackSpeedMultiplier = current.attackSpeedMultiplier;
+  var requiresAttackLoopRestart = false;
+  final selectedSkills = current.selectedSkills.toSet();
+  final previousSynergies = current.activeSynergies;
+
+  switch (choice) {
+    case SkillId.extraArrow:
+      extraArrows++;
+    case SkillId.attackPower:
+      attackPowerMultiplier += 0.25;
+    case SkillId.healing:
+      playerHp = (playerHp + 55).clamp(0.0, playerMaxHp).toDouble();
+    case SkillId.vitality:
+      playerMaxHp += 25;
+      playerHp = (playerHp + 25).clamp(0.0, playerMaxHp).toDouble();
+    case SkillId.frostAura:
+      enemySpeedMultiplier *= 0.9;
+    case SkillId.coinMagnet:
+      coinPickupRadius *= 1.45;
+    case SkillId.criticalStrike:
+      criticalChance = (criticalChance + 0.15).clamp(0.0, 0.75).toDouble();
+    case SkillId.swiftHands:
+      attackSpeedMultiplier =
+          (attackSpeedMultiplier * 1.18).clamp(1.0, 2.2).toDouble();
+      requiresAttackLoopRestart = true;
+    case null:
+      break;
+  }
+
+  if (choice != null) selectedSkills.add(choice);
+  final activeSynergies = resolveSkillSynergies(selectedSkills);
+  final newlyActivated = activeSynergies.difference(previousSynergies);
+  for (final synergy in newlyActivated) {
+    switch (synergy) {
+      case SkillSynergyId.stormVolley:
+        attackSpeedMultiplier =
+            (attackSpeedMultiplier * 1.10).clamp(1.0, 2.2).toDouble();
+        requiresAttackLoopRestart = true;
+      case SkillSynergyId.shatterpoint:
+        criticalChance = (criticalChance + 0.05).clamp(0.0, 0.75).toDouble();
+      case SkillSynergyId.treasureHeart:
+        playerMaxHp += 15;
+        playerHp = (playerHp + 15).clamp(0.0, playerMaxHp).toDouble();
+    }
+  }
+
+  return SkillUpgradeResolution(
+    stats: SkillRuntimeStats(
+      extraArrows: extraArrows,
+      attackPowerMultiplier: attackPowerMultiplier,
+      playerHp: playerHp,
+      playerMaxHp: playerMaxHp,
+      enemySpeedMultiplier: enemySpeedMultiplier,
+      coinPickupRadius: coinPickupRadius,
+      criticalChance: criticalChance,
+      attackSpeedMultiplier: attackSpeedMultiplier,
+      selectedSkills: List<SkillId>.unmodifiable(selectedSkills),
+      activeSynergies: Set<SkillSynergyId>.unmodifiable(activeSynergies),
+    ),
+    requiresAttackLoopRestart: requiresAttackLoopRestart,
+  );
 }
