@@ -1,5 +1,5 @@
 import 'combat_collision.dart';
-import 'combat_targeting.dart';
+import 'combat_targeting.dart' as combat;
 import 'hero_rules.dart';
 import 'player_attack.dart';
 import 'player_movement.dart';
@@ -94,8 +94,8 @@ abstract final class PlayerSystem {
     required List<PlayerTarget> targets,
   }) =>
       _nearestTargetIndex(
-        origin: CombatPoint(originX, originY),
-        targets: targets.map((target) => CombatPoint(target.x, target.y)).toList(growable: false),
+        origin: combat.CombatPoint(originX, originY),
+        targets: targets.map((target) => combat.CombatPoint(target.x, target.y)).toList(growable: false),
       );
 
   static List<PlayerArrowState> createArrowVolley({
@@ -108,8 +108,8 @@ abstract final class PlayerSystem {
     double spreadAngle = 0.20,
   }) =>
       createPlayerArrowVolley(
-        origin: CombatPoint(originX, originY),
-        target: CombatPoint(targetX, targetY),
+        origin: combat.CombatPoint(originX, originY),
+        target: combat.CombatPoint(targetX, targetY),
         extraArrows: extraArrows,
         projectileSpeed: projectileSpeed,
         spreadAngle: spreadAngle,
@@ -155,8 +155,8 @@ abstract final class PlayerSystem {
   }
 
   static int? _nearestTargetIndex({
-    required CombatPoint origin,
-    required List<CombatPoint> targets,
+    required combat.CombatPoint origin,
+    required List<combat.CombatPoint> targets,
   }) =>
-      nearestTargetIndex(origin: origin, targets: targets);
+      combat.nearestTargetIndex(origin: origin, targets: targets);
 }
