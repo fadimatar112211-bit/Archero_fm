@@ -34,6 +34,7 @@ import 'player_movement.dart';
 import 'enemy_hit_resolution.dart';
 import 'game_painters.dart';
 import 'game_actor_widgets.dart';
+import 'game_overlay_widgets.dart';
 
 typedef GameObject = Map<String, dynamic>;
 
@@ -982,52 +983,15 @@ class _GameScreenState extends State<GameScreen>
                     ),
                   ),
 
-                  // لوحة معلومات المرحلة.
-                  Positioned(
-                    top: 8,
-                    left: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.72),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.amber.withOpacity(0.4)),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('المرحلة $stage',
-                              style: const TextStyle(color: Colors.amber)),
-                          Text('⭐ $score'),
-                          Text('🪙 $globalCoins'),
-                          IconButton(
-                            visualDensity: VisualDensity.compact,
-                            onPressed: _togglePause,
-                            icon: Icon(isPaused ? Icons.play_arrow : Icons.pause),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // شريط الصحة.
-                  Positioned(
-                    top: 65,
-                    left: 15,
-                    right: 15,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: LinearProgressIndicator(
-                        minHeight: 10,
-                        value: (playerHp / playerMaxHp).clamp(0.0, 1.0),
-                        backgroundColor: Colors.red.shade900,
-                        color: Colors.greenAccent,
-                      ),
-                    ),
+                  // لوحة معلومات المرحلة والصحة.
+                  GameHudWidget(
+                    stage: stage,
+                    score: score,
+                    coins: globalCoins,
+                    isPaused: isPaused,
+                    playerHp: playerHp,
+                    playerMaxHp: playerMaxHp,
+                    onPause: _togglePause,
                   ),
 
                   // العملات.
@@ -1093,36 +1057,12 @@ class _GameScreenState extends State<GameScreen>
 
                   // طبقة الإيقاف المؤقت.
                   if (isPaused)
-                    Positioned.fill(
-                      child: Container(
-                        color: Colors.black.withOpacity(0.78),
-                        child: Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text(
-                                'اللعبة متوقفة',
-                                style: TextStyle(
-                                  fontSize: 27,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 15),
-                              FilledButton.icon(
-                                onPressed: _togglePause,
-                                icon: const Icon(Icons.play_arrow),
-                                label: const Text('متابعة اللعب'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.popUntil(
-                                    context,
-                                    (route) => route.isFirst,
-                                  );
-                                },
-                                child: const Text('الخروج إلى القائمة'),
-                              ),
-                            ],
+                    GamePauseOverlay(onResume: _togglePause),
+
+                  // صندوق المكافأة.
+                  if (showMysteryChest)
+                    MysteryChestOverlay(onCollect: _collectChest),
+                ],
                           ),
                         ),
                       ),
