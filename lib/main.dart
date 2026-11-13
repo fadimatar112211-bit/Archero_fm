@@ -798,7 +798,7 @@ class _GameScreenState extends State<GameScreen> {
           'x': enemy['x'], 'y': enemy['y'],
           'type': 'bossTell', 'life': 32,
         });
-      } else if (type != 'boss' &&
+      } else if (type != 'boss' && type != 'ranged' &&
           distance <= attackRange &&
           attackCooldown == 0) {
         attackTicks = 16;
@@ -892,7 +892,7 @@ class _GameScreenState extends State<GameScreen> {
       // لحظة الضرر تقع في منتصف ضربة الهجوم، مرة واحدة لكل دورة.
       final impactDistance = 23 + (enemy['radius'] as double) + 14;
       final impactFrame = type == 'boss' ? 12 : 8;
-      if (attackTicks == impactFrame &&
+      if (type != 'ranged' && attackTicks == impactFrame &&
           enemy['attackHitDone'] != true &&
           distance <= impactDistance &&
           playerMoveTicks > 0) {
@@ -901,7 +901,7 @@ class _GameScreenState extends State<GameScreen> {
           'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14,
         });
       }
-      if (attackTicks == impactFrame &&
+      if (type != 'ranged' && attackTicks == impactFrame &&
           enemy['attackHitDone'] != true &&
           distance <= impactDistance &&
           playerMoveTicks <= 0) {
