@@ -42,7 +42,9 @@ Future<void> saveProgress() => ProgressStore.save(
   bestScore: bestScore,
 );
 
-final AudioPlayer globalAudiUint8List _buildToneWav(String type) {
+final AudioPlayer globalAudioPlayer = AudioPlayer();
+
+Uint8List _buildToneWav(String type) {
   const sampleRate = 22050;
   final settings = switch (type) {
     'shoot' => (frequency: 760.0, duration: 0.075, endFrequency: 430.0),
