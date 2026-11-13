@@ -20,7 +20,7 @@ void main() {
         'gems': 0,
         'keys': 0,
         'equipmentShards': 0,
-      'unlockedHeroesMask': 1,
+        'unlockedHeroesMask': 1,
       });
     });
 
@@ -36,6 +36,7 @@ void main() {
         equippedHelmetId: 2,
         equippedRingId: 1,
         equippedRelicId: 2,
+        unlockedHeroesMask: 15,
       );
       expect(PlayerProgress.fromMap(original.toMap()).toMap(), original.toMap());
     });
@@ -49,6 +50,7 @@ void main() {
       expect(progress.bestScore, 0);
       expect(progress.equippedWeaponId, 0);
       expect(progress.ownedEquipmentMask, 585);
+      expect(progress.unlockedHeroesMask, 1);
     });
 
     test('round-trips gem key and equipment shard balances', () {
@@ -78,6 +80,13 @@ void main() {
       expect(progress.equippedArmorId, 2);
       expect(progress.ownedEquipmentMask & (1 << 2), isNonZero);
       expect(progress.ownedEquipmentMask & (1 << 4), isNonZero);
+    });
+
+    test('normalizes unlocked hero masks and always retains the starter hero', () {
+      expect(PlayerProgress.fromMap({'unlockedHeroesMask': 15}).unlockedHeroesMask, 15);
+      expect(PlayerProgress.fromMap({'unlockedHeroesMask': 0}).unlockedHeroesMask, 1);
+      expect(PlayerProgress.fromMap({'unlockedHeroesMask': 99}).unlockedHeroesMask, 15);
+      expect(PlayerProgress.fromMap({'unlockedHeroesMask': -3}).unlockedHeroesMask, 1);
     });
 
     test('copyWith updates selected values without mutating original', () {
