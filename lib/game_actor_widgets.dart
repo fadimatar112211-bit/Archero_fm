@@ -318,6 +318,7 @@ class PlayerActorSpriteWidget extends StatelessWidget {
       left: x - 29,
       top: y - 29,
       child: SizedBox(
+        key: const ValueKey('player-actor'),
         width: 58,
         height: 58,
         child: Transform.translate(
