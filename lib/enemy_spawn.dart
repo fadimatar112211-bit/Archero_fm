@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'world_rules.dart';
+import 'room_flow.dart';
 
 /// Builds the initial enemy roster for a stage without touching widget state.
 ///
@@ -16,7 +17,7 @@ List<Map<String, dynamic>> createEnemyWave({
   final difficultyStep = min(max(stage - 1, 0), 20).toDouble();
   final worldRules = WorldRules.forStage(stage);
 
-  if (stage % 5 == 0) {
+  if (RoomFlow.forStage(stage).isBoss) {
     final bossProgress = min(max(stage - 5, 0), 45).toDouble();
     final bossHp =
         (360.0 + bossProgress * 22) * worldRules.enemyHealthMultiplier;
