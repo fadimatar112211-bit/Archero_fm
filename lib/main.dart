@@ -13,6 +13,7 @@ import 'audio_service.dart';
 import 'world_theme.dart';
 import 'combat_stats.dart';
 import 'combat_targeting.dart';
+import 'combat_timing.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -812,17 +813,9 @@ class _GameScreenState extends State<GameScreen>
     if (heroAttackTicks > 0) heroAttackTicks--;
     if (playerMoveTicks > 0) playerMoveTicks--;
 
-    // Update timed enemy defeat animations.
-    for (int i = defeatedSprites.length - 1; i >= 0; i--) {
-      defeatedSprites[i]['life'] = (defeatedSprites[i]['life'] as int) - 1;
-      if ((defeatedSprites[i]['life'] as int) <= 0) defeatedSprites.removeAt(i);
-    }
-
-    // تحديث عمر المؤثرات القتالية.
-    for (int i = combatEffects.length - 1; i >= 0; i--) {
-      combatEffects[i]['life'] = (combatEffects[i]['life'] as int) - 1;
-      if ((combatEffects[i]['life'] as int) <= 0) combatEffects.removeAt(i);
-    }
+    // Advance short-lived combat visuals through the standalone timing system.
+    tickTimedEntities(defeatedSprites);
+    tickTimedEntities(combatEffects);
 
     // تحريك مقذوفات الأعداء وفحص إصابة اللاعب.
     for (int i = enemyProjectiles.length - 1; i >= 0; i--) {
