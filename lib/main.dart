@@ -18,6 +18,7 @@ import 'enemy_ai.dart';
 import 'enemy_projectile_motion.dart';
 import 'combat_collision.dart';
 import 'boss_projectiles.dart';
+import 'game_timers.dart';
 import 'combat_damage.dart';
 
 Future<void> main() async {
@@ -544,9 +545,7 @@ class _GameScreenState extends State<GameScreen>
   int playerDeathTicks = 0;
   bool stageTransitioning = false;
 
-  Timer? gameLoop;
-  Timer? shootLoop;
-  Timer? cooldownLoop;
+  final GameTimerRegistry timers = GameTimerRegistry();
 
   final List<GameObject> enemies = [];
   final List<GameObject> arrows = [];
@@ -575,14 +574,14 @@ class _GameScreenState extends State<GameScreen>
       extraArrows = 1;
     }
 
-    gameLoop = Timer.periodic(const Duration(milliseconds: 16), (_) {
+    timers.periodic('game', const Duration(milliseconds: 16), () {
       if (!mounted || isPaused || showMysteryChest || gameOverShown) return;
-    if (playerDying) {
-      playerDeathTicks++;
-      if (playerDeathTicks >= 24) _endGame();
-      if (mounted) setState(() {});
-      return;
-    }
+      if (playerDying) {
+        playerDeathTicks++;
+        if (playerDeathTicks >= 24) _endGame();
+        if (mounted) setState(() {});
+        return;
+      }
       _updateEngine();
     });
 
@@ -727,9 +726,8 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _restartShootLoop() {
-    shootLoop?.cancel();
     final intervalMs = CombatBalance.shootIntervalMs(attackSpeedMultiplier);
-    shootLoop = Timer.periodic(Duration(milliseconds: intervalMs), (_) {
+    timers.periodic('shoot', Duration(milliseconds: intervalMs), () {
       if (!mounted ||
           isPaused ||
           showMysteryChest ||
@@ -796,16 +794,16 @@ class _GameScreenState extends State<GameScreen>
 
     playRealSound('special');
     _checkStageComplete();
-    cooldownLoop?.cancel();
-    cooldownLoop = Timer.periodic(const Duration(seconds: 1), (timer) {
+    timers.cancel('cooldown');
+    timers.periodic('cooldown', const Duration(seconds: 1), () {
       if (!mounted) {
-        timer.cancel();
+        timers.cancel('cooldown');
         return;
       }
       if (isPaused || showMysteryChest || gameOverShown) return;
       if (specialCooldown <= 1) {
         setState(() => specialCooldown = 0);
-        timer.cancel();
+        timers.cancel('cooldown');
       } else {
         setState(() => specialCooldown--);
       }
@@ -1299,9 +1297,7 @@ class _GameScreenState extends State<GameScreen>
     bestStage = max(bestStage, stage);
     bestScore = max(bestScore, score);
     saveProgress();
-    gameLoop?.cancel();
-    shootLoop?.cancel();
-    cooldownLoop?.cancel();
+    timers.cancelAll();
     playRealSound('hit');
 
     if (!mounted) return;
@@ -1371,9 +1367,7 @@ class _GameScreenState extends State<GameScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    gameLoop?.cancel();
-    shootLoop?.cancel();
-    cooldownLoop?.cancel();
+    timers.dispose();
     worldAnimationController.dispose();
     super.dispose();
   }
