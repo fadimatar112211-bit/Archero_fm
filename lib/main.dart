@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'progress_store.dart';
+import 'stage_flow.dart';
 import 'world_theme.dart';
 
 Future<void> main() async {
@@ -1092,12 +1093,14 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   void _checkStageComplete() {
     if (stageTransitioning || enemies.isNotEmpty || gameOverShown) return;
     stageTransitioning = true;
-    stage++;
+
+    final advance = StageFlow.complete(stage);
+    stage = advance.nextStage;
     bestStage = max(bestStage, stage);
     playerHp = min(playerMaxHp, playerHp + 35);
     saveProgress();
 
-    if (stage % 2 == 0) {
+    if (advance.reward == StageRewardType.mysteryChest) {
       setState(() => showMysteryChest = true);
       playRealSound('special');
     } else {
@@ -1187,6 +1190,21 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           'رصيد العملات: 🪙 $globalCoins',
         ),
         actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => GameScreen(
+                    heroType: widget.heroType,
+                    initialStage: stage,
+                  ),
+                ),
+              );
+            },
+            child: const Text('إعادة المحاولة'),
+          ),
           FilledButton(
             onPressed: () {
               Navigator.pop(dialogContext);
