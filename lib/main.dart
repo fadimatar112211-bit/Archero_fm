@@ -497,6 +497,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   final Random random = Random();
   late final AnimationController worldAnimationController;
 
+  double arenaWidth = 360;
+  double arenaHeight = 640;
+  bool _arenaInitialized = false;
   double playerX = 180;
   double playerY = 430;
   double playerHp = 100;
@@ -552,8 +555,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       extraArrows = 1;
     }
 
-    _spawnEnemies();
-
     gameLoop = Timer.periodic(const Duration(milliseconds: 16), (_) {
       if (!mounted || isPaused || showMysteryChest || gameOverShown) return;
     if (playerDying) {
@@ -577,7 +578,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     });
   }
 
-  void _spawnEnemies() {
+  void _spawnEnemies({bool notify = true}) {
     enemies.clear();
     arrows.clear();
     enemyProjectiles.clear();
@@ -590,8 +591,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       final bossProgress = min(max(stage - 5, 0), 45).toDouble();
       final bossHp = 360.0 + bossProgress * 22;
       enemies.add({
-        'x': 180.0,
-        'y': 105.0,
+        'x': arenaWidth / 2,
+        'y': arenaHeight * 0.16,
         'hp': bossHp,
         'maxHp': bossHp,
         'type': 'boss',
@@ -625,8 +626,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           _ => 0.76 + difficultyStep * 0.012,
         };
         enemies.add({
-          'x': 35.0 + random.nextDouble() * 290,
-          'y': 90.0 + random.nextDouble() * 190,
+          'x': 24.0 + random.nextDouble() * max(1.0, arenaWidth - 48.0),
+          'y': arenaHeight * (0.14 + random.nextDouble() * 0.26),
           'hp': hp,
           'maxHp': hp,
           'type': enemyType,
@@ -636,7 +637,36 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       }
     }
 
-    if (mounted) setState(() {});
+    if (notify && mounted) setState(() {});
+  }
+
+  void _syncArenaSize(double width, double height) {
+    if (!width.isFinite || !height.isFinite || width <= 0 || height <= 0) return;
+    if (!_arenaInitialized) {
+      arenaWidth = width;
+      arenaHeight = height;
+      playerX = width / 2;
+      playerY = height * 0.72;
+      _arenaInitialized = true;
+      _spawnEnemies(notify: false);
+      return;
+    }
+    if ((arenaWidth - width).abs() < 0.5 && (arenaHeight - height).abs() < 0.5) return;
+
+    final scaleX = width / arenaWidth;
+    final scaleY = height / arenaHeight;
+    playerX = (playerX * scaleX).clamp(22.0, max(22.0, width - 22.0)).toDouble();
+    playerY = (playerY * scaleY).clamp(105.0, max(105.0, height - 35.0)).toDouble();
+    for (final collection in [enemies, arrows, enemyProjectiles, coins, combatEffects, defeatedSprites]) {
+      for (final item in collection) {
+        final x = item['x'];
+        final y = item['y'];
+        if (x is num) item['x'] = (x.toDouble() * scaleX).clamp(-20.0, width + 20.0).toDouble();
+        if (y is num) item['y'] = (y.toDouble() * scaleY).clamp(-20.0, height + 20.0).toDouble();
+      }
+    }
+    arenaWidth = width;
+    arenaHeight = height;
   }
 
   void _shootArrows() {
@@ -788,8 +818,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
         }
         enemyProjectiles.removeAt(i);
       } else if ((shot['life'] as int) <= 0 ||
-          (shot['x'] as double) < -20 || (shot['x'] as double) > 420 ||
-          (shot['y'] as double) < -20 || (shot['y'] as double) > 850) {
+          (shot['x'] as double) < -20 || (shot['x'] as double) > arenaWidth + 20 ||
+          (shot['y'] as double) < -20 || (shot['y'] as double) > arenaHeight + 20) {
         enemyProjectiles.removeAt(i);
       }
     }
@@ -801,9 +831,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       arrow['y'] = (arrow['y'] as double) + (arrow['vy'] as double);
 
       if ((arrow['x'] as double) < -20 ||
-          (arrow['x'] as double) > 420 ||
+          (arrow['x'] as double) > arenaWidth + 20 ||
           (arrow['y'] as double) < -20 ||
-          (arrow['y'] as double) > 850) {
+          (arrow['y'] as double) > arenaHeight + 20) {
         arrows.removeAt(i);
         continue;
       }
@@ -1195,6 +1225,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           builder: (context, constraints) {
             final width = constraints.maxWidth;
             final height = constraints.maxHeight;
+            _syncArenaSize(width, height);
 
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
