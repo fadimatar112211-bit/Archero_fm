@@ -116,3 +116,90 @@ class SkillSystem {
     return List<SkillOption>.unmodifiable(offers);
   }
 }
+
+class SkillRuntimeStats {
+  const SkillRuntimeStats({
+    required this.extraArrows,
+    required this.attackPowerMultiplier,
+    required this.playerHp,
+    required this.playerMaxHp,
+    required this.enemySpeedMultiplier,
+    required this.coinPickupRadius,
+    required this.criticalChance,
+    required this.attackSpeedMultiplier,
+  });
+
+  final int extraArrows;
+  final double attackPowerMultiplier;
+  final double playerHp;
+  final double playerMaxHp;
+  final double enemySpeedMultiplier;
+  final double coinPickupRadius;
+  final double criticalChance;
+  final double attackSpeedMultiplier;
+}
+
+class SkillUpgradeResolution {
+  const SkillUpgradeResolution({
+    required this.stats,
+    required this.requiresAttackLoopRestart,
+  });
+
+  final SkillRuntimeStats stats;
+  final bool requiresAttackLoopRestart;
+}
+
+/// Applies a selected in-run upgrade without mutating widget state.
+/// A null choice (for example, a dismissed dialog) leaves all stats unchanged.
+SkillUpgradeResolution applySkillUpgrade({
+  required SkillRuntimeStats current,
+  required SkillId? choice,
+}) {
+  var extraArrows = current.extraArrows;
+  var attackPowerMultiplier = current.attackPowerMultiplier;
+  var playerHp = current.playerHp;
+  var playerMaxHp = current.playerMaxHp;
+  var enemySpeedMultiplier = current.enemySpeedMultiplier;
+  var coinPickupRadius = current.coinPickupRadius;
+  var criticalChance = current.criticalChance;
+  var attackSpeedMultiplier = current.attackSpeedMultiplier;
+  var requiresAttackLoopRestart = false;
+
+  switch (choice) {
+    case SkillId.extraArrow:
+      extraArrows++;
+    case SkillId.attackPower:
+      attackPowerMultiplier += 0.25;
+    case SkillId.healing:
+      playerHp = (playerHp + 55).clamp(0.0, playerMaxHp).toDouble();
+    case SkillId.vitality:
+      playerMaxHp += 25;
+      playerHp = (playerHp + 25).clamp(0.0, playerMaxHp).toDouble();
+    case SkillId.frostAura:
+      enemySpeedMultiplier *= 0.9;
+    case SkillId.coinMagnet:
+      coinPickupRadius *= 1.45;
+    case SkillId.criticalStrike:
+      criticalChance = (criticalChance + 0.15).clamp(0.0, 0.75).toDouble();
+    case SkillId.swiftHands:
+      attackSpeedMultiplier =
+          (attackSpeedMultiplier * 1.18).clamp(1.0, 2.2).toDouble();
+      requiresAttackLoopRestart = true;
+    case null:
+      break;
+  }
+
+  return SkillUpgradeResolution(
+    stats: SkillRuntimeStats(
+      extraArrows: extraArrows,
+      attackPowerMultiplier: attackPowerMultiplier,
+      playerHp: playerHp,
+      playerMaxHp: playerMaxHp,
+      enemySpeedMultiplier: enemySpeedMultiplier,
+      coinPickupRadius: coinPickupRadius,
+      criticalChance: criticalChance,
+      attackSpeedMultiplier: attackSpeedMultiplier,
+    ),
+    requiresAttackLoopRestart: requiresAttackLoopRestart,
+  );
+}
