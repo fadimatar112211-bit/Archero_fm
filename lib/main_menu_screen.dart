@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';\nimport 'package:flutter_svg/flutter_svg.dart';
 
 import 'game_progress.dart';
 import 'game_screen.dart';
@@ -23,7 +23,7 @@ class MainMenuScreen extends StatefulWidget {
 }
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
-  bool _walletBusy = false;
+  final ScrollController _menuScrollController = ScrollController();\n  final GlobalKey _shopSectionKey = GlobalKey();\n  final GlobalKey _equipmentSectionKey = GlobalKey();\n  bool _walletBusy = false;
   RunCheckpoint? _activeCheckpoint;
 
   @override
@@ -32,7 +32,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     _loadRunCheckpoint();
   }
 
-  Future<void> _loadRunCheckpoint() async {
+  @override\n  void dispose() {\n    _menuScrollController.dispose();\n    super.dispose();\n  }\n\n  void _jumpToSection(GlobalKey key) {\n    final target = key.currentContext;\n    if (target == null) return;\n    Scrollable.ensureVisible(target, duration: const Duration(milliseconds: 520), curve: Curves.easeOutCubic, alignment: .08);\n  }\n\n  Future<void> _loadRunCheckpoint() async {
     try {
       var checkpoint = await RunCheckpointStore.load();
       if (checkpoint != null && restoreRunCheckpointState(checkpoint) == null) {
@@ -583,27 +583,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 constraints: const BoxConstraints(maxWidth: 520),
                 child: Column(
                   children: [
-                    const Icon(
-                      Icons.sports_esports_rounded,
-                      size: 82,
-                      color: Colors.amberAccent,
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'ARCHERO: SOUND EDITION',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'قاتل، طوّر بطلك، وتجاوز المراحل',
-                      style: TextStyle(color: Colors.amber, fontSize: 14),
-                    ),
-                    const SizedBox(height: 25),
+                    _heroHomeHub(),
+                    const SizedBox(height: 18),
                     _panel(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -844,6 +825,80 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     );
   }
 
+  Widget _heroHomeHub() {
+    return Container(
+      height: 330,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFD9B66C).withOpacity(.65), width: 1.3),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(.34), blurRadius: 24, offset: const Offset(0, 12))],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          SvgPicture.asset('assets/home_hub_scene.svg', fit: BoxFit.cover),
+          DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
+            colors: [const Color(0xFF07131D).withOpacity(.12), const Color(0xFF080D13).withOpacity(.72)],
+          ))),
+          Positioned(top: 14, left: 14, right: 14, child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _hubResource(Icons.monetization_on, '$globalCoins', const Color(0xFFFFD56E)),
+              _hubResource(Icons.diamond, '$globalGems', const Color(0xFF70D8FF)),
+              _hubResource(Icons.vpn_key, '$globalKeys', const Color(0xFFFFC75E)),
+            ],
+          )),
+          Positioned(top: 63, left: 12, child: _hubSideAction(
+            icon: Icons.shield_moon_outlined, title: 'العتاد',
+            onTap: () => _jumpToSection(_equipmentSectionKey),
+          )),
+          Positioned(top: 63, right: 12, child: _hubSideAction(
+            icon: Icons.storefront_outlined, title: 'المتجر',
+            onTap: () => _jumpToSection(_shopSectionKey),
+          )),
+          Positioned(left: 92, right: 92, top: 56, bottom: 38,
+            child: SvgPicture.asset('assets/player.svg', fit: BoxFit.contain)),
+          Positioned(left: 0, right: 0, bottom: 12, child: Column(
+            children: [
+              const Text('ARCHERO · SOUND EDITION', style: TextStyle(
+                color: Color(0xFFFFE2A0), fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 1.2,
+                shadows: [Shadow(color: Colors.black, blurRadius: 8)],
+              )),
+              const SizedBox(height: 4),
+              Text('المغامر · أفضل مرحلة $bestStage', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+            ],
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _hubResource(IconData icon, String value, Color color) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+    decoration: BoxDecoration(color: const Color(0xFF111B25).withOpacity(.78),
+      borderRadius: BorderRadius.circular(18), border: Border.all(color: color.withOpacity(.55))),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, size: 16, color: color), const SizedBox(width: 5),
+      Text(value, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
+    ]),
+  );
+
+  Widget _hubSideAction({required IconData icon, required String title, required VoidCallback onTap}) =>
+    Material(color: const Color(0xFF111B25).withOpacity(.88), borderRadius: BorderRadius.circular(17),
+      child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(17), child: Container(
+        width: 68, padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 5),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(17),
+          border: Border.all(color: const Color(0xFFD9B66C).withOpacity(.7))),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, color: const Color(0xFFFFD56E), size: 25),
+          const SizedBox(height: 4), Text(title, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+        ]),
+      )),
+    );
+
   Widget _resourceBadge(IconData icon, String label, int value, Color color) =>
       Column(
         mainAxisSize: MainAxisSize.min,
@@ -855,7 +910,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         ],
       );
 
-  Widget _panel({required Widget child}) {
+  Widget _panel({Key? key, required Widget child}) {\n    return Container(\n      key: key,
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
