@@ -2518,6 +2518,51 @@ class ArenaPainter extends CustomPainter {
       }
     }
 
+    // Signature relics make each biome recognizable at a glance.
+    final relicY = size.height * .19;
+    if (theme.id == 2) {
+      final bowl = Offset(size.width * .5, relicY);
+      canvas.drawCircle(bowl, 13, Paint()..color = const Color(0xFFFF6A24).withOpacity(.22)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12));
+      canvas.drawCircle(bowl, 5, Paint()..color = const Color(0xFFFFC15A));
+    } else if (theme.id == 3) {
+      final center = Offset(size.width * .5, relicY);
+      final frost = Paint()..color = const Color(0xFFD9F8FF).withOpacity(.7)
+        ..strokeWidth = 2..strokeCap = StrokeCap.round;
+      for (var arm = 0; arm < 6; arm++) {
+        final angle = arm * 3.141592653589793 / 3;
+        final tip = Offset(center.dx + 12 * math.cos(angle),
+            center.dy + 12 * math.sin(angle));
+        canvas.drawLine(center, tip, frost);
+      }
+    } else if (theme.id == 4) {
+      final x = size.width * .09;
+      final y = size.height * .76;
+      final cactus = Paint()..color = const Color(0xFF58764A)
+        ..strokeWidth = 5..strokeCap = StrokeCap.round;
+      canvas.drawLine(Offset(x, y + 14), Offset(x, y - 12), cactus);
+      canvas.drawLine(Offset(x, y - 2), Offset(x - 7, y - 2), cactus);
+      canvas.drawLine(Offset(x - 7, y - 2), Offset(x - 7, y - 8), cactus);
+      canvas.drawLine(Offset(x, y + 4), Offset(x + 7, y + 4), cactus);
+      canvas.drawLine(Offset(x + 7, y + 4), Offset(x + 7, y - 3), cactus);
+    } else if (theme.id == 5) {
+      final portal = Rect.fromCenter(
+          center: Offset(size.width * .5, relicY), width: 38, height: 20);
+      canvas.drawOval(portal, Paint()..color = const Color(0xFFB77BFF).withOpacity(.14)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9));
+      canvas.drawOval(portal, Paint()..color = const Color(0xFFD7A7FF).withOpacity(.7)
+        ..style = PaintingStyle.stroke..strokeWidth = 1.5);
+    } else if (theme.id == 6) {
+      final x = size.width * .09;
+      final y = size.height * .22;
+      canvas.drawLine(Offset(x, y - 12), Offset(x, y + 18),
+          Paint()..color = const Color(0xFF344C59)..strokeWidth = 2);
+      final flag = Path()
+        ..moveTo(x, y - 11)..lineTo(x + 19, y - 6)
+        ..lineTo(x, y + 1)..close();
+      canvas.drawPath(flag, Paint()..color = const Color(0xFF55D6D1));
+    }
+
     final vignette = Paint()
       ..shader = RadialGradient(colors: [Colors.transparent, Colors.black.withOpacity(.48)],
         stops: const [0.55, 1]).createShader(rect);
