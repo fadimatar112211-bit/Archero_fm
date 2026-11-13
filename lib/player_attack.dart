@@ -7,7 +7,7 @@ class PlayerArrowSpawn {
   });
 
   final CombatPoint origin;
-  final CombatVector velocity;
+  final CombatPoint velocity;
 }
 
 /// Builds the player's existing aimed arrow volley, including its alternating
