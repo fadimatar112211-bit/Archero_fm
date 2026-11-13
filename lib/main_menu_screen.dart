@@ -910,8 +910,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         ],
       );
 
-  Widget _panel({Key? key, required Widget child}) {\n    return Container(\n      key: key,
+  Widget _panel({Key? key, required Widget child}) {
     return Container(
+      key: key,
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
