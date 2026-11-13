@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'game_painters.dart';
 import 'game_progress.dart';
+import 'run_checkpoint.dart';
 import 'game_screen.dart';
 import 'hero_rules.dart';
 
@@ -129,6 +130,7 @@ class _HeroSelectionScreenState extends State<HeroSelectionScreen> {
       selectedStage = choice;
     }
     if (!mounted) return;
+    try { await RunCheckpointStore.clear(); } catch (_) {}
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
