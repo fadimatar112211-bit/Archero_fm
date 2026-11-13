@@ -25,6 +25,7 @@ import 'hero_rules.dart';
 import 'combat_damage.dart';
 import 'player_attack.dart';
 import 'player_projectiles.dart';
+import 'weapon_system.dart';
 import 'game_run_lifecycle.dart';
 import 'game_run_session.dart';
 import 'game_run_state.dart';
@@ -248,13 +249,16 @@ class _GameScreenState extends State<GameScreen>
     final target = enemies[targetIndex];
 
     heroAttackTicks = 12;
+    final weapon = WeaponCatalog.byId(equippedWeaponId);
     final volley = createPlayerArrowVolley(
       origin: origin,
       target: CombatPoint(
         target['x'] as double,
         target['y'] as double,
       ),
-      extraArrows: extraArrows,
+      extraArrows: extraArrows + weapon.bonusArrows,
+      projectileSpeed: weapon.projectileSpeed,
+      spreadAngle: weapon.spreadAngle,
     );
     for (final arrow in volley) {
       arrows.add({
@@ -268,7 +272,8 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _restartShootLoop() {
-    final intervalMs = CombatBalance.shootIntervalMs(attackSpeedMultiplier);
+    final weapon = WeaponCatalog.byId(equippedWeaponId);
+    final intervalMs = CombatBalance.shootIntervalMs(attackSpeedMultiplier * weapon.attackSpeedMultiplier);
     timers.periodic('shoot', Duration(milliseconds: intervalMs), () {
       if (!mounted || !runLifecycle.canPerformActions || enemies.isEmpty) {
         return;
@@ -298,7 +303,7 @@ class _GameScreenState extends State<GameScreen>
         final isBoss = enemy['type'] == 'boss';
         final hit = resolveEnemyHit(
           currentHp: enemy['hp'] as double,
-          baseDamage: skillDamage,
+          baseDamage: skillDamage * WeaponCatalog.byId(equippedWeaponId).damageMultiplier,
           attackMultiplier: 1,
           criticalChance: 0,
           criticalRoll: 1,
@@ -454,7 +459,7 @@ class _GameScreenState extends State<GameScreen>
       enemy['hitTicks'] = 9;
       final hit = resolveEnemyHit(
         currentHp: enemy['hp'] as double,
-        baseDamage: 35,
+        baseDamage: 35 * WeaponCatalog.byId(equippedWeaponId).damageMultiplier,
         attackMultiplier: attackPowerMultiplier,
         criticalChance: criticalChance,
         criticalRoll: random.nextDouble(),

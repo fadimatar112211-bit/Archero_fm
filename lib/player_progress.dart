@@ -5,6 +5,7 @@ class PlayerProgress {
     this.atkUpgrade = 0,
     this.bestStage = 1,
     this.bestScore = 0,
+    this.equippedWeaponId = 0,
   });
 
   final int coins;
@@ -12,14 +13,17 @@ class PlayerProgress {
   final int atkUpgrade;
   final int bestStage;
   final int bestScore;
+  final int equippedWeaponId;
 
   factory PlayerProgress.fromMap(Map<String, int> values) {
+    final weaponId = values['equippedWeaponId'] ?? 0;
     return PlayerProgress(
       coins: values['coins'] ?? 150,
       hpUpgrade: values['hpUpgrade'] ?? 0,
       atkUpgrade: values['atkUpgrade'] ?? 0,
       bestStage: values['bestStage'] ?? 1,
       bestScore: values['bestScore'] ?? 0,
+      equippedWeaponId: weaponId >= 0 && weaponId <= 3 ? weaponId : 0,
     );
   }
 
@@ -29,6 +33,7 @@ class PlayerProgress {
     'atkUpgrade': atkUpgrade,
     'bestStage': bestStage,
     'bestScore': bestScore,
+    'equippedWeaponId': equippedWeaponId,
   };
 
   PlayerProgress copyWith({
@@ -37,6 +42,7 @@ class PlayerProgress {
     int? atkUpgrade,
     int? bestStage,
     int? bestScore,
+    int? equippedWeaponId,
   }) {
     return PlayerProgress(
       coins: coins ?? this.coins,
@@ -44,6 +50,7 @@ class PlayerProgress {
       atkUpgrade: atkUpgrade ?? this.atkUpgrade,
       bestStage: bestStage ?? this.bestStage,
       bestScore: bestScore ?? this.bestScore,
+      equippedWeaponId: equippedWeaponId ?? this.equippedWeaponId,
     );
   }
 }

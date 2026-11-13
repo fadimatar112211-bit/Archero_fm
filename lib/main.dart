@@ -39,6 +39,7 @@ Future<void> main() async {
     heroAtkUpgrade = progress.atkUpgrade;
     bestStage = progress.bestStage;
     bestScore = progress.bestScore;
+    equippedWeaponId = progress.equippedWeaponId;
     runApp(const ArcheroSoundApp());
   }, (error, stackTrace) {
     GameDiagnostics.record(

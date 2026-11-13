@@ -34,6 +34,7 @@ void main() {
       'atkUpgrade': 0,
       'bestStage': 1,
       'bestScore': 0,
+      'equippedWeaponId': 0,
     });
   });
 
@@ -52,6 +53,7 @@ void main() {
       'atkUpgrade': 30,
       'bestStage': 8,
       'bestScore': 1240,
+      'equippedWeaponId': 0,
     });
   });
 
@@ -79,6 +81,7 @@ void main() {
       'atkUpgrade': 30,
       'bestStage': 9,
       'bestScore': 950,
+      'equippedWeaponId': 0,
     });
   });
 
@@ -132,7 +135,7 @@ void main() {
   });
 
   test('rolls back a partially failed snapshot and keeps the queue usable', () async {
-    final initial = <String, int>{'coins': 200, 'hpUpgrade': 10, 'atkUpgrade': 5, 'bestStage': 3, 'bestScore': 90};
+    final initial = <String, int>{'coins': 200, 'hpUpgrade': 10, 'atkUpgrade': 5, 'bestStage': 3, 'bestScore': 90, 'equippedWeaponId': 0};
     final preferences = _FailingProgressPreferences(Map<String, int>.from(initial), failKey: 'atkUpgrade');
     ProgressStore.setPreferencesProviderForTesting(() async => preferences);
     await expectLater(
@@ -141,7 +144,15 @@ void main() {
     );
     expect(preferences.values, initial);
     await ProgressStore.save(coins: 250, hpUpgrade: 20, atkUpgrade: 15, bestStage: 4, bestScore: 150);
-    expect(preferences.values, {'coins': 250, 'hpUpgrade': 20, 'atkUpgrade': 15, 'bestStage': 4, 'bestScore': 150});
+    expect(preferences.values, {'coins': 250, 'hpUpgrade': 20, 'atkUpgrade': 15, 'bestStage': 4, 'bestScore': 150, 'equippedWeaponId': 0});
   });
 
+  test('persists equipped weapon with the progression snapshot', () async {
+    await ProgressStore.save(coins:300,hpUpgrade:25,atkUpgrade:15,bestStage:4,bestScore:600,equippedWeaponId:2);
+    expect((await ProgressStore.loadPlayerProgress()).equippedWeaponId,2);
+  });
+  test('normalizes unknown equipped weapon IDs to the default', () async {
+    await ProgressStore.save(coins:300,hpUpgrade:25,atkUpgrade:15,bestStage:4,bestScore:600,equippedWeaponId:99);
+    expect((await ProgressStore.loadPlayerProgress()).equippedWeaponId,0);
+  });
 }

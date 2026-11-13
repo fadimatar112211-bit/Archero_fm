@@ -26,6 +26,7 @@ class ProgressStore {
     'atkUpgrade': 0,
     'bestStage': 1,
     'bestScore': 0,
+    'equippedWeaponId': 0,
   };
 
   // Serialize complete snapshots so overlapping saves cannot interleave.
@@ -54,6 +55,7 @@ class ProgressStore {
   static int _validValue(String key, int? value) {
     final fallback = _defaults[key]!;
     final candidate = value ?? fallback;
+    if (key == 'equippedWeaponId') return candidate >= 0 && candidate <= 3 ? candidate : 0;
     if (key == 'bestStage') return candidate < 1 ? 1 : candidate;
     return candidate < 0 ? 0 : candidate;
   }
@@ -77,6 +79,7 @@ class ProgressStore {
       atkUpgrade: progress.atkUpgrade,
       bestStage: progress.bestStage,
       bestScore: progress.bestScore,
+      equippedWeaponId: progress.equippedWeaponId,
     );
   }
 
@@ -86,6 +89,7 @@ class ProgressStore {
     required int atkUpgrade,
     required int bestStage,
     required int bestScore,
+    int equippedWeaponId = 0,
   }) {
     final values = <String, int>{
       'coins': _validValue('coins', coins),
@@ -93,6 +97,7 @@ class ProgressStore {
       'atkUpgrade': _validValue('atkUpgrade', atkUpgrade),
       'bestStage': _validValue('bestStage', bestStage),
       'bestScore': _validValue('bestScore', bestScore),
+      'equippedWeaponId': _validValue('equippedWeaponId', equippedWeaponId),
     };
 
     final nextWrite = _pendingWrite.then((_) async {

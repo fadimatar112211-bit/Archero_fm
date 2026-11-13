@@ -11,6 +11,7 @@ int heroHpUpgrade = 0;
 int heroAtkUpgrade = 0;
 int bestStage = 1;
 int bestScore = 0;
+int equippedWeaponId = 0;
 
 /// Loads saved progression, falling back to safe defaults if storage is
 /// unavailable so a transient persistence failure cannot block game startup.
@@ -29,6 +30,7 @@ Future<PlayerProgress> loadProgressOrDefaults() async {
       atkUpgrade: 0,
       bestStage: 1,
       bestScore: 0,
+      equippedWeaponId: 0,
     );
   }
 }
@@ -42,6 +44,7 @@ Future<void> saveProgress() async {
         atkUpgrade: heroAtkUpgrade,
         bestStage: bestStage,
         bestScore: bestScore,
+        equippedWeaponId: equippedWeaponId,
       ),
     );
   } catch (error, stackTrace) {
