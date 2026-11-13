@@ -19,6 +19,7 @@ import 'enemy_projectile_motion.dart';
 import 'combat_collision.dart';
 import 'boss_projectiles.dart';
 import 'combat_damage.dart';
+import 'enemy_hit_resolution.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -764,8 +765,16 @@ class _GameScreenState extends State<GameScreen>
       for (int i = enemies.length - 1; i >= 0; i--) {
         final enemy = enemies[i];
         final isBoss = enemy['type'] == 'boss';
-        enemy['hp'] = (enemy['hp'] as double) -
-            (isBoss ? skillDamage * 0.65 : skillDamage);
+        final hit = resolveEnemyHit(
+          currentHp: enemy['hp'] as double,
+          baseDamage: skillDamage,
+          attackMultiplier: 1,
+          criticalChance: 0,
+          criticalRoll: 1,
+          isBoss: isBoss,
+          bossDamageMultiplier: 0.65,
+        );
+        enemy['hp'] = hit.updatedHp;
         enemy['hitTicks'] = 10;
         combatEffects.add({
           'x': enemy['x'], 'y': enemy['y'],
@@ -775,7 +784,7 @@ class _GameScreenState extends State<GameScreen>
           'life': 22,
         });
 
-        if ((enemy['hp'] as double) <= 0) {
+        if (hit.isDefeated) {
           final x = enemy['x'];
           final y = enemy['y'];
           final type = enemy['type'] as String;
@@ -786,8 +795,8 @@ class _GameScreenState extends State<GameScreen>
             'x': x, 'y': y, 'type': isBoss ? 'bossBurst' : 'defeat',
             'life': 25,
           });
-          coins.add({'x': x, 'y': y});
-          score += isBoss ? 150 : 20;
+          if (hit.dropsCoin) coins.add({'x': x, 'y': y});
+          score += hit.scoreAward;
           enemies.removeAt(i);
         }
       }
@@ -910,15 +919,16 @@ class _GameScreenState extends State<GameScreen>
         'x': enemy['x'], 'y': enemy['y'], 'type': hitType, 'life': 16,
       });
       enemy['hitTicks'] = 9;
-      final isCritical = random.nextDouble() < criticalChance;
-      final arrowDamage = CombatBalance.arrowDamage(
+      final hit = resolveEnemyHit(
+        currentHp: enemy['hp'] as double,
         baseDamage: 35,
         attackMultiplier: attackPowerMultiplier,
         criticalChance: criticalChance,
-        roll: isCritical ? 0 : 1,
+        criticalRoll: random.nextDouble(),
+        isBoss: enemy['type'] == 'boss',
       );
-      enemy['hp'] = (enemy['hp'] as double) - arrowDamage;
-      if (isCritical) {
+      enemy['hp'] = hit.updatedHp;
+      if (hit.isCritical) {
         combatEffects.add({
           'x': enemy['x'],
           'y': enemy['y'],
@@ -928,7 +938,7 @@ class _GameScreenState extends State<GameScreen>
       }
       arrows.removeAt(i);
 
-      if ((enemy['hp'] as double) <= 0) {
+      if (hit.isDefeated) {
         defeatedSprites.add({
           'x': enemy['x'],
           'y': enemy['y'],
@@ -942,8 +952,8 @@ class _GameScreenState extends State<GameScreen>
           'type': enemy['type'] == 'boss' ? 'bossBurst' : 'defeat',
           'life': 25,
         });
-        coins.add({'x': enemy['x'], 'y': enemy['y']});
-        score += enemy['type'] == 'boss' ? 150 : 20;
+        if (hit.dropsCoin) coins.add({'x': enemy['x'], 'y': enemy['y']});
+        score += hit.scoreAward;
         enemies.removeAt(hitIndex);
         playRealSound('hit');
       }
