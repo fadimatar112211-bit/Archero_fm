@@ -653,3 +653,11 @@ Commits:
 - `8570606dc966b8fc67d2647b05fe7d7967e87f83` — تحديث جرد الملفات.
 
 **معيار الإغلاق:** لا تُعلن المهمة مكتملة نهائياً إلا بعد نجاح تحليل Dart واختبارات Flutter على أحدث commit، ومراجعة عدم وجود استيرادات مباشرة من تفاصيل اللاعب/هندسة القتال في `game_screen.dart`.
+
+
+### تحقق إضافي للمهمة 1.1.2 — 2026-11-14
+
+- تمت مراجعة imports ومراجع `game_screen.dart` بعد آخر commit: لا يستورد الشاشة أيّاً من `hero_rules.dart` أو `player_movement.dart` أو `player_attack.dart` أو `player_projectiles.dart` أو `combat_targeting.dart` أو `combat_collision.dart`، ولا تستخدم أنواع `CombatPoint`/`CombatCircle` أو دوال الحساب الداخلية مباشرة. جميع نقاط الاتصال الست الخاصة بالبطل/الحركة/التصويب/السهام تمر عبر `PlayerSystem`.
+- تحقق ساكن من حالات الاختبار الأربع المضافة: قيم ملف البطل والإحصاءات، حدود السحب ونافذة المراوغة، اختيار الهدف وتكوين volley، وتقدم السهم واكتشاف الاصطدام.
+- CI على آخر commit وقت التحديث `1cec1204649940d8358d95a66fefed3c800bdc78`: Flutter CI run `43522963763` ما زال قيد التنفيذ عند خطوة الاختبارات؛ Android Emulator QA run `43522963831` ما زال قيد التنفيذ عند الاختبارات. لذلك لا توجد نتيجة نجاح نهائية بعد، ولا نغلق البند قبل ظهورها.
+- روابط المتابعة: https://github.com/fadimatar112211-bit/Archero_fm/actions/runs/43522963763 و https://github.com/fadimatar112211-bit/Archero_fm/actions/runs/43522963831
