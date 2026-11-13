@@ -5,7 +5,6 @@ import 'skill_system.dart';
 /// Converts the mutable in-memory run into a stable, JSON-safe snapshot.
 RunCheckpoint captureRunCheckpoint({
   required int heroType,
-  required int coins,
   required GameRunState run,
   int hazardCooldownTicks = 0,
 }) {
@@ -13,7 +12,6 @@ RunCheckpoint captureRunCheckpoint({
     heroType: heroType,
     stage: run.stage,
     state: {
-      'walletCoins': coins,
       'arenaWidth': run.arenaWidth,
       'arenaHeight': run.arenaHeight,
       'arenaInitialized': run.arenaInitialized,
@@ -55,11 +53,9 @@ RunCheckpoint captureRunCheckpoint({
 GameRunState? restoreRunCheckpointState(RunCheckpoint checkpoint) {
   final data = checkpoint.state;
   try {
-    final walletCoins = data['walletCoins'];
     final hazardCooldown = data['hazardCooldownTicks'];
     final lastDamageAt = data['lastDamageAt'];
-    if (walletCoins is! int || walletCoins < 0 ||
-        hazardCooldown is! int || hazardCooldown < 0 ||
+    if (hazardCooldown is! int || hazardCooldown < 0 ||
         data['arenaInitialized'] is! bool ||
         data['challengeRoomRewardPending'] is! bool ||
         (lastDamageAt != null && lastDamageAt is! int)) {
