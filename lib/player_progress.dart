@@ -10,6 +10,7 @@ class PlayerProgress {
     this.equippedHelmetId = 0,
     this.equippedRingId = 0,
     this.equippedRelicId = 0,
+    this.ownedEquipmentMask = 585,
   });
 
   final int coins;
@@ -19,10 +20,20 @@ class PlayerProgress {
   final int bestScore;
   final int equippedWeaponId;
   final int equippedArmorId, equippedHelmetId, equippedRingId, equippedRelicId;
+  final int ownedEquipmentMask;
 
   factory PlayerProgress.fromMap(Map<String, int> values) {
     final weaponId = values['equippedWeaponId'] ?? 0;
     int gearId(String key) { final value = values[key] ?? 0; return value >= 0 && value <= 2 ? value : 0; }
+    final armorId = gearId('equippedArmorId');
+    final helmetId = gearId('equippedHelmetId');
+    final ringId = gearId('equippedRingId');
+    final relicId = gearId('equippedRelicId');
+    var ownedMask = (values['ownedEquipmentMask'] ?? 585).clamp(0, 4095);
+    ownedMask |= 1 << armorId;
+    ownedMask |= 1 << (3 + helmetId);
+    ownedMask |= 1 << (6 + ringId);
+    ownedMask |= 1 << (9 + relicId);
     return PlayerProgress(
       coins: values['coins'] ?? 150,
       hpUpgrade: values['hpUpgrade'] ?? 0,
@@ -30,10 +41,11 @@ class PlayerProgress {
       bestStage: values['bestStage'] ?? 1,
       bestScore: values['bestScore'] ?? 0,
       equippedWeaponId: weaponId >= 0 && weaponId <= 3 ? weaponId : 0,
-      equippedArmorId: gearId('equippedArmorId'),
-      equippedHelmetId: gearId('equippedHelmetId'),
-      equippedRingId: gearId('equippedRingId'),
-      equippedRelicId: gearId('equippedRelicId'),
+      equippedArmorId: armorId,
+      equippedHelmetId: helmetId,
+      equippedRingId: ringId,
+      equippedRelicId: relicId,
+      ownedEquipmentMask: ownedMask,
     );
   }
 
@@ -48,6 +60,7 @@ class PlayerProgress {
     'equippedHelmetId': equippedHelmetId,
     'equippedRingId': equippedRingId,
     'equippedRelicId': equippedRelicId,
+    'ownedEquipmentMask': ownedEquipmentMask,
   };
 
   PlayerProgress copyWith({
@@ -61,6 +74,7 @@ class PlayerProgress {
     int? equippedHelmetId,
     int? equippedRingId,
     int? equippedRelicId,
+    int? ownedEquipmentMask,
   }) {
     return PlayerProgress(
       coins: coins ?? this.coins,
@@ -73,6 +87,7 @@ class PlayerProgress {
       equippedHelmetId: equippedHelmetId ?? this.equippedHelmetId,
       equippedRingId: equippedRingId ?? this.equippedRingId,
       equippedRelicId: equippedRelicId ?? this.equippedRelicId,
+      ownedEquipmentMask: ownedEquipmentMask ?? this.ownedEquipmentMask,
     );
   }
 }
