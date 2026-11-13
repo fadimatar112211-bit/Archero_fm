@@ -5,6 +5,7 @@ import 'hero_selection_screen.dart';
 import 'progress_store.dart';
 import 'shop_economy.dart';
 import 'weapon_system.dart';
+import 'equipment_system.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -26,6 +27,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         bestStage: bestStage,
         bestScore: bestScore,
         equippedWeaponId: equippedWeaponId,
+        equippedArmorId: equippedArmorId, equippedHelmetId: equippedHelmetId,
+        equippedRingId: equippedRingId, equippedRelicId: equippedRelicId,
       ),
     );
     if (!purchase.purchased) {
@@ -83,6 +86,25 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     setState(() => equippedWeaponId = weapon.id);
     try { await saveProgress(); await playRealSound('special'); }
     catch (_) { if (!mounted) return; setState(() => equippedWeaponId = previous); _message('تعذر حفظ السلاح المختار. بقي السلاح السابق مجهزاً.'); }
+  }
+
+  Widget _gearSlot(String title, List<EquipmentProfile> items, int equippedId) => Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ...items.map((item) { final selected = item.id == equippedId; return OutlinedButton(
+        onPressed: selected ? null : () => _equipGear(item),
+        style: OutlinedButton.styleFrom(alignment: Alignment.centerRight, side: BorderSide(color: selected ? Colors.lightBlueAccent : Colors.white24)),
+        child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('${item.name} · ${item.rarity}', style: TextStyle(color: selected ? Colors.lightBlueAccent : Colors.white, fontWeight: FontWeight.bold)), Text(item.description, style: const TextStyle(fontSize: 11, color: Colors.white70))])), if (selected) const Icon(Icons.check_circle, color: Colors.lightBlueAccent)]),
+      );}),
+    ]),
+  );
+
+  Future<void> _equipGear(EquipmentProfile item) async {
+    final old = [equippedArmorId, equippedHelmetId, equippedRingId, equippedRelicId];
+    setState(() { switch (item.slot) { case EquipmentSlot.armor: equippedArmorId=item.id; case EquipmentSlot.helmet: equippedHelmetId=item.id; case EquipmentSlot.ring: equippedRingId=item.id; case EquipmentSlot.relic: equippedRelicId=item.id; } });
+    try { await saveProgress(); await playRealSound('special'); }
+    catch (_) { if (!mounted) return; setState(() { equippedArmorId=old[0]; equippedHelmetId=old[1]; equippedRingId=old[2]; equippedRelicId=old[3]; }); _message('تعذر حفظ المعدّات. بقي التجهيز السابق.'); }
   }
 
   void _message(String message) {
@@ -235,6 +257,16 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       const Text('كل سلاح يغيّر الضرر وسرعة الإطلاق وسرعة المقذوف وانتشاره.',style:TextStyle(fontSize:12,color:Colors.white70)),
                       const SizedBox(height:12),
                       ...WeaponCatalog.all.map((weapon){final selected=equippedWeaponId==weapon.id;return Padding(padding:const EdgeInsets.only(bottom:8),child:OutlinedButton(onPressed:selected?null:()=>_equipWeapon(weapon),style:OutlinedButton.styleFrom(alignment:Alignment.centerRight,side:BorderSide(color:selected?Colors.amber:Colors.white24),backgroundColor:selected?Colors.amber.withOpacity(0.12):Colors.transparent,padding:const EdgeInsets.symmetric(horizontal:14,vertical:11)),child:Row(children:[Icon(selected?Icons.check_circle:Icons.sports_martial_arts,color:selected?Colors.amber:Colors.white70),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(weapon.name,style:TextStyle(fontWeight:FontWeight.bold,color:selected?Colors.amber:Colors.white)),Text(weapon.description,style:const TextStyle(fontSize:11,color:Colors.white70))])),if(selected)const Text('مجهز',style:TextStyle(color:Colors.amber))])));}),
+                    ])),
+                    const SizedBox(height: 18),
+                    _panel(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                      const Text('🛡️ المعدات والآثار', style: TextStyle(color: Colors.lightBlueAccent, fontSize: 18, fontWeight: FontWeight.bold)),
+                      const Text('جهّز درعاً وخوذة وخاتماً وأثراً. كل قطعة تمنح خصائص مختلفة وتبقى محفوظة.', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                      const SizedBox(height: 10),
+                      _gearSlot('الدروع', EquipmentCatalog.armor, equippedArmorId),
+                      _gearSlot('الخوذ', EquipmentCatalog.helmets, equippedHelmetId),
+                      _gearSlot('الخواتم', EquipmentCatalog.rings, equippedRingId),
+                      _gearSlot('الآثار', EquipmentCatalog.relics, equippedRelicId),
                     ])),
                     const SizedBox(height: 28),
                     SizedBox(

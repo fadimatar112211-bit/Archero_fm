@@ -27,6 +27,10 @@ class ProgressStore {
     'bestStage': 1,
     'bestScore': 0,
     'equippedWeaponId': 0,
+    'equippedArmorId': 0,
+    'equippedHelmetId': 0,
+    'equippedRingId': 0,
+    'equippedRelicId': 0,
   };
 
   // Serialize complete snapshots so overlapping saves cannot interleave.
@@ -56,6 +60,7 @@ class ProgressStore {
     final fallback = _defaults[key]!;
     final candidate = value ?? fallback;
     if (key == 'equippedWeaponId') return candidate >= 0 && candidate <= 3 ? candidate : 0;
+    if (key.startsWith('equipped')) return candidate >= 0 && candidate <= 2 ? candidate : 0;
     if (key == 'bestStage') return candidate < 1 ? 1 : candidate;
     return candidate < 0 ? 0 : candidate;
   }
@@ -80,6 +85,10 @@ class ProgressStore {
       bestStage: progress.bestStage,
       bestScore: progress.bestScore,
       equippedWeaponId: progress.equippedWeaponId,
+      equippedArmorId: progress.equippedArmorId,
+      equippedHelmetId: progress.equippedHelmetId,
+      equippedRingId: progress.equippedRingId,
+      equippedRelicId: progress.equippedRelicId,
     );
   }
 
@@ -90,6 +99,10 @@ class ProgressStore {
     required int bestStage,
     required int bestScore,
     int equippedWeaponId = 0,
+    int equippedArmorId = 0,
+    int equippedHelmetId = 0,
+    int equippedRingId = 0,
+    int equippedRelicId = 0,
   }) {
     final values = <String, int>{
       'coins': _validValue('coins', coins),
@@ -98,6 +111,10 @@ class ProgressStore {
       'bestStage': _validValue('bestStage', bestStage),
       'bestScore': _validValue('bestScore', bestScore),
       'equippedWeaponId': _validValue('equippedWeaponId', equippedWeaponId),
+      'equippedArmorId': _validValue('equippedArmorId', equippedArmorId),
+      'equippedHelmetId': _validValue('equippedHelmetId', equippedHelmetId),
+      'equippedRingId': _validValue('equippedRingId', equippedRingId),
+      'equippedRelicId': _validValue('equippedRelicId', equippedRelicId),
     };
 
     final nextWrite = _pendingWrite.then((_) async {

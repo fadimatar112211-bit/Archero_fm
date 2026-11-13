@@ -12,6 +12,7 @@ int heroAtkUpgrade = 0;
 int bestStage = 1;
 int bestScore = 0;
 int equippedWeaponId = 0;
+int equippedArmorId = 0, equippedHelmetId = 0, equippedRingId = 0, equippedRelicId = 0;
 
 /// Loads saved progression, falling back to safe defaults if storage is
 /// unavailable so a transient persistence failure cannot block game startup.
@@ -31,6 +32,7 @@ Future<PlayerProgress> loadProgressOrDefaults() async {
       bestStage: 1,
       bestScore: 0,
       equippedWeaponId: 0,
+      equippedArmorId: 0, equippedHelmetId: 0, equippedRingId: 0, equippedRelicId: 0,
     );
   }
 }
@@ -45,6 +47,8 @@ Future<void> saveProgress() async {
         bestStage: bestStage,
         bestScore: bestScore,
         equippedWeaponId: equippedWeaponId,
+        equippedArmorId: equippedArmorId, equippedHelmetId: equippedHelmetId,
+        equippedRingId: equippedRingId, equippedRelicId: equippedRelicId,
       ),
     );
   } catch (error, stackTrace) {

@@ -136,6 +136,13 @@ Changed files include `lib/weapon_system.dart`, `lib/player_progress.dart`, `lib
 
 Integration fix in this follow-up: both shop purchase paths preserve the equipped weapon ID, preventing a health/attack upgrade from silently resetting the selected weapon.
 
+Equipment progression expansion now included in the open PR #39 batch:
+- Added four persistent equipment slots: armor, helmet, ring, and relic.
+- Added three profile tiers per slot with Arabic rarity labels and distinct bonuses.
+- Equipment stats affect max health, attack power, incoming damage reduction, critical chance, coin pickup radius, and coin rewards.
+- Added main-menu equipment selectors and persistence/restore for all four slots.
+- Added catalog aggregation and invalid-ID fallback tests.
+
 Verification: PR #39 commit `2f57951d2c9584db6557f7d6f9bd71078ae237b5`; CI runs 43474115698 and 43474145701 were still in progress at the last check. Do not mark Section 5 complete until all checks pass.
 
 Branch: `feature/roadmap-room-layouts-and-hazards`

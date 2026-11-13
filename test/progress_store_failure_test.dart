@@ -103,6 +103,10 @@ void main() {
       'bestStage': 5,
       'bestScore': 500,
       'equippedWeaponId': 0,
+        'equippedArmorId': 0,
+        'equippedHelmetId': 0,
+        'equippedRingId': 0,
+        'equippedRelicId': 0,
     });
   });
 

@@ -6,6 +6,10 @@ class PlayerProgress {
     this.bestStage = 1,
     this.bestScore = 0,
     this.equippedWeaponId = 0,
+    this.equippedArmorId = 0,
+    this.equippedHelmetId = 0,
+    this.equippedRingId = 0,
+    this.equippedRelicId = 0,
   });
 
   final int coins;
@@ -14,9 +18,11 @@ class PlayerProgress {
   final int bestStage;
   final int bestScore;
   final int equippedWeaponId;
+  final int equippedArmorId, equippedHelmetId, equippedRingId, equippedRelicId;
 
   factory PlayerProgress.fromMap(Map<String, int> values) {
     final weaponId = values['equippedWeaponId'] ?? 0;
+    int gearId(String key) { final value = values[key] ?? 0; return value >= 0 && value <= 2 ? value : 0; }
     return PlayerProgress(
       coins: values['coins'] ?? 150,
       hpUpgrade: values['hpUpgrade'] ?? 0,
@@ -24,6 +30,10 @@ class PlayerProgress {
       bestStage: values['bestStage'] ?? 1,
       bestScore: values['bestScore'] ?? 0,
       equippedWeaponId: weaponId >= 0 && weaponId <= 3 ? weaponId : 0,
+      equippedArmorId: gearId('equippedArmorId'),
+      equippedHelmetId: gearId('equippedHelmetId'),
+      equippedRingId: gearId('equippedRingId'),
+      equippedRelicId: gearId('equippedRelicId'),
     );
   }
 
@@ -34,6 +44,10 @@ class PlayerProgress {
     'bestStage': bestStage,
     'bestScore': bestScore,
     'equippedWeaponId': equippedWeaponId,
+    'equippedArmorId': equippedArmorId,
+    'equippedHelmetId': equippedHelmetId,
+    'equippedRingId': equippedRingId,
+    'equippedRelicId': equippedRelicId,
   };
 
   PlayerProgress copyWith({
@@ -43,6 +57,10 @@ class PlayerProgress {
     int? bestStage,
     int? bestScore,
     int? equippedWeaponId,
+    int? equippedArmorId,
+    int? equippedHelmetId,
+    int? equippedRingId,
+    int? equippedRelicId,
   }) {
     return PlayerProgress(
       coins: coins ?? this.coins,
@@ -51,6 +69,10 @@ class PlayerProgress {
       bestStage: bestStage ?? this.bestStage,
       bestScore: bestScore ?? this.bestScore,
       equippedWeaponId: equippedWeaponId ?? this.equippedWeaponId,
+      equippedArmorId: equippedArmorId ?? this.equippedArmorId,
+      equippedHelmetId: equippedHelmetId ?? this.equippedHelmetId,
+      equippedRingId: equippedRingId ?? this.equippedRingId,
+      equippedRelicId: equippedRelicId ?? this.equippedRelicId,
     );
   }
 }

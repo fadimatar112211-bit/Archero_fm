@@ -26,6 +26,7 @@ import 'combat_damage.dart';
 import 'player_attack.dart';
 import 'player_projectiles.dart';
 import 'weapon_system.dart';
+import 'equipment_system.dart';
 import 'game_run_lifecycle.dart';
 import 'game_run_session.dart';
 import 'game_run_state.dart';
@@ -167,12 +168,14 @@ class _GameScreenState extends State<GameScreen>
       hpUpgrade: heroHpUpgrade,
       attackUpgrade: heroAtkUpgrade,
     );
-    playerHp = heroStats.playerHp;
-    playerMaxHp = heroStats.playerMaxHp;
+    final gear = EquipmentCatalog.stats(armorId: equippedArmorId, helmetId: equippedHelmetId, ringId: equippedRingId, relicId: equippedRelicId);
+    playerMaxHp = heroStats.playerMaxHp + gear.maxHpBonus;
+    playerHp = heroStats.playerHp + gear.maxHpBonus;
     playerSpeed = heroStats.playerSpeed;
-    attackPowerMultiplier = heroStats.attackPowerMultiplier;
+    attackPowerMultiplier = heroStats.attackPowerMultiplier * (1 + gear.attackBonus);
     extraArrows = heroStats.extraArrows;
-    criticalChance = heroStats.criticalChance;
+    criticalChance = (heroStats.criticalChance + gear.criticalChanceBonus).clamp(0.0, 0.75);
+    coinPickupRadius += gear.coinPickupRadiusBonus;
 
     timers.periodic('game', const Duration(milliseconds: 16), () {
       if (!mounted || !runLifecycle.canAdvanceGameClock) return;
@@ -393,7 +396,7 @@ class _GameScreenState extends State<GameScreen>
             now.difference(lastDamageAt!).inMilliseconds >= 260;
         final resolution = resolveProjectileHit(
           playerHp: playerHp,
-          projectileDamage: (shot['damage'] as double?) ?? 6.0,
+          projectileDamage: ((shot['damage'] as double?) ?? 6.0) * (1 - gear.damageReduction),
           isDodging: playerMoveTicks > 0,
           canTakeDamage: canTakeDamage,
         );
@@ -626,7 +629,7 @@ class _GameScreenState extends State<GameScreen>
           ),
           damage: EnemyAttackRules.bossAreaDamage(
             bossEnraged: bossEnraged,
-          ),
+          ) * (1 - gear.damageReduction),
           isDodging: playerMoveTicks > 0,
           lastDamageAt: lastDamageAt,
         );
@@ -704,7 +707,7 @@ class _GameScreenState extends State<GameScreen>
         damage: EnemyAttackRules.contactDamage(
           enemyType: type,
           bossEnraged: bossEnraged,
-        ),
+        ) * (1 - gear.damageReduction),
       );
       switch (contactHit.status) {
         case EnemyContactHitStatus.notReady:
@@ -738,7 +741,7 @@ class _GameScreenState extends State<GameScreen>
         y: coin['y'] as double,
       )).toList(growable: false),
       pickupRadius: coinPickupRadius,
-      rewardPerCoin: 10 * WorldRules.forStage(stage).coinRewardMultiplier,
+      rewardPerCoin: (10 * WorldRules.forStage(stage).coinRewardMultiplier * (1 + gear.coinRewardBonus)).round(),
     );
     globalCoins += collection.reward;
     for (final index in collection.collectedIndices) {
@@ -764,7 +767,7 @@ class _GameScreenState extends State<GameScreen>
           'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 16,
         });
       } else {
-        playerHp = (playerHp - 8).clamp(0.0, playerMaxHp).toDouble();
+        playerHp = (playerHp - 8 * (1 - gear.damageReduction)).clamp(0.0, playerMaxHp).toDouble();
         lastDamageAt = DateTime.now();
         combatEffects.add({
           'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,

@@ -12,6 +12,10 @@ void main() {
         'bestStage': 1,
         'bestScore': 0,
         'equippedWeaponId': 0,
+        'equippedArmorId': 0,
+        'equippedHelmetId': 0,
+        'equippedRingId': 0,
+        'equippedRelicId': 0,
       });
     });
 
@@ -23,6 +27,10 @@ void main() {
         bestStage: 8,
         bestScore: 1240,
         equippedWeaponId: 2,
+        equippedArmorId: 1,
+        equippedHelmetId: 2,
+        equippedRingId: 1,
+        equippedRelicId: 2,
       );
       expect(PlayerProgress.fromMap(original.toMap()).toMap(), original.toMap());
     });
