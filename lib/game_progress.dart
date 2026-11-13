@@ -33,6 +33,18 @@ Future<void> saveProgress() async {
   }
 }
 
+/// Persists progression without allowing an optional save failure to escape
+/// from gameplay callbacks. The underlying save records diagnostics and
+/// rethrows so callers that need a strict result can still use [saveProgress].
+Future<bool> saveProgressSafely() async {
+  try {
+    await saveProgress();
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 final GameAudioService gameAudio = GameAudioService();
 
 @visibleForTesting
