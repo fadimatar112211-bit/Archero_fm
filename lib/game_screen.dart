@@ -174,7 +174,7 @@ class _GameScreenState extends State<GameScreen>
     criticalChance = heroStats.criticalChance;
 
     timers.periodic('game', const Duration(milliseconds: 16), () {
-      if (!mounted || isPaused || showMysteryChest || gameOverShown) return;
+      if (!mounted || !runLifecycle.canPerformActions) return;
       if (playerDying) {
         playerDeathTicks++;
         if (playerDeathTicks >= 24) _endGame();
@@ -270,11 +270,7 @@ class _GameScreenState extends State<GameScreen>
   void _restartShootLoop() {
     final intervalMs = CombatBalance.shootIntervalMs(attackSpeedMultiplier);
     timers.periodic('shoot', Duration(milliseconds: intervalMs), () {
-      if (!mounted ||
-          isPaused ||
-          showMysteryChest ||
-          gameOverShown ||
-          enemies.isEmpty) {
+      if (!mounted || !runLifecycle.canPerformActions || enemies.isEmpty) {
         return;
       }
       _shootArrows();
@@ -282,8 +278,8 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _useSpecialSkill() {
-    if (specialCooldown > 0 || enemies.isEmpty || isPaused ||
-        showMysteryChest || gameOverShown) return;
+    if (specialCooldown > 0 || enemies.isEmpty ||
+        !runLifecycle.canPerformActions) return;
 
     setState(() {
       final heroProfile = HeroProfile.forType(widget.heroType);
@@ -738,6 +734,7 @@ class _GameScreenState extends State<GameScreen>
     if (playerHp <= 0) {
       playerHp = 0;
       runLifecycle.beginPlayerDeath();
+      timers.cancel('shoot');
       playerDeathTicks = 0;
       playRealSound('hit');
       if (mounted) setState(() {});
@@ -921,7 +918,7 @@ class _GameScreenState extends State<GameScreen>
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
               onPanUpdate: (details) {
-                if (isPaused || showMysteryChest || gameOverShown) return;
+                if (!runLifecycle.canPerformActions) return;
                 final movement = resolvePlayerDrag(
                   currentX: playerX,
                   currentY: playerY,

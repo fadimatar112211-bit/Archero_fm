@@ -6,6 +6,7 @@ void main() {
     test('starts active and toggles pause and resume', () {
       final lifecycle = GameRunLifecycle();
       expect(lifecycle.phase, GameRunPhase.active);
+      expect(lifecycle.canPerformActions, isTrue);
       expect(lifecycle.togglePause(), isTrue);
       expect(lifecycle.isPaused, isTrue);
       expect(lifecycle.togglePause(), isTrue);
@@ -31,6 +32,7 @@ void main() {
       final lifecycle = GameRunLifecycle();
       expect(lifecycle.beginPlayerDeath(), isTrue);
       expect(lifecycle.isPlayerDying, isTrue);
+      expect(lifecycle.canPerformActions, isFalse);
       expect(lifecycle.togglePause(), isFalse);
       expect(lifecycle.beginStageReward(mysteryChest: false), isFalse);
       expect(lifecycle.finishRun(), isTrue);
@@ -56,5 +58,20 @@ void main() {
       expect(lifecycle.beginPlayerDeath(), isFalse);
       expect(lifecycle.beginStageReward(mysteryChest: true), isFalse);
     });
+    test('only active phase accepts gameplay actions', () {
+      final lifecycle = GameRunLifecycle();
+      expect(lifecycle.canPerformActions, isTrue);
+      lifecycle.pause();
+      expect(lifecycle.canPerformActions, isFalse);
+      lifecycle.resume();
+      lifecycle.beginStageReward(mysteryChest: true);
+      expect(lifecycle.canPerformActions, isFalse);
+      lifecycle.collectChest();
+      lifecycle.beginPlayerDeath();
+      expect(lifecycle.canPerformActions, isFalse);
+      lifecycle.finishRun();
+      expect(lifecycle.canPerformActions, isFalse);
+    });
+
   });
 }

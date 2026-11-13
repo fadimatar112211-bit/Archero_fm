@@ -12,6 +12,9 @@ class GameRunLifecycle {
   GameRunPhase _phase = GameRunPhase.active;
 
   GameRunPhase get phase => _phase;
+
+  /// Gameplay input and attacks are accepted only during the active phase.
+  bool get canPerformActions => _phase == GameRunPhase.active;
   bool get isPaused =>
       _phase == GameRunPhase.paused || _phase == GameRunPhase.skillReward;
   bool get showMysteryChest => _phase == GameRunPhase.chestReward;
