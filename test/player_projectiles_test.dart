@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archero_fm/player_projectiles.dart';
+import 'package:archero_fm/combat_collision.dart';
 
 void main() {
   group('advancePlayerProjectile', () {
@@ -63,6 +64,36 @@ void main() {
         arenaHeight: 640,
       );
       expect(step.shouldRemove, isTrue);
+    });
+
+    test('resolves first overlapping target with existing reverse priority', () {
+      final step = advancePlayerProjectile(
+        x: 50,
+        y: 50,
+        velocityX: 0,
+        velocityY: 0,
+        arenaWidth: 360,
+        arenaHeight: 640,
+        targets: const [
+          CombatCircle(x: 50, y: 50, radius: 20),
+          CombatCircle(x: 50, y: 50, radius: 20),
+        ],
+      );
+      expect(step.hitTargetIndex, 1);
+    });
+
+    test('does not resolve collisions for arrows removed outside the arena', () {
+      final step = advancePlayerProjectile(
+        x: 359,
+        y: 100,
+        velocityX: 30,
+        velocityY: 0,
+        arenaWidth: 360,
+        arenaHeight: 640,
+        targets: const [CombatCircle(x: 389, y: 100, radius: 30)],
+      );
+      expect(step.shouldRemove, isTrue);
+      expect(step.hitTargetIndex, isNull);
     });
   });
 }
