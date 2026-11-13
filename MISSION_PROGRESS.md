@@ -328,7 +328,7 @@ Files changed:
 - `test/run_checkpoint_test.dart` (new)
 - `test/game_run_checkpoint_adapter_test.dart` (new)
 
-Verification status: **not yet validated by GitHub Actions**. No PR has been opened for this batch yet. The code has not been run on a physical Android device. Treat this as implementation in progress, not complete.
+Verification status at the first checkpoint: implementation had not yet been validated by GitHub Actions and no physical Android device test had been performed. PR #44 has since been opened; see the newer checkpoint below for its current CI state. Treat the feature as in progress, not complete.
 
 ### Exact next actions
 1. Review the checkpoint code for edge cases and run-state correctness; add integration/widget coverage where useful.
@@ -336,3 +336,46 @@ Verification status: **not yet validated by GitHub Actions**. No PR has been ope
 3. Fix any CI failures before merging.
 4. After merge, verify the resume flow and update this file with the exact merge SHA and CI run IDs.
 5. Continue Section 7 with world/stage unlock gates, then stronger save-corruption recovery. Keep all other roadmap requirements open until implemented and verified.
+
+
+## Session checkpoint — 2026-11-13 (latest; PR #44 open)
+
+### Current repository state
+- PR #43 remains merged into `feature/procedural-game-audio-v2` as merge commit `80c55b2b0f1e49b304c223515f11b149c337c7fc`.
+- PR #44, “Add persistent mid-run checkpoint save and resume”, is **open and not merged**.
+- PR #44 base: `feature/procedural-game-audio-v2`.
+- PR #44 head branch: `feature/mid-run-checkpoint-integrated`.
+- Latest verified PR #44 head SHA: `98fe7e8ba975b844cd32ba8d14abc33d0d6328f5`.
+- Latest GitHub Actions workflow run for that head: `43496064493` (Flutter CI, run number 817), status **in_progress** at the time this checkpoint was written. The previous run `43496064255` (run 816) was cancelled. Do not merge PR #44 while CI is running or unless all required checks pass.
+- No successful CI conclusion has yet been confirmed for the latest PR #44 head. Physical-device gameplay validation has not been performed.
+
+### PR #44 implementation contents
+- Versioned JSON checkpoint model and defensive decoding.
+- Serialized SharedPreferences save/load/clear operations to prevent stale writes racing with clears.
+- Snapshot adapter captures/restores player position and stats, stage/score, selected skills and synergies, enemies, arrows, enemy projectiles, pickups, effects, defeated sprites, wallet balance, and room hazard cooldown.
+- Snapshot entity maps are copied so the saved checkpoint is not a live mutable view of gameplay collections.
+- Periodic five-second saves and app-background save.
+- Main-menu resume button, with checkpoint validation before offering resume.
+- Clear checkpoint on fresh-run start, run completion, and stage reward/special-room transitions; persist a fresh checkpoint after reward resolution.
+- Tests cover serialization, malformed/unsupported payloads, persistence lifecycle, corrupted storage, state round-trip, and invalid run-state rejection.
+
+### Changed files in PR #44
+- `lib/run_checkpoint.dart`
+- `lib/game_run_checkpoint_adapter.dart`
+- `lib/game_run_session.dart`
+- `lib/game_screen.dart`
+- `lib/main_menu_screen.dart`
+- `lib/hero_selection_screen.dart`
+- `test/run_checkpoint_test.dart`
+- `test/game_run_checkpoint_adapter_test.dart`
+- `MISSION_PROGRESS.md`
+
+### Exact next actions
+1. Poll workflow run `43496064493` until it completes and inspect every job/step, especially Dart analysis, Flutter tests, Android project generation, and Android debug APK build.
+2. If any check fails, inspect logs, fix the underlying issue on `feature/mid-run-checkpoint-integrated`, and wait for a green run on the new head SHA.
+3. Review PR #44 diff and verify mergeability against the current base; merge only after all required checks pass.
+4. After merge, record exact merge commit and successful CI run IDs here.
+5. Perform physical-device resume testing when an Android build/device is available; do not mark gameplay verified before this.
+6. Continue Section 7 with world/stage unlock gates, then stronger save-corruption recovery.
+
+Keep all other roadmap requirements open until implemented and verified. Never treat PR creation, code presence, or an in-progress workflow as completion.
