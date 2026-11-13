@@ -11,6 +11,18 @@ void main() {
       expect(session.isTerminal, isFalse);
     });
 
+    test('disposes lifecycle and all timers with the session', () {
+      final session = GameRunSession();
+      session.timers.periodic('owned', const Duration(hours: 1), () {});
+
+      session.dispose();
+
+      expect(session.isDisposed, isTrue);
+      expect(session.lifecycle.isGameOver, isTrue);
+      expect(session.timers.isDisposed, isTrue);
+      expect(session.timers.activeTimerCount, 0);
+    });
+
     test('keeps separate sessions isolated', () {
       final first = GameRunSession(initialStage: 3);
       final second = GameRunSession(initialStage: 8);
