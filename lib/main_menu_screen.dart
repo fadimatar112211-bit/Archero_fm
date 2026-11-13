@@ -145,6 +145,33 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     }
   }
 
+  Future<void> _buyChestKeyWithGems() async {
+    if (_walletBusy) return;
+    setState(() => _walletBusy = true);
+    try {
+      final result = await purchaseChestKeyWithGems(
+        coins: globalCoins,
+        gems: globalGems,
+        keys: globalKeys,
+        equipmentShards: globalEquipmentShards,
+        persist: _persistWallet,
+      );
+      if (!result.completed) {
+        _message(result.status == ResourceTransactionStatus.insufficientCoins
+            ? 'تحتاج إلى 5 جواهر لشراء مفتاح.'
+            : 'تعذر حفظ شراء المفتاح؛ لم يتم خصم الجواهر.');
+        return;
+      }
+      globalGems = result.gems;
+      globalKeys = result.keys;
+      try { await playRealSound('coin'); } catch (_) {}
+      if (mounted) _message('تم شراء مفتاح باستخدام الجواهر.');
+    } finally {
+      _walletBusy = false;
+      if (mounted) setState(() {});
+    }
+  }
+
   Future<void> _openChest(ChestDefinition chest) async {
     if (_walletBusy || globalKeys < chest.keyCost) return;
     setState(() => _walletBusy = true);
@@ -452,6 +479,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             onPressed: _walletBusy ? null : _buyChestKey,
                             icon: const Icon(Icons.key),
                             label: Text(_walletBusy ? 'جارٍ حفظ العملية…' : 'شراء مفتاح · 180 عملة'),
+                          ),
+                          const SizedBox(height: 6),
+                          OutlinedButton.icon(
+                            onPressed: _walletBusy || globalGems < 5 ? null : _buyChestKeyWithGems,
+                            icon: const Icon(Icons.diamond),
+                            label: const Text('شراء مفتاح · 5 جواهر'),
                           ),
                           const SizedBox(height: 8),
                           ...chestDefinitions.map((chest) => Padding(
