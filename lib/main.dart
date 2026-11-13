@@ -45,6 +45,9 @@ Future<void> main() async {
     equippedRingId = progress.equippedRingId;
     equippedRelicId = progress.equippedRelicId;
     ownedEquipmentMask = progress.ownedEquipmentMask;
+    globalGems = progress.gems;
+    globalKeys = progress.keys;
+    globalEquipmentShards = progress.equipmentShards;
     runApp(const ArcheroSoundApp());
   }, (error, stackTrace) {
     GameDiagnostics.record(
