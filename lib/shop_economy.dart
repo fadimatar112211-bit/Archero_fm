@@ -51,6 +51,37 @@ class ShopEconomy {
 }
 
 
+class ShopPurchaseResult {
+  const ShopPurchaseResult({
+    required this.remainingCoins,
+    required this.updatedUpgradeValue,
+    required this.purchased,
+  });
+
+  final int remainingCoins;
+  final int updatedUpgradeValue;
+  final bool purchased;
+}
+
+ShopPurchaseResult purchaseUpgrade({
+  required ShopUpgradeInfo upgrade,
+  required int currentCoins,
+  required int currentUpgradeValue,
+}) {
+  if (!upgrade.canPurchase(currentCoins)) {
+    return ShopPurchaseResult(
+      remainingCoins: currentCoins,
+      updatedUpgradeValue: currentUpgradeValue,
+      purchased: false,
+    );
+  }
+  return ShopPurchaseResult(
+    remainingCoins: currentCoins - upgrade.cost,
+    updatedUpgradeValue: currentUpgradeValue + upgrade.increase,
+    purchased: true,
+  );
+}
+
 enum ShopPurchaseStatus {
   purchased,
   insufficientFunds,
