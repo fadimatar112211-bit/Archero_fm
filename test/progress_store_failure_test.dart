@@ -102,6 +102,7 @@ void main() {
       'atkUpgrade': 30,
       'bestStage': 5,
       'bestScore': 500,
+      'equippedWeaponId': 0,
     });
   });
 
