@@ -41,10 +41,8 @@ void main() {
       matching: find.byType(FilledButton),
     );
     await tester.ensureVisible(attackButton);
-    final onPressed = tester.widget<FilledButton>(attackButton).onPressed;
-    expect(onPressed, isNotNull);
-    onPressed!();
-    await tester.pump();
+    expect(tester.widget<FilledButton>(attackButton).onPressed, isNotNull);
+    await tester.tap(attackButton);
     await tester.pumpAndSettle();
 
     expect(globalCoins, 80);
