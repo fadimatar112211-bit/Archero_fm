@@ -118,7 +118,7 @@ PR 35 – فصل بنية اللعبة: https://github.com/fadimatar112211-bit/A
 
 ## Current execution batch — Section 5: Weapons and equipment
 
-Status: **Weapons and the first persistent equipment loadout slice are merged in PR #39. Equipment acquisition/unlocks are being added in PR #40; the remaining Section 5 requirements are still open.**
+Status: **PR #39 (weapons/equipment loadouts) and PR #40 (persistent equipment unlocks) are merged. Section 5 remains partially complete; equipment merging, drops, and comparison UI remain open. Current work has moved to special room destinations under Section 4.**
 
 Branch: `feature/roadmap-equipment-and-weapon-progression`
 
@@ -179,3 +179,19 @@ Implemented in this follow-up:
 Tests added for sequential unlock rules, ownership migration, and persistence. CI must verify analysis, the complete test suite, Android project generation, and debug APK build before merge.
 
 Remaining in Section 5: equipment merging/duplicate shards, broader loot acquisition and drops, inventory comparison UI, and further equipment balance. Section 6's full economy, chests/resources, achievement rewards, and Section 7's remaining progression requirements still need implementation. Delivery target remains the complete playable game on 2026-11-14.
+### Follow-up PR #41 — special room destinations and rewards
+
+Branch: `feature/special-room-destinations-and-rewards`
+
+Implemented:
+- After every boss room (every fifth stage), the player chooses one of four destinations before the next combat room: treasure, merchant, healing sanctuary, or challenge.
+- Treasure grants 120 coins.
+- Healing restores 40% of maximum HP, capped at maximum health.
+- Merchant offers a paid +15% run attack boost for 80 coins or a healing potion restoring 30% maximum HP for 50 coins; insufficient funds do not mutate player values.
+- Challenge adds two tougher enemies from a higher-stage wave to the next room; clearing that room awards 150 bonus coins.
+- Special room selection has its own exclusive run-lifecycle phase: combat actions and simulation time remain locked until a destination is chosen.
+- Added unit and widget tests for room options, merchant purchase rules, dialog selection, and lifecycle locking.
+
+Changed files: `lib/special_room_system.dart`, `lib/special_room_dialog.dart`, `lib/game_run_lifecycle.dart`, `lib/game_run_state.dart`, `lib/game_screen.dart`, and related tests.
+
+Validation is pending on the current PR head. This is an initial special-room choice/reward loop; separate room maps, interactable shop/treasure props, and deeper challenge-room mechanics remain open.
