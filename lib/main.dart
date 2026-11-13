@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -19,16 +20,52 @@ import 'enemy_projectile_motion.dart';
 import 'combat_collision.dart';
 import 'boss_projectiles.dart';
 import 'combat_damage.dart';
+import 'game_diagnostics.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final progress = await ProgressStore.load();
-  globalCoins = progress['coins']!;
-  heroHpUpgrade = progress['hpUpgrade']!;
-  heroAtkUpgrade = progress['atkUpgrade']!;
-  bestStage = progress['bestStage']!;
-  bestScore = progress['bestScore']!;
-  runApp(const ArcheroSoundApp());
+
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    GameDiagnostics.record(
+      details.exception,
+      details.stack ?? StackTrace.current,
+      source: 'flutter_framework',
+    );
+  };
+  PlatformDispatcher.instance.onError = (error, stackTrace) {
+    GameDiagnostics.record(
+      error,
+      stackTrace,
+      source: 'platform_dispatcher',
+    );
+    return true;
+  };
+
+  await runZonedGuarded<Future<void>>(() async {
+    try {
+      final progress = await ProgressStore.load();
+      globalCoins = progress['coins']!;
+      heroHpUpgrade = progress['hpUpgrade']!;
+      heroAtkUpgrade = progress['atkUpgrade']!;
+      bestStage = progress['bestStage']!;
+      bestScore = progress['bestScore']!;
+      runApp(const ArcheroSoundApp());
+    } catch (error, stackTrace) {
+      GameDiagnostics.record(
+        error,
+        stackTrace,
+        source: 'application_startup',
+      );
+      rethrow;
+    }
+  }, (error, stackTrace) {
+    GameDiagnostics.record(
+      error,
+      stackTrace,
+      source: 'uncaught_zone_error',
+    );
+  });
 }
 
 // -----------------------------------------------------------------------------
@@ -41,13 +78,24 @@ int heroAtkUpgrade = 0;
 int bestStage = 1;
 int bestScore = 0;
 
-Future<void> saveProgress() => ProgressStore.save(
-  coins: globalCoins,
-  hpUpgrade: heroHpUpgrade,
-  atkUpgrade: heroAtkUpgrade,
-  bestStage: bestStage,
-  bestScore: bestScore,
-);
+Future<void> saveProgress() async {
+  try {
+    await ProgressStore.save(
+      coins: globalCoins,
+      hpUpgrade: heroHpUpgrade,
+      atkUpgrade: heroAtkUpgrade,
+      bestStage: bestStage,
+      bestScore: bestScore,
+    );
+  } catch (error, stackTrace) {
+    GameDiagnostics.record(
+      error,
+      stackTrace,
+      source: 'progress_save',
+    );
+    rethrow;
+  }
+}
 
 final GameAudioService gameAudio = GameAudioService();
 
