@@ -35,13 +35,24 @@ CoinCollectionResult resolveCoinCollection({
 }) {
   final collectedIndices = <int>[];
   var reward = 0;
+  if (!playerX.isFinite || !playerY.isFinite) {
+    return const CoinCollectionResult(collectedIndices: [], reward: 0);
+  }
+  final safePickupRadius =
+      pickupRadius.isFinite && pickupRadius >= 0 ? pickupRadius : 0.0;
+  final safeRewardPerCoin =
+      rewardPerCoin.isFinite && rewardPerCoin > 0 ? rewardPerCoin : 0.0;
 
   for (var index = coins.length - 1; index >= 0; index--) {
-    final dx = playerX - coins[index].x;
-    final dy = playerY - coins[index].y;
-    if (sqrt(dx * dx + dy * dy) < pickupRadius) {
+    final coin = coins[index];
+    if (!coin.x.isFinite || !coin.y.isFinite) continue;
+    final dx = playerX - coin.x;
+    final dy = playerY - coin.y;
+    final distanceSquared = dx * dx + dy * dy;
+    if (distanceSquared.isFinite &&
+        distanceSquared < safePickupRadius * safePickupRadius) {
       collectedIndices.add(index);
-      reward += rewardPerCoin.round();
+      reward += safeRewardPerCoin.round();
     }
   }
 

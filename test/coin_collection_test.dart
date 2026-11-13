@@ -54,6 +54,51 @@ void main() {
       expect(result.reward, 30);
     });
 
+    test('ignores non-finite positions and malformed coin coordinates', () {
+      final result = resolveCoinCollection(
+        playerX: double.nan,
+        playerY: 0,
+        coins: const [CoinPosition(x: 0, y: 0)],
+        pickupRadius: 20,
+        rewardPerCoin: 10,
+      );
+      final malformedCoins = resolveCoinCollection(
+        playerX: 0,
+        playerY: 0,
+        coins: const [
+          CoinPosition(x: double.nan, y: 0),
+          CoinPosition(x: 0, y: double.infinity),
+          CoinPosition(x: 1, y: 1),
+        ],
+        pickupRadius: 5,
+        rewardPerCoin: 10,
+      );
+      expect(result.collectedIndices, isEmpty);
+      expect(result.reward, 0);
+      expect(malformedCoins.collectedIndices, [2]);
+      expect(malformedCoins.reward, 10);
+    });
+
+    test('normalizes invalid pickup radii and reward values', () {
+      final invalidRadius = resolveCoinCollection(
+        playerX: 0,
+        playerY: 0,
+        coins: const [CoinPosition(x: 0, y: 0)],
+        pickupRadius: double.nan,
+        rewardPerCoin: 10,
+      );
+      final invalidReward = resolveCoinCollection(
+        playerX: 0,
+        playerY: 0,
+        coins: const [CoinPosition(x: 1, y: 0)],
+        pickupRadius: 2,
+        rewardPerCoin: double.nan,
+      );
+      expect(invalidRadius.collectedIndices, isEmpty);
+      expect(invalidReward.collectedIndices, [0]);
+      expect(invalidReward.reward, 0);
+    });
+
     test('supports expanded pickup radius and world-scaled rewards', () {
       final result = resolveCoinCollection(
         playerX: 0,
