@@ -48,6 +48,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         gems: globalGems,
         keys: globalKeys,
         equipmentShards: globalEquipmentShards,
+        unlockedHeroesMask: unlockedHeroesMask,
       ),
     );
     if (!purchase.purchased) {
@@ -138,6 +139,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     gems: gems,
     keys: keys,
     equipmentShards: equipmentShards,
+    unlockedHeroesMask: unlockedHeroesMask,
   );
 
   Future<void> _buyChestKey() async {
