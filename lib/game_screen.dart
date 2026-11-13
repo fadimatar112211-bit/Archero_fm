@@ -576,12 +576,22 @@ class _GameScreenState extends State<GameScreen>
         'source': 'boss',
       });
     }
-    if (update.projectiles.isNotEmpty || update.areaAttackStarted ||
-        update.showPeriodicTell) {
+    if (update.projectiles.isNotEmpty) {
       combatEffects.add({
         'x': enemy['x'], 'y': enemy['y'],
-        'type': 'bossTell',
-        'life': update.areaAttackStarted ? 32 : 16,
+        'type': 'bossTell', 'life': 16,
+      });
+    }
+    if (update.areaAttackStarted) {
+      combatEffects.add({
+        'x': enemy['x'], 'y': enemy['y'],
+        'type': 'bossTell', 'life': 32,
+      });
+    }
+    if (update.showPeriodicTell) {
+      combatEffects.add({
+        'x': enemy['x'], 'y': enemy['y'],
+        'type': 'bossTell', 'life': 28,
       });
     }
 
