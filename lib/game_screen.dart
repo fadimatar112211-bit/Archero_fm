@@ -279,15 +279,11 @@ class _GameScreenState extends State<GameScreen>
         showMysteryChest || gameOverShown) return;
 
     setState(() {
-      // Distinct hero skills: flame burst, shadow evasion, storm strike.
-      final skillDamage = switch (widget.heroType) {
-        2 => 70.0,
-        3 => 42.0,
-        4 => 54.0,
-        _ => 48.0,
-      } * attackPowerMultiplier;
+      final heroProfile = HeroProfile.forType(widget.heroType);
+      final skillDamage =
+          heroProfile.activeSkillDamage * attackPowerMultiplier;
 
-      if (widget.heroType == 3) {
+      if (heroProfile.triggersDodge) {
         playerMoveTicks = 36;
         combatEffects.add({
           'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 24,
