@@ -27,13 +27,14 @@
 | `.github/workflows/build-apk.yml` | CI لبناء APK بعد تجهيز Flutter/Android وتشغيل الفحوصات ورفع artifact. |
 | `.github/workflows/flutter-ci.yml` | CI لفحوص Flutter والتحليل والاختبارات على تغييرات المستودع. |
 
-### كود التطبيق lib/ (58)
+### كود التطبيق lib/ (59)
 
 | الملف | الوظيفة |
 |---|---|
 | `lib/achievement_system.dart` | منطق تعريف الإنجازات، شروط فتحها ومكافآتها واستحقاقها. |
 | `lib/audio_service.dart` | خدمة تشغيل وإدارة المؤثرات/الموسيقى الصوتية وإعدادات الصوت. |
 | `lib/boss_combat.dart` | قواعد منطق قتال الزعماء ومراحل/نتائج هجماتهم. |
+| `lib/boss_movement.dart` | قرارات حركة الزعيم المستقلة، بما فيها اندفاعة الشحن وتأثير مرحلة الزعيم والغضب. |
 | `lib/boss_projectiles.dart` | إنشاء/حركة/قواعد مقذوفات الزعماء. |
 | `lib/boss_spawn.dart` | إنشاء كيان الزعيم وخصائصه الأساسية بمعزل عن مولّد موجات الأعداء العاديين. |
 | `lib/coin_collection.dart` | قواعد التقاط العملات وحساب نواتج الجمع. |
@@ -146,6 +147,7 @@
 | `test/audio_service_test.dart` | اختبارات آلية لوحدة/ميزة audio service؛ تتحقق من السلوك المحدد في حالات الاختبار. |
 | `test/boss_combat_test.dart` | اختبارات آلية لوحدة/ميزة boss combat؛ تتحقق من السلوك المحدد في حالات الاختبار. |
 | `test/boss_projectiles_test.dart` | اختبارات آلية لوحدة/ميزة boss projectiles؛ تتحقق من السلوك المحدد في حالات الاختبار. |
+| `test/boss_movement_test.dart` | اختبارات قرارات حركة الزعيم المستقلة وتدرج السرعة حسب المرحلة والغضب. |
 | `test/boss_spawn_test.dart` | اختبارات إنشاء الزعيم وخصائصه وتدرج صحته وسرعته بمعزل عن موجات الأعداء. |
 | `test/coin_collection_test.dart` | اختبارات آلية لوحدة/ميزة coin collection؛ تتحقق من السلوك المحدد في حالات الاختبار. |
 | `test/combat_collision_test.dart` | اختبارات آلية لوحدة/ميزة combat collision؛ تتحقق من السلوك المحدد في حالات الاختبار. |
