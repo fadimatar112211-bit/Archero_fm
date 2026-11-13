@@ -18,7 +18,7 @@ void main() {
       (tester) async {
     await tester.pumpWidget(const ArcheroSoundApp());
 
-    await tester.tap(find.text('صحة +25 (50)'));
+    await tester.tap(find.text('صحة +25 · المستوى 0/20 · 50 عملة'));
     await tester.pumpAndSettle();
 
     expect(globalCoins, 100);
@@ -35,7 +35,7 @@ void main() {
       (tester) async {
     await tester.pumpWidget(const ArcheroSoundApp());
 
-    final attackButton = find.text('هجوم +15 (70)');
+    final attackButton = find.text('هجوم +15 · المستوى 0/15 · 70 عملة');
     await tester.ensureVisible(attackButton);
     await tester.tap(attackButton);
     await tester.pumpAndSettle();
