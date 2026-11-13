@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:archero_fm/main.dart';
+import 'package:archero_fm/progress_store.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
+    ProgressStore.resetForTesting();
     SharedPreferences.setMockInitialValues({});
     globalCoins = 150;
     heroHpUpgrade = 0;
