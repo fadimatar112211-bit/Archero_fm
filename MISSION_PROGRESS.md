@@ -251,7 +251,7 @@ Remaining in Section 7: mid-run checkpoint save/restore, achievements and reward
 
 Branch: `feature/persistent-achievements-and-reward-claims`
 
-Status: implementation and tests are committed on this branch. Latest-head CI is running; PR creation and merge are pending successful validation.
+Status: PR #43 is merged into `feature/procedural-game-audio-v2` as merge commit `80c55b2b0f1e49b304c223515f11b149c337c7fc`. Final CI run `43493906694` succeeded, including Dart analysis, Flutter tests, Android project generation, and Android debug APK build.
 
 Implemented:
 - Added persistent lifetime counters for defeated enemies, defeated bosses, opened reward chests, and completed runs.
@@ -288,7 +288,7 @@ This checkpoint was added after reviewing GitHub PRs #41, #42, and #43 and the c
 ### Verified PR states
 - PR #41, “Add boss-gated special room choices and rewards”: **merged** into `feature/procedural-game-audio-v2` on 2026-11-13. Merge commit: `81cdd3b947003b0cefa54541b0d948ecbf448c80`. Final-head CI runs `43482791474` and `43482784424` succeeded (Dart analysis, Flutter tests, Android project generation, Android debug APK build).
 - PR #42, “Add persistent resource wallet and reward chests”: **merged** into `feature/procedural-game-audio-v2` on 2026-11-13. Merge commit: `77a2347cbf264e8d2e5760209148bd70b7b34aff`. Final-head CI runs `43488128681` and `43488116406` succeeded (Dart analysis, Flutter tests, Android project generation, Android debug APK build).
-- PR #43, “Add persistent achievements and one-time reward claims”: **open, not merged** at this checkpoint. Branch: `feature/persistent-achievements-and-reward-claims`. Head commit: `9be87b14d4a93e2244d4b55d23e264e406510aa3`. The two GitHub Actions check runs on this head (`43491077166` and `43491060914`) are completed successfully. PR #43 changes 14 files, including the achievement implementation, persistence integration, tests, and this progress file. Do not describe PR #43 as merged until GitHub confirms the merge.
+- PR #43, “Add persistent achievements and one-time reward claims”: **merged** into `feature/procedural-game-audio-v2`. Final head: `a863e898f075a80eaf8fb5d8333fd916d2f23f55`; merge commit: `80c55b2b0f1e49b304c223515f11b149c337c7fc`. Final CI run `43493906694` completed successfully: Dart analysis, full Flutter tests, Android project generation, and Android debug APK build.
 
 ### Exact resume point
 - The latest implementation batch is PR #43: persistent achievements and one-time reward claims (details and changed-file list are recorded in the section above).
@@ -298,3 +298,90 @@ This checkpoint was added after reviewing GitHub PRs #41, #42, and #43 and the c
 
 ### Progress-recording rule for future sessions
 After every coherent implementation batch, update this `MISSION_PROGRESS.md` in the active working branch with: roadmap section/item, what changed, exact files, tests and build results, CI run IDs and outcomes, PR number/state, merge commit (if merged), remaining gaps, and the exact next action. Keep statuses evidence-based (implemented, tested, built, manually gameplay-verified are distinct). Before stopping a session, write a fresh “Session checkpoint” so the next session can resume without asking the user to reconstruct the history.
+
+
+## Session checkpoint — 2026-11-13 (after PR #43 merge; active-run checkpoint implementation underway)
+
+### Verified integration
+- PR #43 is merged into `feature/procedural-game-audio-v2` as `80c55b2b0f1e49b304c223515f11b149c337c7fc`.
+- Final-head Flutter CI run `43493906694` succeeded. The Android debug APK build completed successfully after the earlier analysis, test, and Android project-generation steps passed.
+- PR #43 is no longer open. Its achievement system is integrated; the nine-section roadmap remains incomplete.
+
+### Section 7 — mid-run checkpoint save/restore (implementation branch)
+Branch: `feature/mid-run-checkpoint-integrated`, based directly on PR #43 merge commit.
+
+Implemented in the current unvalidated batch:
+- Added a versioned JSON checkpoint model with defensive decoding and a dedicated SharedPreferences store.
+- Added a run-state adapter that captures/restores hero-independent combat state: stage, player stats/position, score, skill selections and synergies, enemies, player arrows, enemy projectiles, coins, combat effects, defeated sprites, room-hazard cooldown.
+- Added periodic five-second checkpoint saves while the run is active/paused, plus a save on app backgrounding.
+- Added a main-menu “resume saved run” action and a restore constructor path for GameRunSession.
+- Clear the checkpoint when a new run starts or a run ends; clear it at stage-reward transitions and write a fresh checkpoint after the reward choice resolves.
+- Added model/storage and run-state adapter tests.
+
+Files changed:
+- `lib/run_checkpoint.dart` (new)
+- `lib/game_run_checkpoint_adapter.dart` (new)
+- `lib/game_run_session.dart`
+- `lib/game_screen.dart`
+- `lib/main_menu_screen.dart`
+- `lib/hero_selection_screen.dart`
+- `test/run_checkpoint_test.dart` (new)
+- `test/game_run_checkpoint_adapter_test.dart` (new)
+
+Verification status at the first checkpoint: implementation had not yet been validated by GitHub Actions and no physical Android device test had been performed. PR #44 has since been opened; see the newer checkpoint below for its current CI state. Treat the feature as in progress, not complete.
+
+### Exact next actions
+1. Review the checkpoint code for edge cases and run-state correctness; add integration/widget coverage where useful.
+2. Open a PR against `feature/procedural-game-audio-v2` and wait for Dart analysis, all Flutter tests, Android project generation, and Android debug APK build.
+3. Fix any CI failures before merging.
+4. After merge, verify the resume flow and update this file with the exact merge SHA and CI run IDs.
+5. Continue Section 7 with world/stage unlock gates, then stronger save-corruption recovery. Keep all other roadmap requirements open until implemented and verified.
+
+
+## Session checkpoint — 2026-11-13 (latest; PR #44 open)
+
+### Current repository state
+- PR #43 remains merged into `feature/procedural-game-audio-v2` as merge commit `80c55b2b0f1e49b304c223515f11b149c337c7fc`.
+- PR #44, “Add persistent mid-run checkpoint save and resume”, is **open and not merged**.
+- PR #44 base: `feature/procedural-game-audio-v2`.
+- PR #44 head branch: `feature/mid-run-checkpoint-integrated`.
+- Latest PR #44 head SHA after wallet-source-of-truth hardening and progress-log update: `698c40e08bd01cc4231cfe49dc6f711132bb448c`.
+- Earlier run `43496064493` (run 817) was cancelled during the Android debug APK step after setup, dependency installation, Dart analysis, tests, and Android project generation had passed. Workflow run `43497017111` (run 823) was created for the code-only head and is superseded by the latest-head workflow run `43497110206` (run 825) for head `698c40e08bd01cc4231cfe49dc6f711132bb448c`; the latter was in progress at the time this checkpoint was written. Do not merge PR #44 until this latest-head run completes successfully.
+- No successful CI conclusion has yet been confirmed for the latest PR #44 head. Physical-device gameplay validation has not been performed.
+
+### PR #44 implementation contents
+- Versioned JSON checkpoint model and defensive decoding.
+- Serialized SharedPreferences save/load/clear operations to prevent stale writes racing with clears.
+- Snapshot adapter captures/restores player position and stats, stage/score, selected skills and synergies, enemies, arrows, enemy projectiles, pickups, effects, defeated sprites, room hazard cooldown.
+- Snapshot entity maps are copied so the saved checkpoint is not a live mutable view of gameplay collections.
+- Periodic five-second saves and app-background save.
+- Main-menu resume button, with checkpoint validation before offering resume.
+- Clear checkpoint on fresh-run start, run completion, and stage reward/special-room transitions; persist a fresh checkpoint after reward resolution.
+- Tests cover serialization, malformed/unsupported payloads, persistence lifecycle, corrupted storage, state round-trip, and invalid run-state rejection.
+
+### Changed files in PR #44
+- `lib/run_checkpoint.dart`
+- `lib/game_run_checkpoint_adapter.dart`
+- `lib/game_run_session.dart`
+- `lib/game_screen.dart`
+- `lib/main_menu_screen.dart`
+- `lib/hero_selection_screen.dart`
+- `test/run_checkpoint_test.dart`
+- `test/game_run_checkpoint_adapter_test.dart`
+- `MISSION_PROGRESS.md`
+
+### Wallet consistency hardening (latest code change)
+- Removed wallet balance from the active-run checkpoint payload and restore path. The player progression store remains the single source of truth for persistent coins.
+- Updated `lib/game_run_checkpoint_adapter.dart`, `lib/game_screen.dart`, and `test/game_run_checkpoint_adapter_test.dart`.
+- Reason: a checkpoint can be older than a later saved shop purchase or wallet update; restoring its wallet value could roll back legitimate spending or overwrite newer persisted progression.
+- Commit: `7f991ef65dfaf4f1241cdd85a2e51e421e3e074c`.
+
+### Exact next actions
+1. Poll latest-head workflow run `43497110206` until it completes and inspect every job/step, especially Dart analysis, Flutter tests, Android project generation, and Android debug APK build.
+2. If any check fails, inspect logs, fix the underlying issue on `feature/mid-run-checkpoint-integrated`, and wait for a green run on the new head SHA.
+3. Review PR #44 diff and verify mergeability against the current base; merge only after all required checks pass.
+4. After merge, record exact merge commit and successful CI run IDs here.
+5. Perform physical-device resume testing when an Android build/device is available; do not mark gameplay verified before this.
+6. Continue Section 7 with world/stage unlock gates, then stronger save-corruption recovery.
+
+Keep all other roadmap requirements open until implemented and verified. Never treat PR creation, code presence, or an in-progress workflow as completion.
