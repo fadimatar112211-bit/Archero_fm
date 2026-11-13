@@ -23,6 +23,7 @@ void main() {
   setUp(() {
     preferences = _MemoryProgressPreferences();
     ProgressStore.setPreferencesProviderForTesting(() async => preferences);
+    playSoundOverrideForTesting = (_) async {};
     globalCoins = 150;
     heroHpUpgrade = 0;
     heroAtkUpgrade = 0;
@@ -30,7 +31,10 @@ void main() {
     bestScore = 0;
   });
 
-  tearDown(ProgressStore.resetForTesting);
+  tearDown(() {
+    ProgressStore.resetForTesting();
+    playSoundOverrideForTesting = null;
+  });
 
   testWidgets('health purchase deducts coins, upgrades health and persists',
       (tester) async {
