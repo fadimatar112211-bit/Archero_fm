@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:archero_fm/main.dart';
+import 'package:archero_fm/progress_store.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
+    ProgressStore.resetForTesting();
     SharedPreferences.setMockInitialValues({});
     globalCoins = 150;
     heroHpUpgrade = 0;
@@ -15,11 +17,17 @@ void main() {
     bestScore = 0;
   });
 
+  tearDown(ProgressStore.resetForTesting);
+
   testWidgets('health purchase deducts coins, upgrades health and persists',
       (tester) async {
     await tester.pumpWidget(const ArcheroSoundApp());
 
     await tester.tap(find.text('صحة +25 · المستوى 0/20 · 50 عملة'));
+    await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    });
     await tester.pumpAndSettle();
 
     expect(globalCoins, 100);
@@ -36,6 +44,10 @@ void main() {
     final attackButton = find.text('هجوم +15 · المستوى 0/15 · 70 عملة');
     await tester.ensureVisible(attackButton);
     await tester.tap(attackButton);
+    await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    });
     await tester.pumpAndSettle();
 
     expect(globalCoins, 80);
