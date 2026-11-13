@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'progress_store.dart';
+import 'player_progress.dart';
 import 'stage_flow.dart';
 import 'skill_system.dart';
 import 'boss_combat.dart';
@@ -22,12 +23,12 @@ import 'combat_damage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final progress = await ProgressStore.load();
-  globalCoins = progress['coins']!;
-  heroHpUpgrade = progress['hpUpgrade']!;
-  heroAtkUpgrade = progress['atkUpgrade']!;
-  bestStage = progress['bestStage']!;
-  bestScore = progress['bestScore']!;
+  final progress = await ProgressStore.loadPlayerProgress();
+  globalCoins = progress.coins;
+  heroHpUpgrade = progress.hpUpgrade;
+  heroAtkUpgrade = progress.atkUpgrade;
+  bestStage = progress.bestStage;
+  bestScore = progress.bestScore;
   runApp(const ArcheroSoundApp());
 }
 
