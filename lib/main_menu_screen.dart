@@ -31,8 +31,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Future<void> _loadRunCheckpoint() async {
-    final checkpoint = await RunCheckpointStore.load();
-    if (mounted) setState(() => _activeCheckpoint = checkpoint);
+    try {
+      final checkpoint = await RunCheckpointStore.load();
+      if (mounted) setState(() => _activeCheckpoint = checkpoint);
+    } catch (_) {
+      if (mounted) setState(() => _activeCheckpoint = null);
+    }
   }
 
   Future<void> _resumeRun() async {
