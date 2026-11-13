@@ -37,12 +37,7 @@ class RoomHazardSystem {
     double damageReduction = 0,
   }) {
     final nextCooldown = cooldownTicks > 0 ? cooldownTicks - 1 : 0;
-    final safeMaxHp = playerMaxHp.isFinite && playerMaxHp > 0
-        ? playerMaxHp
-        : 0.0;
-    final safeHp = playerHp.isFinite
-        ? playerHp.clamp(0.0, safeMaxHp).toDouble()
-        : 0.0;
+    final safeHp = playerHp.isFinite ? playerHp : 0.0;
 
     if (nextCooldown > 0) {
       return RoomHazardResolution(
@@ -76,6 +71,9 @@ class RoomHazardSystem {
       );
     }
 
+    final safeMaxHp = playerMaxHp.isFinite && playerMaxHp > 0
+        ? playerMaxHp
+        : 0.0;
     final reduction = damageReduction.isFinite
         ? damageReduction.clamp(0.0, 1.0).toDouble()
         : 0.0;
@@ -85,7 +83,7 @@ class RoomHazardSystem {
       status: RoomHazardStatus.damaged,
       cooldownTicks: defaultCooldownTicks,
       playerHp: nextHp,
-      damageApplied: safeHp - nextHp,
+      damageApplied: (safeHp - nextHp).clamp(0.0, double.infinity).toDouble(),
     );
   }
 }

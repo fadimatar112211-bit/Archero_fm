@@ -62,9 +62,10 @@ void main() {
     });
 
     test('safe positions and invalid geometry do not apply damage', () {
-      final safe = resolve(x: 180, y: 520);
+      final safe = resolve(x: 180, y: 520, hp: 120);
       expect(safe.status, RoomHazardStatus.safe);
       expect(safe.cooldownTicks, 0);
+      expect(safe.playerHp, 120);
       final invalid = RoomHazardSystem.advance(
         layout: layout,
         cooldownTicks: 0,
