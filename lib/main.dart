@@ -948,7 +948,16 @@ class _GameScreenState extends State<GameScreen> {
         final now = DateTime.now();
         if (lastDamageAt == null ||
             now.difference(lastDamageAt!).inMilliseconds >= 220) {
-          playerHp -= type == 'boss' ? 9.0 : 5.0;
+          // ضرر مختلف لكل فئة: الدبابة بطيئة لكنها تضرب بقوة،
+          // والعدّاء أخف ضرراً مقابل اندفاعاته المتكررة.
+          final contactDamage = switch (type) {
+            'boss' => bossEnraged ? 12.0 : 10.0,
+            'tank' => 8.0,
+            'stalker' => 6.0,
+            'runner' => 4.0,
+            _ => 5.0,
+          };
+          playerHp -= contactDamage;
           lastDamageAt = now;
           enemy['attackHitDone'] = true;
           combatEffects.add({
