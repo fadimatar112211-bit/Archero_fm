@@ -14,6 +14,7 @@ import 'world_theme.dart';
 import 'combat_stats.dart';
 import 'combat_targeting.dart';
 import 'combat_timing.dart';
+import 'coin_collection.dart';
 import 'enemy_ai.dart';
 import 'enemy_projectile_motion.dart';
 import 'combat_collision.dart';
@@ -1154,21 +1155,23 @@ class _GameScreenState extends State<GameScreen>
       }
     }
 
-    // جمع العملات.
-    var collectedCoin = false;
-    for (int i = coins.length - 1; i >= 0; i--) {
-      final dx = playerX - (coins[i]['x'] as double);
-      final dy = playerY - (coins[i]['y'] as double);
-      if (sqrt(dx * dx + dy * dy) < coinPickupRadius) {
-        globalCoins +=
-            (10 * WorldRules.forStage(stage).coinRewardMultiplier).round();
-        collectedCoin = true;
-        coins.removeAt(i);
-        playRealSound('coin');
-      }
+    // Resolve pickups in a pure module; remove descending indices safely.
+    final collection = resolveCoinCollection(
+      playerX: playerX,
+      playerY: playerY,
+      coins: coins.map((coin) => CoinPosition(
+        x: coin['x'] as double,
+        y: coin['y'] as double,
+      )).toList(growable: false),
+      pickupRadius: coinPickupRadius,
+      rewardPerCoin: 10 * WorldRules.forStage(stage).coinRewardMultiplier,
+    );
+    globalCoins += collection.reward;
+    for (final index in collection.collectedIndices) {
+      coins.removeAt(index);
+      playRealSound('coin');
     }
-
-    if (collectedCoin) saveProgress();
+    if (collection.collectedAny) saveProgress();
 
     if (playerHp <= 0) {
       playerHp = 0;
