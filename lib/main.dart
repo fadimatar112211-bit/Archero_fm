@@ -14,6 +14,7 @@ import 'world_theme.dart';
 import 'combat_stats.dart';
 import 'combat_targeting.dart';
 import 'combat_timing.dart';
+import 'enemy_ai.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1051,52 +1052,31 @@ class _GameScreenState extends State<GameScreen>
           'type': 'bossBurst', 'life': 24,
         });
       }
-      var moveSpeed = enemy['speed'] as double;
-      var moveAngle = angle;
+      final movement = decideEnemyMovement(
+        type: type,
+        distanceToPlayer: distance,
+        baseAngle: angle,
+        enemyX: enemy['x'] as double,
+        animationTicks: animationTicks,
+        bossEnraged: bossEnraged,
+        bossPhaseMovementMultiplier: bossConfig.movementMultiplier,
+      );
+      final moveSpeed =
+          (enemy['speed'] as double) * movement.speedMultiplier;
+      final moveAngle = movement.angle;
 
-      if (type == 'ranged') {
-        if (distance < 145) {
-          moveAngle += pi;
-          moveSpeed *= 1.05;
-        } else if (distance < 185) {
-          moveSpeed *= 0.08;
-        } else {
-          moveSpeed *= 0.72;
-        }
-      } else if (type == 'runner') {
-        final dashCycle = animationTicks % 105;
-        if (dashCycle < 18) {
-          moveSpeed *= 2.35;
-          if (dashCycle == 0) {
-            combatEffects.add({
-              'x': enemy['x'], 'y': enemy['y'],
-              'type': 'enemyAttack', 'life': 12,
-            });
-          }
-        } else {
-          moveSpeed *= 0.78;
-        }
-      } else if (type == 'stalker') {
-        // يتحرك جانبياً حول اللاعب بدلاً من مطاردته بخط مستقيم.
-        final side = sin(animationTicks * 0.055 + (enemy['x'] as double)) >= 0 ? 1.0 : -1.0;
-        moveAngle += side * 0.48;
-        moveSpeed *= distance < 105 ? 0.72 : 1.12;
-      } else if (type == 'boss') {
-        final bossCycle = animationTicks % 180;
-        if (bossCycle < 28) {
-          moveSpeed *= (bossEnraged ? 3.15 : 2.65) *
-              bossConfig.movementMultiplier;
-          if (bossCycle == 0) {
-            combatEffects.add({
-              'x': enemy['x'], 'y': enemy['y'],
-              'type': 'bossTell', 'life': 28,
-            });
-          }
-        } else {
-          moveSpeed *= 0.72;
-        }
-      } else if (type == 'tank') {
-        moveSpeed *= 0.82;
+      // Keep telegraph visuals in the game layer; steering itself is pure.
+      if (type == 'runner' && animationTicks % 105 == 0) {
+        combatEffects.add({
+          'x': enemy['x'], 'y': enemy['y'],
+          'type': 'enemyAttack', 'life': 12,
+        });
+      } else if (type == 'boss' && animationTicks % 180 == 0 &&
+          animationTicks % 180 < 28) {
+        combatEffects.add({
+          'x': enemy['x'], 'y': enemy['y'],
+          'type': 'bossTell', 'life': 28,
+        });
       }
 
       enemy['x'] = (enemy['x'] as double) + cos(moveAngle) * moveSpeed;
