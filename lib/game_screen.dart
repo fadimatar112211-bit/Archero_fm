@@ -15,19 +15,14 @@ import 'boss_combat.dart';
 import 'world_rules.dart';
 import 'world_theme.dart';
 import 'combat_stats.dart';
-import 'combat_targeting.dart';
 import 'combat_effects.dart';
 import 'coin_collection.dart';
 import 'enemy_ai.dart';
 import 'enemy_spawn.dart';
 import 'enemy_attack_rules.dart';
 import 'enemy_projectile_motion.dart';
-import 'combat_collision.dart';
 import 'boss_projectiles.dart';
-import 'hero_rules.dart';
 import 'combat_damage.dart';
-import 'player_attack.dart';
-import 'player_projectiles.dart';
 import 'weapon_system.dart';
 import 'equipment_system.dart';
 import 'game_run_lifecycle.dart';
@@ -38,8 +33,8 @@ import 'game_run_checkpoint_adapter.dart';
 import 'game_timers.dart';
 import 'room_flow.dart';
 import 'room_layout.dart';
-import 'player_movement.dart';
 import 'enemy_hit_resolution.dart';
+import 'player_system.dart';
 import 'skill_selection_dialog.dart';
 import 'game_arena_view.dart';
 import 'special_room_system.dart';
@@ -187,7 +182,7 @@ class _GameScreenState extends State<GameScreen>
       final hazardTicks = widget.checkpoint!.state['hazardCooldownTicks'];
       if (hazardTicks is int && hazardTicks >= 0) _roomHazardCooldownTicks = hazardTicks;
     } else {
-      final heroStats = createHeroRunStats(
+      final heroStats = PlayerSystem.createRunStats(
         heroType: widget.heroType,
         hpUpgrade: heroHpUpgrade,
         attackUpgrade: heroAtkUpgrade,
@@ -300,13 +295,13 @@ class _GameScreenState extends State<GameScreen>
   void _shootArrows() {
     if (enemies.isEmpty) return;
 
-    final origin = CombatPoint(playerX, playerY);
-    final targetIndex = nearestTargetIndex(
-      origin: origin,
+    final targetIndex = PlayerSystem.nearestTargetIndex(
+      originX: playerX,
+      originY: playerY,
       targets: enemies
-          .map((enemy) => CombatPoint(
-                enemy['x'] as double,
-                enemy['y'] as double,
+          .map((enemy) => PlayerTarget(
+                x: enemy['x'] as double,
+                y: enemy['y'] as double,
               ))
           .toList(growable: false),
     );
@@ -315,22 +310,21 @@ class _GameScreenState extends State<GameScreen>
 
     heroAttackTicks = 12;
     final weapon = WeaponCatalog.byId(equippedWeaponId);
-    final volley = createPlayerArrowVolley(
-      origin: origin,
-      target: CombatPoint(
-        target['x'] as double,
-        target['y'] as double,
-      ),
+    final volley = PlayerSystem.createArrowVolley(
+      originX: playerX,
+      originY: playerY,
+      targetX: target['x'] as double,
+      targetY: target['y'] as double,
       extraArrows: extraArrows + weapon.bonusArrows,
       projectileSpeed: weapon.projectileSpeed,
       spreadAngle: weapon.spreadAngle,
     );
     for (final arrow in volley) {
       arrows.add({
-        'x': arrow.origin.x,
-        'y': arrow.origin.y,
-        'vx': arrow.velocity.x,
-        'vy': arrow.velocity.y,
+        'x': arrow.x,
+        'y': arrow.y,
+        'vx': arrow.velocityX,
+        'vy': arrow.velocityY,
       });
     }
     playRealSound('shoot');
@@ -357,7 +351,7 @@ class _GameScreenState extends State<GameScreen>
         !runLifecycle.canPerformActions) return;
 
     setState(() {
-      final heroProfile = HeroProfile.forType(widget.heroType);
+      final heroProfile = PlayerSystem.profileForHero(widget.heroType);
       final skillDamage =
           heroProfile.activeSkillDamage * attackPowerMultiplier;
 
@@ -495,14 +489,14 @@ class _GameScreenState extends State<GameScreen>
     // تحريك الأسهم وفحص اصطدامها بالأعداء.
     for (int i = arrows.length - 1; i >= 0; i--) {
       final arrow = arrows[i];
-      final movement = advancePlayerProjectile(
+      final movement = PlayerSystem.advanceArrow(
         x: arrow['x'] as double,
         y: arrow['y'] as double,
         velocityX: arrow['vx'] as double,
         velocityY: arrow['vy'] as double,
         arenaWidth: arenaWidth,
         arenaHeight: arenaHeight,
-        targets: enemies.map((enemy) => CombatCircle(
+        targets: enemies.map((enemy) => PlayerTarget(
           x: enemy['x'] as double,
           y: enemy['y'] as double,
           radius: enemy['radius'] as double,
@@ -1125,7 +1119,7 @@ class _GameScreenState extends State<GameScreen>
 
   void _handlePlayerDrag(Offset delta, double width, double height) {
     if (!runLifecycle.canPerformActions) return;
-    final movement = resolvePlayerDrag(
+    final movement = PlayerSystem.resolveDrag(
       currentX: playerX,
       currentY: playerY,
       deltaX: delta.dx,
