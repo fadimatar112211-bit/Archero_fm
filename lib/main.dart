@@ -507,7 +507,8 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateMixin {
+class _GameScreenState extends State<GameScreen>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   String get playerSpritePrefix => switch (widget.heroType) {
     2 => 'assets/spritesheets/player_flame',
     3 => 'assets/spritesheets/player_shadow',
@@ -560,6 +561,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     worldAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 12),
@@ -789,6 +791,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
         timer.cancel();
         return;
       }
+      if (isPaused || showMysteryChest || gameOverShown) return;
       if (specialCooldown <= 1) {
         setState(() => specialCooldown = 0);
         timer.cancel();
@@ -1322,6 +1325,19 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     );
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed ||
+        !mounted ||
+        isPaused ||
+        gameOverShown ||
+        showMysteryChest) {
+      return;
+    }
+    // Never let combat continue behind another app or a system interruption.
+    setState(() => isPaused = true);
+  }
+
   void _togglePause() {
     if (showMysteryChest || gameOverShown) return;
     setState(() => isPaused = !isPaused);
@@ -1329,6 +1345,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     gameLoop?.cancel();
     shootLoop?.cancel();
     cooldownLoop?.cancel();
