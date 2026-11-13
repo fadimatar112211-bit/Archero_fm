@@ -47,7 +47,7 @@ void main() {
       final all = SkillSystem.rollOffers(
         stage: 20,
         random: Random(2),
-        count: 6,
+        count: 8,
       );
 
       expect(all.map((skill) => skill.rarity).toSet(), {
