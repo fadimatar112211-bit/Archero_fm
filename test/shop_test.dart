@@ -3,18 +3,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:archero_fm/main.dart';
 
 
-Future<void> waitForSavedValue(
+Future<void> waitForSavedValues(
   WidgetTester tester,
-  String key,
-  int expected,
+  Map<String, int> expected,
 ) async {
-  await tester.runAsync(() async {
-    for (var attempt = 0; attempt < 20; attempt++) {
+  final saved = await tester.runAsync(() async {
+    for (var attempt = 0; attempt < 100; attempt++) {
       final prefs = await SharedPreferences.getInstance();
-      if (prefs.getInt(key) == expected) return;
+      if (expected.entries.every(
+        (entry) => prefs.getInt(entry.key) == entry.value,
+      )) {
+        return true;
+      }
       await Future<void>.delayed(const Duration(milliseconds: 10));
     }
+    return false;
   });
+  expect(saved, isTrue, reason: 'Timed out waiting for saved values: $expected');
 }
 
 void main() {
@@ -35,7 +40,7 @@ void main() {
 
     await tester.tap(find.text('صحة +25 (50)'));
     await tester.pumpAndSettle();
-    await waitForSavedValue(tester, 'hpUpgrade', 25);
+    await waitForSavedValues(tester, {'coins': 100, 'hpUpgrade': 25});
 
     expect(globalCoins, 100);
     expect(heroHpUpgrade, 25);
@@ -55,7 +60,7 @@ void main() {
     await tester.ensureVisible(attackButton);
     await tester.tap(attackButton);
     await tester.pumpAndSettle();
-    await waitForSavedValue(tester, 'atkUpgrade', 15);
+    await waitForSavedValues(tester, {'coins': 80, 'atkUpgrade': 15});
 
     expect(globalCoins, 80);
     expect(heroAtkUpgrade, 15);
