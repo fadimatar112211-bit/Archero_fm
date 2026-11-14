@@ -39,3 +39,6 @@ Future<void> saveProgress() async {
     rethrow;
   }
 }
+
+/// Injectable persistence boundary for purchase rollback tests and platform adapters.
+Future<void> Function() progressSaveOperation = saveProgress;
