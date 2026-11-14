@@ -860,3 +860,20 @@ Commits:
 - كشف تدقيق التوافق أن checkpoint الإصدار 1 المحفوظ قبل إضافة `hazardCooldownTicks` كان سيُرفض عند الاستعادة. أصبح الحقل اختيارياً عند القراءة وتُستخدم قيمة 0 للملفات القديمة، مع اختبار رجعي يحاكي snapshot سابقاً.
 - أول محاولة Android Emulator QA لم تصل إلى تشغيل التطبيق: محاكي API 35 استغرق 578 ثانية للإقلاع، ثم انقطع ADB عند أمر ضبط `accelerometer_rotation` داخل action قبل تنفيذ سكربت الاختبار. لم تكن هذه نتيجة فشل للعبة؛ لم يبدأ اختبار التطبيق ولم يُنتج artifact.
 - ستُعاد المحاولة بمحاكي أخف (API 34 / Pixel 2)، مع مهلة إقلاع أطول وإلغاء تعطيل الحركات من action لتجنب أمر ADB الإضافي الذي انقطع بعد الإقلاع.
+
+
+## Session checkpoint — 2026-11-14 (restore milestone-only emulator QA)
+
+### Mission 1.1 verification state
+- Active branch: `feature/visual-overhaul-home-hub`; PR #48 remains open against `feature/procedural-game-audio-v2`.
+- Current branch head before this checkpoint: `05db3c388cc3f709cd7deb7c16855d54cec14ade`.
+- Latest Flutter CI run `43533338264` completed successfully on that exact head. Dart analysis, the full Flutter unit/widget test suite, Android project generation, and Android debug APK build passed.
+- Android Emulator QA run `43533331309` completed as **cancelled**. Its setup, dependency installation, Dart analysis, and Flutter tests passed; the emulator step itself was cancelled, so there is still no successful on-device gameplay evidence.
+- Inspection found a temporary `push` trigger had been left in `.github/workflows/android-emulator-qa.yml`, despite the agreed manual-only milestone policy. Removed that push trigger; the workflow now uses `workflow_dispatch` only. Flutter CI remains automatic.
+- No emulator success is claimed. The emulator workflow must be started manually at the next planned milestone; this session's connector does not expose a workflow-dispatch action.
+
+### Exact next action
+1. Manually dispatch Android Emulator QA on the latest branch head after this workflow-only correction; inspect whether the integration test launches the app, completes the resume/exit flow, and uploads screenshot/logcat evidence.
+2. If the emulator fails before the app launches, diagnose the runner/ADB issue separately from game-code failures. If the app test fails, inspect the integration-test and logcat evidence and fix the actual regression.
+3. Continue the remaining 1.1.3–1.1.14 integration audit only after the emulator evidence is available; do not mark the 1.1 package complete until all listed requirements have evidence.
+4. Keep PR #48 open; do not merge or change its base/head without user direction.
