@@ -24,7 +24,7 @@ class ArrowVolleyFactory {
       (target['x'] as num).toDouble() - playerX,
     );
 
-    final totalShots = 1 + max(extraArrows, 0);
+    final totalShots = 1 + (extraArrows < 0 ? 0 : extraArrows);
     return List<Map<String, dynamic>>.generate(totalShots, (index) {
       final spread = index == 0 ? 0.0 : (index.isOdd ? 0.20 : -0.20);
       return {
