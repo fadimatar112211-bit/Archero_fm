@@ -4,9 +4,20 @@ workflows:
     environment:
       flutter: stable
     scripts:
-      - name: Build APK
+      - name: Prepare Android project when platform files are absent
         script: |
-          flutter build apk --release
+          if [ ! -f android/app/build.gradle ] && [ ! -f android/app/build.gradle.kts ]; then
+            flutter create --platforms=android --org com.fadimatar --project-name archero_fm .
+          else
+            echo "Existing Android project detected; preserving platform configuration."
+          fi
+      - name: Install dependencies
+        script: flutter pub get
+      - name: Analyze Dart code
+        script: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - name: Run tests
+        script: flutter test
+      - name: Build release APK
+        script: flutter build apk --release
     artifacts:
       - build/app/outputs/flutter-apk/app-release.apk
-      
