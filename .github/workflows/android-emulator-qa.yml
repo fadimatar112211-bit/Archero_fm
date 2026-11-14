@@ -2,6 +2,7 @@ name: Android Emulator QA
 
 # Emulator validation is intentionally manual and runs at integrated milestones,
 # not after every small subtask. Flutter CI continues to run automatically.
+# The current branch push trigger is temporary for the mission 1.1 milestone run.
 on:
   workflow_dispatch:
   push:
