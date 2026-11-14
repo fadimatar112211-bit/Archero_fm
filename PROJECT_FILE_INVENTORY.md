@@ -11,7 +11,7 @@
 |---|---|
 | `ROADMAP.md` | خارطة الطريق المعتمدة لتطوير اللعبة: الأساس التقني، العوالم، القتال، التقدم، تجربة اللاعب، الفن/الأداء، ثم الاختبار والإصدار. |
 | `pubspec.yaml` | تعريف حزمة Flutter والاعتماديات: Flutter و`audioplayers` و`shared_preferences` و`flutter_svg`، إضافة إلى تسجيل الأصول. |
-| `codemagic.yaml` | إعداد بناء Android APK على Codemagic باستخدام قناة Flutter المستقرة. |
+| `codemagic.yaml` | إعداد Codemagic لتحضير منصة Android عند غيابها، وتنزيل الاعتماديات، وتشغيل التحليل والاختبارات، ثم بناء APK. |
 | `.github/workflows/build-apk.yml` | GitHub Actions: تجهيز Java وFlutter، إعادة توليد مجلد Android، تنزيل الاعتماديات، تشغيل التحليل والاختبارات، ثم بناء APK ورفعه كـ artifact. |
 
 ## 2. كود التطبيق — lib/
