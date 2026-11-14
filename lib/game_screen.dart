@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 
 import 'game_settings.dart';
+import 'game_diagnostics.dart';
 
 import 'game_progress.dart';
 import 'stage_flow.dart';
@@ -226,6 +227,18 @@ class _GameScreenState extends State<GameScreen>
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
+  Future<void> _clearRunCheckpointSafely() async {
+    try {
+      await RunCheckpointStore.clear();
+    } catch (error, stackTrace) {
+      GameDiagnostics.record(
+        error,
+        stackTrace,
+        source: 'run_checkpoint_clear',
+      );
+    }
+  }
+
   Future<void> _persistRunCheckpoint() async {
     if (gameOverShown ||
         (runLifecycle.phase != GameRunPhase.active &&
@@ -236,7 +249,11 @@ class _GameScreenState extends State<GameScreen>
         run: runState,
       ));
     } catch (error, stackTrace) {
-      debugPrint('Active run checkpoint save failed: $error\\n$stackTrace');
+      GameDiagnostics.record(
+        error,
+        stackTrace,
+        source: 'run_checkpoint_save',
+      );
     }
   }
 
@@ -961,7 +978,7 @@ class _GameScreenState extends State<GameScreen>
     );
     final advance = transition.stageAdvance;
     if (transition.currentRoom.isBoss && runLifecycle.beginSpecialRoomChoice()) {
-      unawaited(RunCheckpointStore.clear());
+      unawaited(_clearRunCheckpointSafely());
       stage = transition.nextRoom.stage;
       _roomLayout = RoomLayout.forStage(stage);
       _roomHazardCooldownTicks = 0;
@@ -976,7 +993,7 @@ class _GameScreenState extends State<GameScreen>
     runLifecycle.beginStageReward(
       mysteryChest: advance.reward == StageRewardType.mysteryChest,
     );
-    unawaited(RunCheckpointStore.clear());
+    unawaited(_clearRunCheckpointSafely());
     stage = transition.nextRoom.stage;
     _roomLayout = RoomLayout.forStage(stage);
     _roomHazardCooldownTicks = 0;
@@ -1133,7 +1150,7 @@ class _GameScreenState extends State<GameScreen>
   Future<void> _endGame() async {
     if (gameOverShown) return;
     runLifecycle.finishRun();
-    try { await RunCheckpointStore.clear(); } catch (_) {}
+    await _clearRunCheckpointSafely();
     bestStage = max(bestStage, stage);
     bestScore = max(bestScore, score);
     totalRuns++;
