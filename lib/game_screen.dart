@@ -7,6 +7,7 @@ import 'audio_service.dart';
 import 'combat_painters.dart';
 import 'game_progress.dart';
 import 'enemy_wave_factory.dart';
+import 'arrow_volley_factory.dart';
 import 'sprite_sheet_frame.dart';
 import 'world_theme.dart';
 
@@ -130,29 +131,13 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   void _shootArrows() {
     if (enemies.isEmpty) return;
 
-    final target = enemies.reduce((a, b) {
-      final da = pow((a['x'] as double) - playerX, 2) +
-          pow((a['y'] as double) - playerY, 2);
-      final db = pow((b['x'] as double) - playerX, 2) +
-          pow((b['y'] as double) - playerY, 2);
-      return da <= db ? a : b;
-    });
-    final angle = atan2(
-      (target['y'] as double) - playerY,
-      (target['x'] as double) - playerX,
-    );
-
+    arrows.addAll(ArrowVolleyFactory.create(
+      enemies: enemies,
+      playerX: playerX,
+      playerY: playerY,
+      extraArrows: extraArrows,
+    ));
     heroAttackTicks = 12;
-    final totalShots = 1 + extraArrows;
-    for (int i = 0; i < totalShots; i++) {
-      final spread = i == 0 ? 0.0 : (i.isOdd ? 0.20 : -0.20);
-      arrows.add({
-        'x': playerX,
-        'y': playerY,
-        'vx': cos(angle + spread) * 8.5,
-        'vy': sin(angle + spread) * 8.5,
-      });
-    }
     playRealSound('shoot');
   }
 
