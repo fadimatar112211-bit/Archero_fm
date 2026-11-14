@@ -24,6 +24,7 @@ void main() {
     required void Function(double, double) onSize,
     required void Function(Offset, double, double) onDrag,
     VoidCallback? onPause,
+    VoidCallback? onExit,
   }) {
     return GameArenaView(
       stage: 3,
@@ -54,6 +55,7 @@ void main() {
       onArenaSizeChanged: onSize,
       onPlayerDrag: onDrag,
       onPause: onPause ?? () {},
+      onExitToMenu: onExit ?? () {},
       onSpecialSkill: () {},
       onCollectChest: () {},
     );

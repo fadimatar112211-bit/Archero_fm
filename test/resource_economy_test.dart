@@ -70,7 +70,7 @@ void main() {
         equipmentShards: 1,
         persist: ({required coins, required gems, required keys, required equipmentShards}) async { calls++; },
       );
-      expect(result.status, ResourceTransactionStatus.insufficientCoins);
+      expect(result.status, ResourceTransactionStatus.insufficientGems);
       expect(result.gems, 4);
       expect(result.keys, 0);
       expect(calls, 0);

@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'game_progress.dart';
 import 'game_screen.dart';
@@ -15,6 +17,9 @@ import 'resource_economy.dart';
 import 'achievement_system.dart';
 import 'game_settings_screen.dart';
 
+final RouteObserver<ModalRoute<void>> mainMenuRouteObserver =
+    RouteObserver<ModalRoute<void>>();
+
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
 
@@ -22,7 +27,11 @@ class MainMenuScreen extends StatefulWidget {
   State<MainMenuScreen> createState() => _MainMenuScreenState();
 }
 
-class _MainMenuScreenState extends State<MainMenuScreen> {
+class _MainMenuScreenState extends State<MainMenuScreen> with RouteAware {
+  ModalRoute<void>? _subscribedRoute;
+  final ScrollController _menuScrollController = ScrollController();
+  final GlobalKey _shopSectionKey = GlobalKey();
+  final GlobalKey _equipmentSectionKey = GlobalKey();
   bool _walletBusy = false;
   RunCheckpoint? _activeCheckpoint;
 
@@ -30,6 +39,37 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   void initState() {
     super.initState();
     _loadRunCheckpoint();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of<void>(context);
+    if (route != null && route != _subscribedRoute) {
+      if (_subscribedRoute != null) {
+        mainMenuRouteObserver.unsubscribe(this);
+      }
+      _subscribedRoute = route;
+      mainMenuRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPopNext() {
+    unawaited(_loadRunCheckpoint());
+  }
+
+  @override
+  void dispose() {
+    mainMenuRouteObserver.unsubscribe(this);
+    _menuScrollController.dispose();
+    super.dispose();
+  }
+
+  void _jumpToSection(GlobalKey key) {
+    final target = key.currentContext;
+    if (target == null) return;
+    Scrollable.ensureVisible(target, duration: const Duration(milliseconds: 520), curve: Curves.easeOutCubic, alignment: .08);
   }
 
   Future<void> _loadRunCheckpoint() async {
@@ -238,7 +278,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         persist: _persistWallet,
       );
       if (!result.completed) {
-        _message(result.status == ResourceTransactionStatus.insufficientCoins
+        _message(result.status == ResourceTransactionStatus.insufficientGems
             ? 'تحتاج إلى 5 جواهر لشراء مفتاح.'
             : 'تعذر حفظ شراء المفتاح؛ لم يتم خصم الجواهر.');
         return;
@@ -578,32 +618,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
+              controller: _menuScrollController,
               padding: const EdgeInsets.all(22),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
                 child: Column(
                   children: [
-                    const Icon(
-                      Icons.sports_esports_rounded,
-                      size: 82,
-                      color: Colors.amberAccent,
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'ARCHERO: SOUND EDITION',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'قاتل، طوّر بطلك، وتجاوز المراحل',
-                      style: TextStyle(color: Colors.amber, fontSize: 14),
-                    ),
-                    const SizedBox(height: 25),
+                    _heroHomeHub(),
+                    const SizedBox(height: 18),
                     _panel(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -653,6 +675,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     ),
                     const SizedBox(height: 18),
                     _panel(
+                      key: _shopSectionKey,
                       child: Column(
                         children: [
                           const Text(
@@ -759,7 +782,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       ...WeaponCatalog.all.map((weapon){final selected=equippedWeaponId==weapon.id;return Padding(padding:const EdgeInsets.only(bottom:8),child:OutlinedButton(onPressed:selected?null:()=>_equipWeapon(weapon),style:OutlinedButton.styleFrom(alignment:Alignment.centerRight,side:BorderSide(color:selected?Colors.amber:Colors.white24),backgroundColor:selected?Colors.amber.withOpacity(0.12):Colors.transparent,padding:const EdgeInsets.symmetric(horizontal:14,vertical:11)),child:Row(children:[Icon(selected?Icons.check_circle:Icons.sports_martial_arts,color:selected?Colors.amber:Colors.white70),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(weapon.name,style:TextStyle(fontWeight:FontWeight.bold,color:selected?Colors.amber:Colors.white)),Text(weapon.description,style:const TextStyle(fontSize:11,color:Colors.white70))])),if(selected)const Text('مجهز',style:TextStyle(color:Colors.amber))])));}),
                     ])),
                     const SizedBox(height: 18),
-                    _panel(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                    _panel(key: _equipmentSectionKey, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                       const Text('🛡️ المعدات والآثار', style: TextStyle(color: Colors.lightBlueAccent, fontSize: 18, fontWeight: FontWeight.bold)),
                       const Text('جهّز درعاً وخوذة وخاتماً وأثراً. كل قطعة تمنح خصائص مختلفة وتبقى محفوظة.', style: TextStyle(fontSize: 12, color: Colors.white70)),
                       const SizedBox(height: 10),
@@ -844,6 +867,80 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     );
   }
 
+  Widget _heroHomeHub() {
+    return Container(
+      height: 330,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFD9B66C).withOpacity(.65), width: 1.3),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(.34), blurRadius: 24, offset: const Offset(0, 12))],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          SvgPicture.asset('assets/home_hub_scene.svg', fit: BoxFit.cover),
+          DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
+            colors: [const Color(0xFF07131D).withOpacity(.12), const Color(0xFF080D13).withOpacity(.72)],
+          ))),
+          Positioned(top: 14, left: 14, right: 14, child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _hubResource(Icons.monetization_on, '$globalCoins', const Color(0xFFFFD56E)),
+              _hubResource(Icons.diamond, '$globalGems', const Color(0xFF70D8FF)),
+              _hubResource(Icons.vpn_key, '$globalKeys', const Color(0xFFFFC75E)),
+            ],
+          )),
+          Positioned(top: 63, left: 12, child: _hubSideAction(
+            icon: Icons.shield_moon_outlined, title: 'العتاد',
+            onTap: () => _jumpToSection(_equipmentSectionKey),
+          )),
+          Positioned(top: 63, right: 12, child: _hubSideAction(
+            icon: Icons.storefront_outlined, title: 'المتجر',
+            onTap: () => _jumpToSection(_shopSectionKey),
+          )),
+          Positioned(left: 92, right: 92, top: 56, bottom: 38,
+            child: SvgPicture.asset('assets/player.svg', fit: BoxFit.contain)),
+          Positioned(left: 0, right: 0, bottom: 12, child: Column(
+            children: [
+              const Text('ARCHERO · SOUND EDITION', style: TextStyle(
+                color: Color(0xFFFFE2A0), fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 1.2,
+                shadows: [Shadow(color: Colors.black, blurRadius: 8)],
+              )),
+              const SizedBox(height: 4),
+              Text('المغامر · أفضل مرحلة $bestStage', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+            ],
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _hubResource(IconData icon, String value, Color color) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+    decoration: BoxDecoration(color: const Color(0xFF111B25).withOpacity(.78),
+      borderRadius: BorderRadius.circular(18), border: Border.all(color: color.withOpacity(.55))),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, size: 16, color: color), const SizedBox(width: 5),
+      Text(value, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
+    ]),
+  );
+
+  Widget _hubSideAction({required IconData icon, required String title, required VoidCallback onTap}) =>
+    Material(color: const Color(0xFF111B25).withOpacity(.88), borderRadius: BorderRadius.circular(17),
+      child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(17), child: Container(
+        width: 68, padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 5),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(17),
+          border: Border.all(color: const Color(0xFFD9B66C).withOpacity(.7))),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, color: const Color(0xFFFFD56E), size: 25),
+          const SizedBox(height: 4), Text(title, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+        ]),
+      )),
+    );
+
   Widget _resourceBadge(IconData icon, String label, int value, Color color) =>
       Column(
         mainAxisSize: MainAxisSize.min,
@@ -855,8 +952,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         ],
       );
 
-  Widget _panel({required Widget child}) {
+  Widget _panel({Key? key, required Widget child}) {
     return Container(
+      key: key,
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(

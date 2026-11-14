@@ -4,6 +4,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:archero_fm/boss_projectiles.dart';
 
 void main() {
+  group('advanceBossProjectile', () {
+    test('moves a boss shot and detects player collision', () {
+      final step = advanceBossProjectile(
+        x: 10, y: 10, velocityX: 2, velocityY: 0, life: 10,
+        targetX: 13, targetY: 10, arenaWidth: 100, arenaHeight: 100,
+      );
+      expect(step.x, 12);
+      expect(step.y, 10);
+      expect(step.life, 9);
+      expect(step.hitTarget, isTrue);
+      expect(step.shouldRemove, isTrue);
+    });
+  });
+
   group('createBossFanVolley', () {
     test('creates the configured three-shot fan toward the player', () {
       final shots = createBossFanVolley(

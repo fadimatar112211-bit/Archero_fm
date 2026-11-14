@@ -306,44 +306,49 @@ class PlayerActorSpriteWidget extends StatelessWidget {
   final int playerDeathTicks;
 
   @override
-  Widget build(BuildContext context) => Positioned(
-        left: x - 21,
-        top: y - 21,
-        child: SizedBox(
-          width: 58,
-          height: 58,
-          child: Transform.translate(
-            offset: Offset(
-              heroAttackTicks > 0 ? 3.0 : 0.0,
-              math.sin(animationTicks * 0.13).abs() * -2.4,
-            ),
-            child: Transform.rotate(
-              angle: heroAttackTicks > 0
-                  ? -0.10 - (heroAttackTicks / 12) * 0.13
-                  : math.sin(animationTicks * 0.13) * 0.025,
-              child: Transform.scale(
-                scale: (1 + math.sin(animationTicks * 0.13) * 0.025) *
-                    (heroAttackTicks > 0 ? 1.045 : 1.0),
-                child: SpriteSheetFrame(
-                  asset: playerDying
-                      ? '${heroSpritePrefix}_death.svg'
-                      : heroAttackTicks > 0
-                          ? '${heroSpritePrefix}_attack.svg'
-                          : playerMoveTicks > 0
-                              ? '${heroSpritePrefix}_walk.svg'
-                              : '${heroSpritePrefix}_idle.svg',
-                  frameCount: 4,
-                  frameIndex: playerDying
-                      ? (playerDeathTicks ~/ 6).clamp(0, 3)
-                      : heroAttackTicks > 0
-                          ? (animationTicks ~/ 2) % 4
-                          : playerMoveTicks > 0
-                              ? (animationTicks ~/ 7) % 4
-                              : 0,
-                ),
+  Widget build(BuildContext context) {
+    final isWalking = playerMoveTicks > 0 && !playerDying;
+    final isAttacking = heroAttackTicks > 0 && !playerDying;
+    final walkPhase = animationTicks * 0.13;
+    // Keep the sprite's feet anchored to the arena floor. Only walking gets
+    // a tiny grounded step bounce; idle no longer floats or sways in place.
+    final stepBounce = isWalking ? math.sin(walkPhase * 2).abs() * 0.8 : 0.0;
+
+    return Positioned(
+      left: x - 29,
+      top: y - 29,
+      child: SizedBox(
+        key: const ValueKey('player-actor'),
+        width: 58,
+        height: 58,
+        child: Transform.translate(
+          offset: Offset(isAttacking ? 2.0 : 0.0, -stepBounce),
+          child: Transform.rotate(
+            angle: isAttacking ? -0.07 - (heroAttackTicks / 12) * 0.08 : 0,
+            child: Transform.scale(
+              scale: isAttacking ? 1.025 : 1.0,
+              alignment: Alignment.bottomCenter,
+              child: SpriteSheetFrame(
+                asset: playerDying
+                    ? '${heroSpritePrefix}_death.svg'
+                    : isAttacking
+                        ? '${heroSpritePrefix}_attack.svg'
+                        : isWalking
+                            ? '${heroSpritePrefix}_walk.svg'
+                            : '${heroSpritePrefix}_idle.svg',
+                frameCount: 4,
+                frameIndex: playerDying
+                    ? (playerDeathTicks ~/ 6).clamp(0, 3)
+                    : isAttacking
+                        ? (animationTicks ~/ 2) % 4
+                        : isWalking
+                            ? (animationTicks ~/ 4) % 4
+                            : 0,
               ),
             ),
           ),
         ),
-      );
+      ),
+    );
+  }
 }

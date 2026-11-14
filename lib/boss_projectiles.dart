@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'enemy_projectile_motion.dart';
+
 /// Immutable data for one projectile in a boss fan volley.
 class BossProjectileSpec {
   final double x;
@@ -63,4 +65,29 @@ List<BossProjectileSpec> createBossFanVolley({
       lifetimeTicks: safeLife,
     );
   }, growable: false);
+}
+
+/// Advances one boss-owned projectile using the shared collision geometry.
+ProjectileStep advanceBossProjectile({
+  required double x,
+  required double y,
+  required double velocityX,
+  required double velocityY,
+  required int life,
+  required double targetX,
+  required double targetY,
+  required double arenaWidth,
+  required double arenaHeight,
+}) {
+  return advanceEnemyProjectile(
+    x: x,
+    y: y,
+    velocityX: velocityX,
+    velocityY: velocityY,
+    life: life,
+    targetX: targetX,
+    targetY: targetY,
+    arenaWidth: arenaWidth,
+    arenaHeight: arenaHeight,
+  );
 }

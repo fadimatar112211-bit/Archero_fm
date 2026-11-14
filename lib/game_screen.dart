@@ -7,27 +7,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 
 import 'game_settings.dart';
+import 'game_diagnostics.dart';
 
 import 'game_progress.dart';
 import 'stage_flow.dart';
 import 'skill_system.dart';
-import 'boss_combat.dart';
 import 'world_rules.dart';
 import 'world_theme.dart';
 import 'combat_stats.dart';
-import 'combat_targeting.dart';
 import 'combat_effects.dart';
 import 'coin_collection.dart';
 import 'enemy_ai.dart';
-import 'enemy_spawn.dart';
 import 'enemy_attack_rules.dart';
-import 'enemy_projectile_motion.dart';
-import 'combat_collision.dart';
+import 'boss_attack_rules.dart';
 import 'boss_projectiles.dart';
-import 'hero_rules.dart';
+import 'boss_system.dart';
+import 'enemy_projectile_motion.dart';
 import 'combat_damage.dart';
-import 'player_attack.dart';
-import 'player_projectiles.dart';
 import 'weapon_system.dart';
 import 'equipment_system.dart';
 import 'game_run_lifecycle.dart';
@@ -37,9 +33,11 @@ import 'run_checkpoint.dart';
 import 'game_run_checkpoint_adapter.dart';
 import 'game_timers.dart';
 import 'room_flow.dart';
+import 'room_encounter.dart';
 import 'room_layout.dart';
-import 'player_movement.dart';
+import 'room_hazard_system.dart';
 import 'enemy_hit_resolution.dart';
+import 'player_system.dart';
 import 'skill_selection_dialog.dart';
 import 'game_arena_view.dart';
 import 'special_room_system.dart';
@@ -74,6 +72,7 @@ class _GameScreenState extends State<GameScreen>
 
   final Random random = Random();
   late final AnimationController worldAnimationController;
+  late RoomLayout _roomLayout;
 
   late final GameRunSession runSession = GameRunSession(
     initialStage: widget.checkpoint?.stage ?? widget.initialStage,
@@ -82,7 +81,7 @@ class _GameScreenState extends State<GameScreen>
         : restoreRunCheckpointState(widget.checkpoint!),
   );
   GameRunState get runState => runSession.state;
-  EquipmentStats get gearStats => EquipmentCatalog.stats(armorId: equippedArmorId, helmetId: equippedHelmetId, ringId: equippedRingId, relicId: equippedRelicId);
+  late final EquipmentStats gearStats = EquipmentCatalog.stats(armorId: equippedArmorId, helmetId: equippedHelmetId, ringId: equippedRingId, relicId: equippedRelicId);
 
   double get arenaWidth => runState.arenaWidth;
   set arenaWidth(double value) => runState.arenaWidth = value;
@@ -143,7 +142,8 @@ class _GameScreenState extends State<GameScreen>
   bool get stageTransitioning => runLifecycle.isStageTransitioning;
   GameTimerRegistry get timers => runSession.timers;
   bool _pausedForAppLifecycle = false;
-  int _roomHazardCooldownTicks = 0;
+  int get _roomHazardCooldownTicks => runState.roomHazardCooldownTicks;
+  set _roomHazardCooldownTicks(int value) => runState.roomHazardCooldownTicks = value;
 
   List<GameObject> get enemies => runState.enemies;
   List<GameObject> get arrows => runState.arrows;
@@ -178,16 +178,14 @@ class _GameScreenState extends State<GameScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _roomLayout = RoomLayout.forStage(stage);
     worldAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 12),
     )..repeat();
 
-    if (runSession.isRestored) {
-      final hazardTicks = widget.checkpoint!.state['hazardCooldownTicks'];
-      if (hazardTicks is int && hazardTicks >= 0) _roomHazardCooldownTicks = hazardTicks;
-    } else {
-      final heroStats = createHeroRunStats(
+    if (!runSession.isRestored) {
+      final heroStats = PlayerSystem.createRunStats(
         heroType: widget.heroType,
         hpUpgrade: heroHpUpgrade,
         attackUpgrade: heroAtkUpgrade,
@@ -223,6 +221,24 @@ class _GameScreenState extends State<GameScreen>
     if (runSession.isRestored) unawaited(saveProgressSafely());
   }
 
+  Future<void> _exitToMenu() async {
+    await _persistRunCheckpoint();
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  Future<void> _clearRunCheckpointSafely() async {
+    try {
+      await RunCheckpointStore.clear();
+    } catch (error, stackTrace) {
+      GameDiagnostics.record(
+        error,
+        stackTrace,
+        source: 'run_checkpoint_clear',
+      );
+    }
+  }
+
   Future<void> _persistRunCheckpoint() async {
     if (gameOverShown ||
         (runLifecycle.phase != GameRunPhase.active &&
@@ -231,18 +247,23 @@ class _GameScreenState extends State<GameScreen>
       await RunCheckpointStore.save(captureRunCheckpoint(
         heroType: widget.heroType,
         run: runState,
-        hazardCooldownTicks: _roomHazardCooldownTicks,
       ));
     } catch (error, stackTrace) {
-      debugPrint('Active run checkpoint save failed: $error\\n$stackTrace');
+      GameDiagnostics.record(
+        error,
+        stackTrace,
+        source: 'run_checkpoint_save',
+      );
     }
   }
 
+
   void _spawnEnemies({bool notify = true, bool challenge = false}) {
+    _roomLayout = RoomLayout.forStage(stage);
     enemies.clear();
     arrows.clear();
     enemyProjectiles.clear();
-    enemies.addAll(createEnemyWave(
+    enemies.addAll(RoomEncounterFactory.create(
       stage: stage,
       arenaWidth: arenaWidth,
       arenaHeight: arenaHeight,
@@ -250,18 +271,13 @@ class _GameScreenState extends State<GameScreen>
       random: random,
     ));
     if (challenge) {
-      final extraWave = createEnemyWave(
-        stage: stage + 2,
+      enemies.addAll(RoomEncounterFactory.createChallengeReinforcements(
+        currentStage: stage,
         arenaWidth: arenaWidth,
         arenaHeight: arenaHeight,
-        enemySpeedMultiplier: enemySpeedMultiplier * 1.12,
+        enemySpeedMultiplier: enemySpeedMultiplier,
         random: random,
-      ).take(2);
-      for (final enemy in extraWave) {
-        final hp = enemy['hp'];
-        if (hp is num) enemy['hp'] = hp.toDouble() * 1.2;
-        enemies.add(enemy);
-      }
+      ));
       challengeRoomRewardPending = true;
     }
 
@@ -300,13 +316,13 @@ class _GameScreenState extends State<GameScreen>
   void _shootArrows() {
     if (enemies.isEmpty) return;
 
-    final origin = CombatPoint(playerX, playerY);
-    final targetIndex = nearestTargetIndex(
-      origin: origin,
+    final targetIndex = PlayerSystem.nearestTargetIndex(
+      originX: playerX,
+      originY: playerY,
       targets: enemies
-          .map((enemy) => CombatPoint(
-                enemy['x'] as double,
-                enemy['y'] as double,
+          .map((enemy) => PlayerTarget(
+                x: enemy['x'] as double,
+                y: enemy['y'] as double,
               ))
           .toList(growable: false),
     );
@@ -315,22 +331,21 @@ class _GameScreenState extends State<GameScreen>
 
     heroAttackTicks = 12;
     final weapon = WeaponCatalog.byId(equippedWeaponId);
-    final volley = createPlayerArrowVolley(
-      origin: origin,
-      target: CombatPoint(
-        target['x'] as double,
-        target['y'] as double,
-      ),
+    final volley = PlayerSystem.createArrowVolley(
+      originX: playerX,
+      originY: playerY,
+      targetX: target['x'] as double,
+      targetY: target['y'] as double,
       extraArrows: extraArrows + weapon.bonusArrows,
       projectileSpeed: weapon.projectileSpeed,
       spreadAngle: weapon.spreadAngle,
     );
     for (final arrow in volley) {
       arrows.add({
-        'x': arrow.origin.x,
-        'y': arrow.origin.y,
-        'vx': arrow.velocity.x,
-        'vy': arrow.velocity.y,
+        'x': arrow.x,
+        'y': arrow.y,
+        'vx': arrow.velocityX,
+        'vy': arrow.velocityY,
       });
     }
     playRealSound('shoot');
@@ -357,7 +372,7 @@ class _GameScreenState extends State<GameScreen>
         !runLifecycle.canPerformActions) return;
 
     setState(() {
-      final heroProfile = HeroProfile.forType(widget.heroType);
+      final heroProfile = PlayerSystem.profileForHero(widget.heroType);
       final skillDamage =
           heroProfile.activeSkillDamage * attackPowerMultiplier;
 
@@ -430,6 +445,233 @@ class _GameScreenState extends State<GameScreen>
     });
   }
 
+  void _advanceBossProjectiles() {
+    _advanceProjectileGroup(bossProjectiles: true);
+  }
+
+  void _advanceEnemyProjectiles() {
+    _advanceProjectileGroup(bossProjectiles: false);
+  }
+
+  void _advanceProjectileGroup({required bool bossProjectiles}) {
+    for (int i = enemyProjectiles.length - 1; i >= 0; i--) {
+      final shot = enemyProjectiles[i];
+      final isBossProjectile = shot['source'] == 'boss';
+      if (isBossProjectile != bossProjectiles) continue;
+
+      final x = shot['x'] as double;
+      final y = shot['y'] as double;
+      final velocityX = shot['vx'] as double;
+      final velocityY = shot['vy'] as double;
+      final life = shot['life'] as int;
+      final step = bossProjectiles
+          ? advanceBossProjectile(
+              x: x,
+              y: y,
+              velocityX: velocityX,
+              velocityY: velocityY,
+              life: life,
+              targetX: playerX,
+              targetY: playerY,
+              arenaWidth: arenaWidth,
+              arenaHeight: arenaHeight,
+            )
+          : advanceEnemyProjectile(
+              x: x,
+              y: y,
+              velocityX: velocityX,
+              velocityY: velocityY,
+              life: life,
+              targetX: playerX,
+              targetY: playerY,
+              arenaWidth: arenaWidth,
+              arenaHeight: arenaHeight,
+            );
+      shot['x'] = step.x;
+      shot['y'] = step.y;
+      shot['life'] = step.life;
+
+      if (step.hitTarget) {
+        _resolveProjectileHit(shot);
+      }
+      if (step.shouldRemove) enemyProjectiles.removeAt(i);
+    }
+  }
+
+  void _resolveProjectileHit(GameObject shot) {
+    // Keep the 260ms hit-protection window in the game loop; collision
+    // outcome and HP mutation are resolved by the pure combat module.
+    final now = DateTime.now();
+    final canTakeDamage = lastDamageAt == null ||
+        now.difference(lastDamageAt!).inMilliseconds >= 260;
+    final resolution = resolveProjectileHit(
+      playerHp: playerHp,
+      projectileDamage: ((shot['damage'] as double?) ?? 6.0) *
+          (1 - gearStats.damageReduction),
+      isDodging: playerMoveTicks > 0,
+      canTakeDamage: canTakeDamage,
+    );
+    playerHp = resolution.updatedPlayerHp;
+    switch (resolution.status) {
+      case ProjectileHitStatus.damaged:
+        _triggerHaptic();
+        lastDamageAt = now;
+        combatEffects.add({
+          'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
+        });
+        playRealSound('hit');
+      case ProjectileHitStatus.dodged:
+        combatEffects.add({
+          'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14,
+        });
+      case ProjectileHitStatus.invulnerable:
+        combatEffects.add({
+          'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 10,
+        });
+    }
+  }
+
+  void _updateBossEnemy(GameObject enemy) {
+    final update = BossSystem.advance(
+      x: enemy['x'] as double,
+      y: enemy['y'] as double,
+      hp: enemy['hp'] as double,
+      maxHp: enemy['maxHp'] as double,
+      playerX: playerX,
+      playerY: playerY,
+      animationTicks: animationTicks,
+      previousPhase: (enemy['bossPhase'] as int?) ?? 1,
+      volleyCooldown: (enemy['bossVolleyCooldown'] as int?) ?? 90,
+      attackTicks: (enemy['attackTicks'] as int?) ?? 0,
+      attackCooldown: (enemy['attackCooldown'] as int?) ?? 0,
+      areaAttackTicks: (enemy['areaAttackTicks'] as int?) ?? 0,
+      areaHitDone: enemy['areaHitDone'] == true,
+    );
+
+    enemy['bossPhase'] = update.phase;
+    enemy['bossVolleyCooldown'] = update.volleyCooldown;
+    enemy['attackTicks'] = update.attackTicks;
+    enemy['attackCooldown'] = update.attackCooldown;
+    enemy['areaAttackTicks'] = update.areaAttackTicks;
+    enemy['areaHitDone'] = update.areaHitDone;
+
+    if (update.phaseChanged) {
+      combatEffects.add({
+        'x': enemy['x'], 'y': enemy['y'],
+        'type': 'bossBurst', 'life': 30,
+      });
+    }
+    for (final projectile in update.projectiles) {
+      enemyProjectiles.add({
+        'x': projectile.x,
+        'y': projectile.y,
+        'vx': projectile.velocityX,
+        'vy': projectile.velocityY,
+        'damage': projectile.damage,
+        'life': projectile.lifetimeTicks,
+        'source': 'boss',
+      });
+    }
+    if (update.projectiles.isNotEmpty) {
+      combatEffects.add({
+        'x': enemy['x'], 'y': enemy['y'],
+        'type': 'bossTell', 'life': 16,
+      });
+    }
+    if (update.areaAttackStarted) {
+      combatEffects.add({
+        'x': enemy['x'], 'y': enemy['y'],
+        'type': 'bossTell', 'life': 32,
+      });
+    }
+    if (update.showPeriodicTell) {
+      combatEffects.add({
+        'x': enemy['x'], 'y': enemy['y'],
+        'type': 'bossTell', 'life': 28,
+      });
+    }
+
+    if (update.areaImpactTriggered) {
+      final areaHit = resolveAreaAttackHit(
+        playerHp: playerHp,
+        distanceToPlayer: update.distanceToPlayer,
+        attackRadius: BossAttackRules.areaDamageRadius(
+          enraged: update.enraged,
+        ),
+        damage: BossAttackRules.areaDamage(
+          enraged: update.enraged,
+        ) * (1 - gearStats.damageReduction),
+        isDodging: playerMoveTicks > 0,
+        lastDamageAt: lastDamageAt,
+      );
+      switch (areaHit.status) {
+        case AreaAttackHitStatus.outOfRange:
+          break;
+        case AreaAttackHitStatus.dodged:
+        case AreaAttackHitStatus.invulnerable:
+          combatEffects.add({
+            'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 18,
+          });
+        case AreaAttackHitStatus.damaged:
+          _triggerHaptic();
+          playerHp = areaHit.updatedPlayerHp;
+          lastDamageAt = areaHit.resolvedAt;
+          combatEffects.add({
+            'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 22,
+          });
+          playRealSound('hit');
+      }
+      combatEffects.add({
+        'x': enemy['x'], 'y': enemy['y'],
+        'type': 'bossBurst', 'life': 24,
+      });
+    }
+
+    final movement = update.movement;
+    final moveSpeed = (enemy['speed'] as double) * movement.speedMultiplier;
+    enemy['x'] = (enemy['x'] as double) + cos(movement.angle) * moveSpeed;
+    enemy['y'] = (enemy['y'] as double) + sin(movement.angle) * moveSpeed;
+    enemy['walkPhase'] = ((enemy['walkPhase'] as double?) ?? 0.0) +
+        moveSpeed.abs() * 0.11;
+
+    final contactHit = resolveEnemyContactHit(
+      enemyType: 'boss',
+      attackTicks: update.attackTicks,
+      impactFrame: BossAttackRules.contactImpactFrame,
+      hitAlreadyResolved: enemy['attackHitDone'] == true,
+      distanceToPlayer: update.distanceToPlayer,
+      impactRange: EnemyAttackRules.impactRange(
+        enemyRadius: enemy['radius'] as double,
+      ),
+      playerIsDodging: playerMoveTicks > 0,
+      lastDamageAt: lastDamageAt,
+      now: null,
+      damage: BossAttackRules.contactDamage(enraged: update.enraged) *
+          (1 - gearStats.damageReduction),
+    );
+    switch (contactHit.status) {
+      case EnemyContactHitStatus.notReady:
+      case EnemyContactHitStatus.invulnerable:
+        break;
+      case EnemyContactHitStatus.dodged:
+        enemy['attackHitDone'] = true;
+        combatEffects.add({
+          'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14,
+        });
+      case EnemyContactHitStatus.damaged:
+        playerHp -= contactHit.damageApplied;
+        lastDamageAt = contactHit.resolvedAt;
+        enemy['attackHitDone'] = true;
+        combatEffects.add({
+          'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
+        });
+        combatEffects.add({
+          'x': enemy['x'], 'y': enemy['y'],
+          'type': 'enemyAttack', 'life': 12,
+        });
+    }
+  }
+
   void _updateEngine() {
     if (!mounted || gameOverShown || stageTransitioning) return;
     animationTicks++;
@@ -440,73 +682,28 @@ class _GameScreenState extends State<GameScreen>
     CombatEffectManager.advance(defeatedSprites);
     CombatEffectManager.advance(combatEffects);
 
-    // تحريك مقذوفات الأعداء وفحص إصابة اللاعب.
-    for (int i = enemyProjectiles.length - 1; i >= 0; i--) {
-      final shot = enemyProjectiles[i];
-      final step = advanceEnemyProjectile(
-        x: shot['x'] as double,
-        y: shot['y'] as double,
-        velocityX: shot['vx'] as double,
-        velocityY: shot['vy'] as double,
-        life: shot['life'] as int,
-        targetX: playerX,
-        targetY: playerY,
-        arenaWidth: arenaWidth,
-        arenaHeight: arenaHeight,
-      );
-      shot['x'] = step.x;
-      shot['y'] = step.y;
-      shot['life'] = step.life;
+    // Boss and regular enemy projectiles advance through separate systems.
+    _advanceBossProjectiles();
+    _advanceEnemyProjectiles();
 
-      if (step.hitTarget) {
-        // Keep the 260ms hit-protection window in the game loop; collision
-        // outcome and HP mutation are resolved by the pure combat module.
-        final now = DateTime.now();
-        final canTakeDamage = lastDamageAt == null ||
-            now.difference(lastDamageAt!).inMilliseconds >= 260;
-        final resolution = resolveProjectileHit(
-          playerHp: playerHp,
-          projectileDamage: ((shot['damage'] as double?) ?? 6.0) * (1 - gearStats.damageReduction),
-          isDodging: playerMoveTicks > 0,
-          canTakeDamage: canTakeDamage,
-        );
-        playerHp = resolution.updatedPlayerHp;
-        switch (resolution.status) {
-          case ProjectileHitStatus.damaged:
-            _triggerHaptic();
-            lastDamageAt = now;
-            combatEffects.add({
-              'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
-            });
-            playRealSound('hit');
-          case ProjectileHitStatus.dodged:
-            combatEffects.add({
-              'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 14,
-            });
-          case ProjectileHitStatus.invulnerable:
-            combatEffects.add({
-              'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 10,
-            });
-        }
-      }
-      if (step.shouldRemove) enemyProjectiles.removeAt(i);
-    }
+    // Build the target snapshot once per simulation tick, not once per arrow.
+    final arrowTargets = enemies.map((enemy) => PlayerTarget(
+      x: enemy['x'] as double,
+      y: enemy['y'] as double,
+      radius: enemy['radius'] as double,
+    )).toList(growable: false);
 
     // تحريك الأسهم وفحص اصطدامها بالأعداء.
     for (int i = arrows.length - 1; i >= 0; i--) {
       final arrow = arrows[i];
-      final movement = advancePlayerProjectile(
+      final movement = PlayerSystem.advanceArrow(
         x: arrow['x'] as double,
         y: arrow['y'] as double,
         velocityX: arrow['vx'] as double,
         velocityY: arrow['vy'] as double,
         arenaWidth: arenaWidth,
         arenaHeight: arenaHeight,
-        targets: enemies.map((enemy) => CombatCircle(
-          x: enemy['x'] as double,
-          y: enemy['y'] as double,
-          radius: enemy['radius'] as double,
-        )).toList(growable: false),
+        targets: arrowTargets,
       );
       arrow['x'] = movement.x;
       arrow['y'] = movement.y;
@@ -579,209 +776,94 @@ class _GameScreenState extends State<GameScreen>
       if (hitTicks > 0) enemy['hitTicks'] = hitTicks - 1;
     }
 
-    // ذكاء قتالي متنوع: اندفاع السريع، التفاف المتخفي، واندفاعة الزعيم.
+    // Update boss actors through their dedicated system; regular enemies
+    // retain their own movement and attack rules below.
     for (final enemy in enemies) {
+      final type = enemy['type'] as String;
+      if (type == 'boss') {
+        _updateBossEnemy(enemy);
+        continue;
+      }
+
       final dx = playerX - (enemy['x'] as double);
       final dy = playerY - (enemy['y'] as double);
       final distance = sqrt(dx * dx + dy * dy);
       final angle = atan2(dy, dx);
-      final type = enemy['type'] as String;
-      final bossPhase = type == 'boss'
-          ? BossCombat.phaseForHealth(
-              hp: enemy['hp'] as double,
-              maxHp: enemy['maxHp'] as double,
-            )
-          : 1;
-      final bossConfig = BossCombat.configForPhase(bossPhase);
-      final previousBossPhase = (enemy['bossPhase'] as int?) ?? 1;
-      final bossEnraged = bossPhase == 3;
-      if (type == 'boss' && bossPhase != previousBossPhase) {
-        enemy['bossPhase'] = bossPhase;
-        combatEffects.add({
-          'x': enemy['x'], 'y': enemy['y'],
-          'type': 'bossBurst', 'life': 30,
-        });
-      }
-      var bossVolleyCooldown =
-          (enemy['bossVolleyCooldown'] as int?) ?? 90;
-      if (type == 'boss' && bossPhase >= 2) {
-        if (bossVolleyCooldown > 0) bossVolleyCooldown--;
-        if (bossVolleyCooldown == 0 && distance <= 320) {
-          final volley = createBossFanVolley(
-            originX: enemy['x'] as double,
-            originY: enemy['y'] as double,
-            targetX: playerX,
-            targetY: playerY,
-            count: bossConfig.volleyCount,
-            speed: bossConfig.projectileSpeed,
-            damage: bossConfig.projectileDamage,
-          );
-          for (final projectile in volley) {
-            enemyProjectiles.add({
-              'x': projectile.x,
-              'y': projectile.y,
-              'vx': projectile.velocityX,
-              'vy': projectile.velocityY,
-              'damage': projectile.damage,
-              'life': projectile.lifetimeTicks,
-            });
-          }
-          bossVolleyCooldown = bossConfig.volleyCooldownTicks;
-          combatEffects.add({
-            'x': enemy['x'], 'y': enemy['y'],
-            'type': 'bossTell', 'life': 16,
-          });
-        }
-      }
-      enemy['bossVolleyCooldown'] = bossVolleyCooldown;
       var attackTicks = (enemy['attackTicks'] as int?) ?? 0;
       var attackCooldown = (enemy['attackCooldown'] as int?) ?? 0;
       if (attackTicks > 0) attackTicks--;
       if (attackCooldown > 0) attackCooldown--;
+
       final attackRange = EnemyAttackRules.attackRange(
         enemyRadius: enemy['radius'] as double,
       );
-      var areaAttackTicks = (enemy['areaAttackTicks'] as int?) ?? 0;
-      if (areaAttackTicks > 0) areaAttackTicks--;
-      if (type == 'ranged' && distance >= 105 && distance <= 255 && attackCooldown == 0) {
+      if (type == 'ranged' &&
+          distance >= 105 &&
+          distance <= 255 &&
+          attackCooldown == 0) {
         final shotAngle = atan2(dy, dx);
         enemyProjectiles.add({
           'x': enemy['x'], 'y': enemy['y'],
-          // مقذوف أبطأ قليلاً ليمنح اللاعب وقتاً أوضح للمراوغة.
-          'vx': cos(shotAngle) * 3.8, 'vy': sin(shotAngle) * 3.8,
+          'vx': cos(shotAngle) * 3.8,
+          'vy': sin(shotAngle) * 3.8,
           'damage': 6.0,
           'life': 110,
+          'source': 'enemy',
         });
         attackTicks = 12;
         attackCooldown = 108;
-        combatEffects.add({'x': enemy['x'], 'y': enemy['y'], 'type': 'rangedShot', 'life': 12});
-      }
-      if (type == 'boss' &&
-          distance <= 220 &&
-          areaAttackTicks == 0 &&
-          attackCooldown == 0) {
-        areaAttackTicks = EnemyAttackRules.attackDurationTicks(isBoss: true);
-        attackCooldown = EnemyAttackRules.attackCooldownTicks(
-          isBoss: true,
-          bossEnraged: bossEnraged,
-        );
-        enemy['areaHitDone'] = false;
         combatEffects.add({
           'x': enemy['x'], 'y': enemy['y'],
-          'type': 'bossTell', 'life': 32,
+          'type': 'rangedShot', 'life': 12,
         });
-      } else if (type != 'boss' && type != 'ranged' &&
+      } else if (type != 'ranged' &&
           distance <= attackRange &&
           attackCooldown == 0) {
-        attackTicks = EnemyAttackRules.attackDurationTicks(isBoss: false);
-        attackCooldown = EnemyAttackRules.attackCooldownTicks(
-          isBoss: false,
-          bossEnraged: false,
-        );
+        attackTicks = EnemyAttackRules.attackDurationTicks;
+        attackCooldown = EnemyAttackRules.attackCooldownTicks;
         enemy['attackHitDone'] = false;
         combatEffects.add({
           'x': enemy['x'], 'y': enemy['y'],
           'type': 'enemyAttack', 'life': 12,
         });
       }
-      enemy['areaAttackTicks'] = areaAttackTicks;
       enemy['attackTicks'] = attackTicks;
       enemy['attackCooldown'] = attackCooldown;
-      if (type == 'boss' &&
-          areaAttackTicks == 8 &&
-          enemy['areaHitDone'] != true) {
-        enemy['areaHitDone'] = true;
-        final blastDx = playerX - (enemy['x'] as double);
-        final blastDy = playerY - (enemy['y'] as double);
-        final blastDistance = sqrt(blastDx * blastDx + blastDy * blastDy);
-        final areaHit = resolveAreaAttackHit(
-          playerHp: playerHp,
-          distanceToPlayer: blastDistance,
-          attackRadius: EnemyAttackRules.bossAreaRadius(
-            bossEnraged: bossEnraged,
-          ),
-          damage: EnemyAttackRules.bossAreaDamage(
-            bossEnraged: bossEnraged,
-          ) * (1 - gearStats.damageReduction),
-          isDodging: playerMoveTicks > 0,
-          lastDamageAt: lastDamageAt,
-        );
-        switch (areaHit.status) {
-          case AreaAttackHitStatus.outOfRange:
-            break;
-          case AreaAttackHitStatus.dodged:
-          case AreaAttackHitStatus.invulnerable:
-            combatEffects.add({
-              'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 18,
-            });
-          case AreaAttackHitStatus.damaged:
-            _triggerHaptic();
-            playerHp = areaHit.updatedPlayerHp;
-            lastDamageAt = areaHit.resolvedAt;
-            combatEffects.add({
-              'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 22,
-            });
-            playRealSound('hit');
-        }
-        combatEffects.add({
-          'x': enemy['x'], 'y': enemy['y'],
-          'type': 'bossBurst', 'life': 24,
-        });
-      }
+
       final movement = decideEnemyMovement(
         type: type,
         distanceToPlayer: distance,
         baseAngle: angle,
         enemyX: enemy['x'] as double,
         animationTicks: animationTicks,
-        bossEnraged: bossEnraged,
-        bossPhaseMovementMultiplier: bossConfig.movementMultiplier,
       );
-      final moveSpeed =
-          (enemy['speed'] as double) * movement.speedMultiplier;
-      final moveAngle = movement.angle;
+      final moveSpeed = (enemy['speed'] as double) * movement.speedMultiplier;
+      enemy['x'] = (enemy['x'] as double) + cos(movement.angle) * moveSpeed;
+      enemy['y'] = (enemy['y'] as double) + sin(movement.angle) * moveSpeed;
+      enemy['walkPhase'] = ((enemy['walkPhase'] as double?) ?? 0.0) +
+          moveSpeed.abs() * (type == 'runner' ? 0.16 : 0.11);
 
-      // Keep telegraph visuals in the game layer; steering itself is pure.
       if (type == 'runner' && animationTicks % 105 == 0) {
         combatEffects.add({
           'x': enemy['x'], 'y': enemy['y'],
           'type': 'enemyAttack', 'life': 12,
         });
-      } else if (type == 'boss' && animationTicks % 180 == 0 &&
-          animationTicks % 180 < 28) {
-        combatEffects.add({
-          'x': enemy['x'], 'y': enemy['y'],
-          'type': 'bossTell', 'life': 28,
-        });
       }
 
-      enemy['x'] = (enemy['x'] as double) + cos(moveAngle) * moveSpeed;
-      enemy['y'] = (enemy['y'] as double) + sin(moveAngle) * moveSpeed;
-      // دورة مشي مستقلة تتقدم بحسب سرعة الحركة الفعلية لكل عدو.
-      enemy['walkPhase'] = ((enemy['walkPhase'] as double?) ?? 0.0) +
-          moveSpeed.abs() * (type == 'runner' ? 0.16 : 0.11);
-      // لحظة الضرر تقع في منتصف ضربة الهجوم، مرة واحدة لكل دورة.
-      final impactDistance = EnemyAttackRules.impactRange(
-        enemyRadius: enemy['radius'] as double,
-      );
-      final impactFrame = EnemyAttackRules.attackImpactFrame(
-        isBoss: type == 'boss',
-      );
       final contactHit = resolveEnemyContactHit(
         enemyType: type,
         attackTicks: attackTicks,
-        impactFrame: impactFrame,
+        impactFrame: EnemyAttackRules.attackImpactFrame,
         hitAlreadyResolved: enemy['attackHitDone'] == true,
         distanceToPlayer: distance,
-        impactRange: impactDistance,
+        impactRange: EnemyAttackRules.impactRange(
+          enemyRadius: enemy['radius'] as double,
+        ),
         playerIsDodging: playerMoveTicks > 0,
         lastDamageAt: lastDamageAt,
-        // The resolver samples the clock only after confirming an impact.
         now: null,
-        damage: EnemyAttackRules.contactDamage(
-          enemyType: type,
-          bossEnraged: bossEnraged,
-        ) * (1 - gearStats.damageReduction),
+        damage: EnemyAttackRules.contactDamage(enemyType: type) *
+            (1 - gearStats.damageReduction),
       );
       switch (contactHit.status) {
         case EnemyContactHitStatus.notReady:
@@ -827,27 +909,30 @@ class _GameScreenState extends State<GameScreen>
     // Environmental hazards are room-specific and can be dodged with the
     // existing movement i-frames. The cooldown is tick-based, not timer-based.
     if (_roomHazardCooldownTicks > 0) _roomHazardCooldownTicks--;
-    final roomLayout = RoomLayout.forStage(stage);
-    if (_roomHazardCooldownTicks == 0 &&
-        roomLayout.playerTouchesHazard(
-          x: playerX,
-          y: playerY,
-          arenaWidth: arenaWidth,
-          arenaHeight: arenaHeight,
-        )) {
-      _roomHazardCooldownTicks = 45;
-      if (playerMoveTicks > 0) {
-        combatEffects.add({
-          'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 16,
-        });
-      } else {
-        playerHp = (playerHp - 8 * (1 - gearStats.damageReduction)).clamp(0.0, playerMaxHp).toDouble();
-        lastDamageAt = DateTime.now();
-        combatEffects.add({
-          'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
-        });
-        playRealSound('hit');
-      }
+    final hazard = RoomHazardSystem.advance(
+      layout: _roomLayout,
+      cooldownTicks: _roomHazardCooldownTicks,
+      x: playerX,
+      y: playerY,
+      arenaWidth: arenaWidth,
+      arenaHeight: arenaHeight,
+      playerHp: playerHp,
+      playerMaxHp: playerMaxHp,
+      playerIsDodging: playerMoveTicks > 0,
+      damageReduction: gearStats.damageReduction,
+    );
+    _roomHazardCooldownTicks = hazard.cooldownTicks;
+    if (hazard.status == RoomHazardStatus.dodged) {
+      combatEffects.add({
+        'x': playerX, 'y': playerY, 'type': 'dodge', 'life': 16,
+      });
+    } else if (hazard.status == RoomHazardStatus.damaged) {
+      playerHp = hazard.playerHp;
+      lastDamageAt = DateTime.now();
+      combatEffects.add({
+        'x': playerX, 'y': playerY, 'type': 'playerHit', 'life': 20,
+      });
+      playRealSound('hit');
     }
 
     if (playerHp <= 0) {
@@ -890,8 +975,9 @@ class _GameScreenState extends State<GameScreen>
     );
     final advance = transition.stageAdvance;
     if (transition.currentRoom.isBoss && runLifecycle.beginSpecialRoomChoice()) {
-      unawaited(RunCheckpointStore.clear());
+      unawaited(_clearRunCheckpointSafely());
       stage = transition.nextRoom.stage;
+      _roomLayout = RoomLayout.forStage(stage);
       _roomHazardCooldownTicks = 0;
       bestStage = completion.updatedBestStage;
       playerHp = completion.updatedPlayerHp;
@@ -904,8 +990,9 @@ class _GameScreenState extends State<GameScreen>
     runLifecycle.beginStageReward(
       mysteryChest: advance.reward == StageRewardType.mysteryChest,
     );
-    unawaited(RunCheckpointStore.clear());
+    unawaited(_clearRunCheckpointSafely());
     stage = transition.nextRoom.stage;
+    _roomLayout = RoomLayout.forStage(stage);
     _roomHazardCooldownTicks = 0;
     bestStage = completion.updatedBestStage;
     playerHp = completion.updatedPlayerHp;
@@ -1060,7 +1147,7 @@ class _GameScreenState extends State<GameScreen>
   Future<void> _endGame() async {
     if (gameOverShown) return;
     runLifecycle.finishRun();
-    try { await RunCheckpointStore.clear(); } catch (_) {}
+    await _clearRunCheckpointSafely();
     bestStage = max(bestStage, stage);
     bestScore = max(bestScore, score);
     totalRuns++;
@@ -1125,7 +1212,7 @@ class _GameScreenState extends State<GameScreen>
 
   void _handlePlayerDrag(Offset delta, double width, double height) {
     if (!runLifecycle.canPerformActions) return;
-    final movement = resolvePlayerDrag(
+    final movement = PlayerSystem.resolveDrag(
       currentX: playerX,
       currentY: playerY,
       deltaX: delta.dx,
@@ -1151,7 +1238,7 @@ class _GameScreenState extends State<GameScreen>
         playerMaxHp: playerMaxHp,
         worldAnimation: worldAnimationController,
         worldTheme: WorldTheme.forStage(stage),
-        roomLayout: RoomLayout.forStage(stage),
+        roomLayout: _roomLayout,
         coinActors: coins,
         playerArrows: arrows,
         enemyProjectiles: enemyProjectiles,
@@ -1171,6 +1258,7 @@ class _GameScreenState extends State<GameScreen>
         onArenaSizeChanged: _syncArenaSize,
         onPlayerDrag: _handlePlayerDrag,
         onPause: _togglePause,
+        onExitToMenu: _exitToMenu,
         onSpecialSkill: _useSpecialSkill,
         onCollectChest: _collectChest,
       );

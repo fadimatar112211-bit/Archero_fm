@@ -17,6 +17,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
   flutter_lints: ^3.0.0
 
 flutter:
@@ -27,3 +29,4 @@ flutter:
     - assets/enemy_ranged.svg
     - assets/boss.svg
     - assets/spritesheets/
+    - assets/home_hub_scene.svg

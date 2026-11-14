@@ -5,12 +5,8 @@
 class EnemyAttackRules {
   const EnemyAttackRules._();
 
-  static double contactDamage({
-    required String enemyType,
-    required bool bossEnraged,
-  }) {
+  static double contactDamage({required String enemyType}) {
     return switch (enemyType) {
-      'boss' => bossEnraged ? 12.0 : 10.0,
       'tank' => 8.0,
       'stalker' => 6.0,
       'runner' => 4.0,
@@ -18,25 +14,9 @@ class EnemyAttackRules {
     };
   }
 
-  static double bossAreaDamage({required bool bossEnraged}) =>
-      bossEnraged ? 20.0 : 15.0;
-
-  static double bossAreaRadius({required bool bossEnraged}) =>
-      bossEnraged ? 132.0 : 112.0;
-
-  static int attackDurationTicks({required bool isBoss}) =>
-      isBoss ? 32 : 16;
-
-  static int attackCooldownTicks({
-    required bool isBoss,
-    required bool bossEnraged,
-  }) {
-    if (isBoss) return bossEnraged ? 132 : 180;
-    return 76;
-  }
-
-  static int attackImpactFrame({required bool isBoss}) =>
-      isBoss ? 12 : 8;
+  static const int attackDurationTicks = 16;
+  static const int attackCooldownTicks = 76;
+  static const int attackImpactFrame = 8;
 
   static double attackRange({required double enemyRadius}) =>
       23 + enemyRadius + 24;

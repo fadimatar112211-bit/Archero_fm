@@ -15,6 +15,7 @@ void main() {
       expect(run.arenaWidth, 360);
       expect(run.arenaHeight, 640);
       expect(run.specialCooldown, 0);
+      expect(run.roomHazardCooldownTicks, 0);
     });
 
     test('normalizes an invalid initial stage', () {
@@ -43,6 +44,7 @@ void main() {
       run.score = 300;
       run.stage = 4;
       run.playerDeathTicks = 5;
+      run.roomHazardCooldownTicks = 12;
 
       expect(run.playerHp, 42);
       expect(run.attackPowerMultiplier, 1.5);
@@ -51,6 +53,7 @@ void main() {
       expect(run.score, 300);
       expect(run.stage, 4);
       expect(run.playerDeathTicks, 5);
+      expect(run.roomHazardCooldownTicks, 12);
     });
   });
 }

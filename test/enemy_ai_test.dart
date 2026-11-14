@@ -12,8 +12,6 @@ void main() {
             baseAngle: 0,
             enemyX: 0,
             animationTicks: 10,
-            bossEnraged: false,
-            bossPhaseMovementMultiplier: 1,
           );
 
       expect(decide(100).angle, closeTo(pi, 0.000001));
@@ -25,13 +23,11 @@ void main() {
     test('runner dash alternates between charge and recovery speeds', () {
       final dash = decideEnemyMovement(
         type: 'runner', distanceToPlayer: 200, baseAngle: 0,
-        enemyX: 0, animationTicks: 0, bossEnraged: false,
-        bossPhaseMovementMultiplier: 1,
+        enemyX: 0, animationTicks: 0,
       );
       final recovery = decideEnemyMovement(
         type: 'runner', distanceToPlayer: 200, baseAngle: 0,
-        enemyX: 0, animationTicks: 18, bossEnraged: false,
-        bossPhaseMovementMultiplier: 1,
+        enemyX: 0, animationTicks: 18,
       );
 
       expect(dash.speedMultiplier, 2.35);
@@ -41,13 +37,11 @@ void main() {
     test('stalker circles and tank advances more slowly', () {
       final stalker = decideEnemyMovement(
         type: 'stalker', distanceToPlayer: 150, baseAngle: 0,
-        enemyX: 0, animationTicks: 0, bossEnraged: false,
-        bossPhaseMovementMultiplier: 1,
+        enemyX: 0, animationTicks: 0,
       );
       final tank = decideEnemyMovement(
         type: 'tank', distanceToPlayer: 150, baseAngle: 0,
-        enemyX: 0, animationTicks: 0, bossEnraged: false,
-        bossPhaseMovementMultiplier: 1,
+        enemyX: 0, animationTicks: 0,
       );
 
       expect(stalker.angle, closeTo(0.48, 0.000001));
@@ -58,13 +52,11 @@ void main() {
     test('normalizes non-finite steering inputs and negative distances', () {
       final ranged = decideEnemyMovement(
         type: 'ranged', distanceToPlayer: double.nan, baseAngle: double.nan,
-        enemyX: double.infinity, animationTicks: 10, bossEnraged: false,
-        bossPhaseMovementMultiplier: double.nan,
+        enemyX: double.infinity, animationTicks: 10,
       );
       final stalker = decideEnemyMovement(
         type: 'stalker', distanceToPlayer: -10, baseAngle: double.infinity,
-        enemyX: double.nan, animationTicks: 0, bossEnraged: false,
-        bossPhaseMovementMultiplier: 1,
+        enemyX: double.nan, animationTicks: 0,
       );
 
       expect(ranged.angle, 0);
@@ -73,20 +65,6 @@ void main() {
       expect(stalker.speedMultiplier, 0.72);
     });
 
-    test('boss movement scales by phase and enrage state', () {
-      final normal = decideEnemyMovement(
-        type: 'boss', distanceToPlayer: 150, baseAngle: 0,
-        enemyX: 0, animationTicks: 0, bossEnraged: false,
-        bossPhaseMovementMultiplier: 1.2,
-      );
-      final enraged = decideEnemyMovement(
-        type: 'boss', distanceToPlayer: 150, baseAngle: 0,
-        enemyX: 0, animationTicks: 0, bossEnraged: true,
-        bossPhaseMovementMultiplier: 1.2,
-      );
 
-      expect(normal.speedMultiplier, closeTo(3.18, 0.000001));
-      expect(enraged.speedMultiplier, closeTo(3.78, 0.000001));
-    });
   });
 }

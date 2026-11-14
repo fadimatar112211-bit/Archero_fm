@@ -16,7 +16,8 @@ void main() {
       ..playerMaxHp = 125
       ..score = 840
       ..animationTicks = 550
-      ..challengeRoomRewardPending = true;
+      ..challengeRoomRewardPending = true
+      ..roomHazardCooldownTicks = 12;
     run.selectedSkills.addAll([SkillId.extraArrow, SkillId.vitality]);
     run.activeSkillSynergies.add(SkillSynergyId.treasureHeart);
     run.enemies.add({
@@ -32,7 +33,6 @@ void main() {
     final checkpoint = captureRunCheckpoint(
       heroType: 4,
       run: run,
-      hazardCooldownTicks: 12,
     );
     final decoded = RunCheckpoint.decode(checkpoint.encode())!;
     final restored = restoreRunCheckpointState(decoded)!;
@@ -47,6 +47,24 @@ void main() {
     expect(restored.activeSkillSynergies, {SkillSynergyId.treasureHeart});
     expect(restored.enemies.single['type'], 'boss');
     expect(restored.coins.single['x'], 120.0);
+  });
+
+  test('restores version-1 checkpoints created before room hazard cooldown existed', () {
+    final current = captureRunCheckpoint(
+      heroType: 2,
+      run: GameRunState(initialStage: 3),
+    );
+    final legacy = RunCheckpoint(
+      heroType: current.heroType,
+      stage: current.stage,
+      state: Map<String, Object?>.from(current.state)
+        ..remove('hazardCooldownTicks'),
+    );
+
+    final restored = restoreRunCheckpointState(legacy);
+    expect(restored, isNotNull);
+    expect(restored!.stage, 3);
+    expect(restored.roomHazardCooldownTicks, 0);
   });
 
   test('rejects structurally invalid run state instead of restoring partial data', () {

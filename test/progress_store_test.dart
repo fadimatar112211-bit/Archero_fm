@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:archero_fm/progress_store.dart';
@@ -17,6 +19,25 @@ class _FailingProgressPreferences implements ProgressPreferences {
     return true;
   }
 }
+class _DelayedProgressPreferences implements ProgressPreferences {
+  final Map<String, int> values = {};
+  final Completer<void> firstWriteStarted = Completer<void>();
+  final Completer<void> releaseWrites = Completer<void>();
+
+  @override
+  int? getInt(String key) => values[key];
+
+  @override
+  Future<bool> setInt(String key, int value) async {
+    if (!firstWriteStarted.isCompleted) {
+      firstWriteStarted.complete();
+      await releaseWrites.future;
+    }
+    values[key] = value;
+    return true;
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -127,6 +148,35 @@ void main() {
     });
   });
 
+  test('loads wait for an in-flight complete snapshot write', () async {
+    final preferences = _DelayedProgressPreferences();
+    ProgressStore.setPreferencesProviderForTesting(() async => preferences);
+
+    final save = ProgressStore.save(
+      coins: 444,
+      hpUpgrade: 25,
+      atkUpgrade: 15,
+      bestStage: 7,
+      bestScore: 900,
+    );
+    await preferences.firstWriteStarted.future;
+
+    var loadCompleted = false;
+    final load = ProgressStore.load().then((snapshot) {
+      loadCompleted = true;
+      return snapshot;
+    });
+    await Future<void>.delayed(Duration.zero);
+    expect(loadCompleted, isFalse);
+
+    preferences.releaseWrites.complete();
+    await save;
+    final snapshot = await load;
+    expect(snapshot['coins'], 444);
+    expect(snapshot['bestStage'], 7);
+    expect(snapshot['bestScore'], 900);
+  });
+
   test('normalizes invalid negative progression values', () async {
     SharedPreferences.setMockInitialValues({
       'coins': -40,
@@ -173,6 +223,24 @@ void main() {
     expect(recovered.bestStage, 1);
     expect(recovered.gems, 42);
     expect(recovered.totalKills, 91);
+  });
+
+  test('saves safely when an existing stored field has the wrong type', () async {
+    SharedPreferences.setMockInitialValues({
+      'coins': 'corrupted-coins',
+      'hpUpgrade': 10,
+    });
+    await ProgressStore.save(
+      coins: 250,
+      hpUpgrade: 25,
+      atkUpgrade: 15,
+      bestStage: 3,
+      bestScore: 200,
+    );
+    final saved = await ProgressStore.load();
+    expect(saved['coins'], 250);
+    expect(saved['hpUpgrade'], 25);
+    expect(saved['bestStage'], 3);
   });
 
   test('does not persist negative values supplied by callers', () async {

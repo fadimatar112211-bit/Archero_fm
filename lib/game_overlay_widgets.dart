@@ -74,9 +74,14 @@ class GameHudWidget extends StatelessWidget {
 }
 
 class GamePauseOverlay extends StatelessWidget {
-  const GamePauseOverlay({super.key, required this.onResume});
+  const GamePauseOverlay({
+    super.key,
+    required this.onResume,
+    required this.onExit,
+  });
 
   final VoidCallback onResume;
+  final VoidCallback onExit;
 
   @override
   Widget build(BuildContext context) => Positioned.fill(
@@ -97,9 +102,7 @@ class GamePauseOverlay extends StatelessWidget {
                   label: const Text('متابعة اللعب'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    Navigator.popUntil(context, (route) => route.isFirst);
-                  },
+                  onPressed: onExit,
                   child: const Text('الخروج إلى القائمة'),
                 ),
               ],

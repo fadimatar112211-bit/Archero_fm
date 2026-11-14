@@ -4,7 +4,7 @@ Last updated: 2026-11-13
 
 ## Source of truth
 
-The following nine sections and their items, as supplied by the user on 2026-11-13, are the active roadmap for the project. This replaces the previous roadmap and its execution structure.
+The authoritative execution roadmap is `DETAILED_GAME_ROADMAP.md` on this branch. It contains the user's ten numbered sections and all detailed sub-items. This progress log is supplemental evidence only; it does not replace or renumber the detailed roadmap.
 
 Preserve the section names, item wording, and order. Do not invent, omit, rename, or silently reorder requirements. As work proceeds, add implementation status, files, commits, PRs, and verification evidence under the relevant item without changing the original requirement text.
 
@@ -531,3 +531,362 @@ Current verification state: world/stage implementation is committed to the featu
 2. If successful, retrieve the artifact from Actions (or publish the first version tag after reviewing the build) and provide the user the direct download path.
 3. Continue repairing PR #47 independently; do not include its changes in the downloadable integrated build until CI passes and it is merged.
 4. Keep the nine-section game roadmap and hands-on Android validation open; this distribution workflow does not mean the game is complete.
+
+
+## Visual overhaul batch — illustrated hero home hub (in progress)
+
+Branch: `feature/visual-overhaul-home-hub`, based on the integrated game branch (through PR #46; PR #47 is intentionally not included).
+
+Implemented in this first visual integration slice:
+- Replaced the generic gamepad/icon masthead with a dedicated illustrated home-hub scene, layered environmental backdrop, framed presentation, central hero artwork, and live resource counters.
+- Added visible left/right quick-navigation controls: **العتاد** scrolls to the existing equipment section and **المتجر** scrolls to the existing upgrade shop section. Existing shop, inventory, chest, achievement, settings, and stage-start flows remain in the same main menu and are not discarded.
+- Registered the new vector environment artwork in Flutter assets and reused the project's current player SVG as the central character pending the full character-art replacement/animation pass.
+- Added stable section keys and a managed scroll controller for the hub shortcuts.
+
+Changed files:
+- `assets/home_hub_scene.svg` (new)
+- `pubspec.yaml`
+- `lib/main_menu_screen.dart`
+- `MISSION_PROGRESS.md`
+
+Verification status: code has been committed to the feature branch; CI/Flutter analysis, full tests, Android build, and device visual review are still pending. This is a first integrated hub redesign slice, **not** completion of the requested visual overhaul. The next visual batch must replace/upgrade the in-game player/enemy/boss art and connect the existing sprite animation assets, then improve biome floor tiles, props, projectiles, equipment display, and combat VFX. Keep all gameplay systems intact.
+
+
+### Hero grounding / anti-floating pass
+- Updated `PlayerActorSpriteWidget` to anchor the hero at the arena position and remove continuous idle bobbing, idle rotation, and idle scale pulsing that made the character appear to hover.
+- Walking now uses a very small bottom-aligned step bounce only while the movement window is active; attack motion remains subtle and bottom-aligned.
+- Switched the player sprite frame to a 4-tick cadence while walking so the walk cycle is more visible during short touch drags.
+- Commit: `147fc81d2d545fd204354259ebf4a86c1144c8be`.
+- Flutter CI run `43512851070` was queued on this exact commit at checkpoint time. Device-side visual verification remains pending.
+
+
+## Android Emulator QA automation — first implementation
+
+- Added `.github/workflows/android-emulator-qa.yml`.
+- On pushes to feature/main/fix branches, pull requests, and manual dispatch, CI now provisions an Android 35 Google APIs x86_64 Pixel 6 emulator.
+- Pipeline generates the Android runner project, installs Flutter dependencies, runs Dart analysis, runs all unit/widget tests, then launches the app through Flutter's integration-test driver on the emulator.
+- Added `integration_test/app_smoke_test.dart` to launch `ArcheroSoundApp` and verify the main-menu title and wallet are visible.
+- Workflow uploads emulator screenshot and logcat evidence as a 14-day artifact, including on failures when files were captured.
+- This is automated launch/UI smoke coverage, not yet automated full gameplay. Next extension: deterministic gameplay test hooks/scenarios for player movement, enemy approach/attacks, boss phases, and combat outcomes, then screenshot checkpoints for arena/loadout/shop.
+- Actual first workflow execution and artifact review are pending; do not claim emulator testing has passed until the run completes successfully.
+
+
+## Android Emulator QA — gameplay-route expansion
+
+- First automated run exposed a stale main-menu widget assertion: the test expected the old `ARCHERO: SOUND EDITION` title after the home-hub redesign. Updated it to the actual `ARCHERO · SOUND EDITION` title; no assertion was weakened.
+- Expanded `integration_test/app_smoke_test.dart` to launch the real app, open hero selection, choose the unlocked starter hero, enter world/stage selection, start stage 1, verify the live arena and pause control, perform a touch drag, activate the special-skill control, and assert no Flutter exception.
+- Changed the emulator workflow to capture a screenshot and logcat even when the integration test fails, preserving debugging evidence.
+- Emulator test execution still pending on the latest commits. It will not be marked passed until the new run completes.
+
+
+## Deterministic gameplay scenario batch — in progress
+
+Branch: `feature/visual-overhaul-home-hub`
+
+Implemented and pushed:
+- Added a stable `player-actor` widget key to the actual rendered hero sprite so automated UI tests can measure its position.
+- Upgraded `integration_test/app_smoke_test.dart`: the Android route now records the hero's rendered center before and after a touch drag and asserts measurable horizontal and vertical movement, instead of merely performing a gesture.
+- Added `test/gameplay_scenarios_test.dart` with deterministic outcome scenarios using the same pure gameplay resolvers used by `GameScreen`:
+  - bounded player movement and dodge-window activation;
+  - arrow advancement and enemy collision followed by a deterministic critical hit and HP calculation;
+  - survival versus lethal enemy damage, coin-drop and score outcomes;
+  - player projectile damage, dodge protection, and invulnerability;
+  - lethal player damage through dying to game-over lifecycle;
+  - boss health thresholds, phase-specific volley size/damage, and fan projectile directions.
+
+Commits on this branch:
+- `de31683da812def3389c7f5826f5552cc41ed4d6` — stable rendered player actor key.
+- `49d222c3f8b0ef5326e5b6790a9d078bf2bd8ac4` — measured drag assertion in emulator integration test.
+- `e06028eefcdbe8abde14f2cb3582d166bae7deef` — initial deterministic scenario suite.
+- `0a74747d49eb3f853ee76c0400ab9c2780f7127b` — corrected survival-vs-lethal expectations in scenario suite.
+
+Verification:
+- The earlier Android Emulator QA run `43514468588` was still running its emulator integration step on the older commit `529c9ab66ae61e4622c11e48e55fc541fd2d098b`; it does not include the new measured-position assertion or scenario suite.
+- Unit/widget tests and Android emulator validation for the latest commits are **pending**. Do not mark this batch verified until CI runs on the latest branch head and the emulator job passes.
+- The deterministic suite verifies the combat/lifecycle resolver outcomes in isolation; it is not a substitute for full end-to-end enemy-hit/death/boss gameplay automation. Next work: expose minimal read-only diagnostic state or deterministic test fixtures at the GameScreen boundary, then drive those real game-loop outcomes in integration tests without changing production balance or weakening assertions.
+
+### Exact resume point
+1. Check the CI runs triggered by commit `0a74747d49eb3f853ee76c0400ab9c2780f7127b`; inspect and fix any failing scenario or integration assertion.
+2. Confirm the Android emulator test measures actual rendered hero movement and review the uploaded screenshot/logcat artifact.
+3. Add deterministic GameScreen-level scenarios for enemy projectile impact, player death animation/game-over, and boss phase/volley transitions; keep test-only controls isolated from release gameplay.
+4. Update this file with exact latest SHA, run IDs, outcomes, and remaining gaps before moving to the next gameplay batch.
+
+
+## القائمة التفصيلية الرسمية للمهمات
+
+تم حفظ القائمة التفصيلية الكاملة التي أرسلها المستخدم بتاريخ 2026-11-14 في الملف DETAILED_GAME_ROADMAP.md، وتشمل الأقسام 1 إلى 10 وجميع البنود الفرعية وترقيمها كما وردت، بما في ذلك الاختبارات النهائية وضمان الجودة. هذا الملف هو المرجع التفصيلي المعتمد للتنفيذ. يجب تحديث حالة البنود فيه أو تسجيلها في هذا الملف دون تغيير نص المتطلبات أو ترقيمها.
+
+
+## المهمة 1.1.1 — مراجعة جميع ملفات المشروع الحالية وتحديد وظيفة كل ملف
+
+الحالة: 🟢 مكتملة توثيقياً.
+
+- تمت مراجعة شجرة Git الحالية على الفرع `feature/visual-overhaul-home-hub` عند commit المرجعي `82c51c65606fb67bec32f9ea7e1aec9c36eacabd`.
+- شمل الجرد جميع الملفات المتتبعة وعددها **166 ملفاً**: إعدادات الجذر، 3 ملفات CI/CD، كود `lib/`، الأصول الرسومية، الاختبارات، الاختبار التكاملي، وإعداد iOS.
+- أُنشئ `PROJECT_FILE_INVENTORY.md` وفيه جدول يحدد وظيفة كل ملف، مع ملاحظات بنيوية ومخاطر/نقاط تحتاج انتباهاً.
+- Commit الجرد: `777b1ad651624c8a7a6f434c01091535ac66db10`.
+- لم تُجرَ أي إعادة هيكلة أو تغييرات على منطق اللعب ضمن هذا البند.
+- لم تُعلن نتائج اختبارات أو CI على أنها ناجحة؛ الجرد وثائقي، وتشغيل CI ليس شرطاً لإثبات وظيفة كل ملف.
+- أبرز الملاحظات: `lib/main.dart` أصبح نقطة دخول رفيعة؛ `game_screen.dart` ما زال منسق الجولة الكبير؛ وحدات العرض والقتال والحفظ والاقتصاد مفصولة بدرجات متفاوتة؛ تسجيل الأصول في `pubspec.yaml` انتقائي؛ و`ios/Runner/Info.plist` شبه فارغ (بايت واحد).
+
+رابط الجرد: https://github.com/fadimatar112211-bit/Archero_fm/blob/feature/visual-overhaul-home-hub/PROJECT_FILE_INVENTORY.md
+
+**نطاق التنفيذ:** اكتمل 1.1.1 فقط. لم يبدأ 1.1.2 ولم تُغيّر حالته.
+
+
+## المهمة 1.1.2 — فصل أنظمة اللاعب عن نظام القتال
+
+الحالة: 🟡 نُفّذ الفصل المعماري الأولي؛ التحقق الآلي من أحدث commit قيد الانتظار.
+
+- أُضيف `lib/player_system.dart` كواجهة نطاق موحدة لنظام اللاعب، وتجمع الوصول إلى ملف البطل وإحصاءات بدء الجولة، وحركة اللاعب، واختيار الهدف، وإنشاء رمية الأسهم، وتحديث مقذوفات اللاعب.
+- أصبحت شاشة اللعب `lib/game_screen.dart` تستدعي `PlayerSystem` بدلاً من استيراد تفاصيل `hero_rules.dart` و`player_movement.dart` و`player_attack.dart` و`player_projectiles.dart` و`combat_targeting.dart` و`combat_collision.dart` مباشرة.
+- أخفى الحدّ الجديد أنواع هندسة القتال `CombatPoint` و`CombatCircle` عن شاشة اللعبة؛ أصبحت واجهة اللاعب تتعامل مع `PlayerTarget` و`PlayerArrowState` و`PlayerArrowUpdate`.
+- بقيت حسابات الضرر والتصادم المشتركة وقواعد توقيت القتال ضمن وحدات القتال، ولم تُنقل إلى نظام اللاعب. كما بقيت واجهات اللعبة وسلوك الأبطال والأسلحة والمعدات والاقتصاد دون حذف أو تغيير مقصود.
+- أُضيف `test/player_system_test.dart` لاختبار تهيئة البطل والحركة واختيار الهدف وإنشاء الأسهم وتحديثها/تصادمها.
+- حُدّث `PROJECT_FILE_INVENTORY.md` ليشمل ملف نظام اللاعب الجديد والاختبار.
+
+Commits:
+- `54b17f261e71be0e459abb7ccca11086ff61428f` — إضافة واجهة نظام اللاعب.
+- `59bf87d48254ede6677cc3303d3be946007d53b2` — توصيل شاشة اللعب بواجهة نظام اللاعب.
+- `474b7ceece056766f31fb2c5c66851b5f642d966` — إصلاح تأهيل اعتماديات هندسة القتال داخل الواجهة.
+- `5dd6a2fb19173327c4b37804f806ca727c65cb05` — اختبارات واجهة نظام اللاعب.
+- `8570606dc966b8fc67d2647b05fe7d7967e87f83` — تحديث جرد الملفات.
+
+**معيار الإغلاق:** لا تُعلن المهمة مكتملة نهائياً إلا بعد نجاح تحليل Dart واختبارات Flutter على أحدث commit، ومراجعة عدم وجود استيرادات مباشرة من تفاصيل اللاعب/هندسة القتال في `game_screen.dart`.
+
+
+### تحقق إضافي للمهمة 1.1.2 — 2026-11-14
+
+- تمت مراجعة imports ومراجع `game_screen.dart` بعد آخر commit: لا يستورد الشاشة أيّاً من `hero_rules.dart` أو `player_movement.dart` أو `player_attack.dart` أو `player_projectiles.dart` أو `combat_targeting.dart` أو `combat_collision.dart`، ولا تستخدم أنواع `CombatPoint`/`CombatCircle` أو دوال الحساب الداخلية مباشرة. جميع نقاط الاتصال الست الخاصة بالبطل/الحركة/التصويب/السهام تمر عبر `PlayerSystem`.
+- تحقق ساكن من حالات الاختبار الأربع المضافة: قيم ملف البطل والإحصاءات، حدود السحب ونافذة المراوغة، اختيار الهدف وتكوين volley، وتقدم السهم واكتشاف الاصطدام.
+- CI على آخر commit وقت التحديث `1cec1204649940d8358d95a66fefed3c800bdc78`: Flutter CI run `43522963763` ما زال قيد التنفيذ عند خطوة الاختبارات؛ Android Emulator QA run `43522963831` ما زال قيد التنفيذ عند الاختبارات. لذلك لا توجد نتيجة نجاح نهائية بعد، ولا نغلق البند قبل ظهورها.
+- روابط المتابعة: https://github.com/fadimatar112211-bit/Archero_fm/actions/runs/43522963763 و https://github.com/fadimatar112211-bit/Archero_fm/actions/runs/43522963831
+
+
+## اتفاقية أسلوب التنفيذ والتحقق — 2026-11-14
+
+تم الاتفاق على اعتماد تحقق مرحلي أسرع من دون تقليل الجودة:
+- بعد كل بند فرعي: مراجعة الكود، تحليل Dart والفحوص الساكنة، واختبارات الوحدة المستهدفة المرتبطة بالتعديل؛ لا يُشغّل المحاكي تلقائياً بعد كل بند.
+- بعد كل مجموعة مترابطة: اختبارات تكامل مناسبة للتحقق من تفاعل الأنظمة.
+- اختبار Android Emulator عند اكتمال مجموعة كبيرة ذات تغييرات مؤثرة على التشغيل/الواجهات/التفاعل، أو عندما يكون ضرورياً لإثبات سلوك لا تغطيه الاختبارات الأخرى.
+- بعد كل مهمة رئيسية: تحقق شامل مناسب لنطاقها، مع المحاكي عند الحاجة.
+- قبل إعلان الجاهزية النهائية للعبة: اختبار شامل لمسارات اللعب الأساسية والتقدم والواجهات على المحاكي/الأجهزة المستهدفة وتوثيق الأدلة.
+- لا تُضعف الاختبارات لتسريع العمل، ولا يُعد نجاح التحليل أو اختبارات الوحدة أو بناء APK وحده إثباتاً لنجاح تجربة اللعب الفعلية.
+- تُجمع التغييرات الصغيرة المترابطة لتقليل تكرار تشغيل المحاكي، مع إصلاح أي فشل حقيقي قبل البناء عليه.
+
+### نتيجة التحقق الحالية للمهمة 1.1.2
+- Commit الإصلاح: `91def16058cc59b03c65da0664dbf519c5ebb6e2` (تصحيح اتجاهات التوقع في اختبار رشقة الزعيم؛ لم يتغير منطق القتال).
+- Flutter CI: التشغيلان `43523460948` و`43523468168` اكتملَا بنجاح على SHA نفسه؛ التحليل والاختبارات وبناء Android debug APK نجحت.
+- Android Emulator QA: التشغيلان `43523467923` و`43523460818` ما زالا قيد التنفيذ عند خطوة تشغيل التطبيق على المحاكي؛ خطوات التحليل واختبارات الوحدة والواجهات نجحت بالفعل.
+- وفق الاتفاقية الجديدة، لا يُشترط تشغيل المحاكي لكل بند فرعي. ننتظر نتيجة التشغيل الحالي لأنه بدأ بالفعل، ثم يُعتمد مستوى الاختبار المطلوب لكل دفعة بحسب طبيعة التغيير.
+- لا يُسجّل نجاح اختبار المحاكي قبل اكتماله بنتيجة `success`.
+
+
+## المهمة 1.1.3 — فصل نظام الأعداء عن نظام الزعماء (قيد التنفيذ)
+
+بدأ التنفيذ على الفرع `feature/visual-overhaul-home-hub` انطلاقاً من commit `3e61f1a55a128d1cad992f8055d0405c793eaa6a`.
+
+الدفعة الأولى:
+- فصل إنشاء كيان الزعيم إلى `lib/boss_spawn.dart عبر `createBossForStage`، وأصبح `lib/enemy_spawn.dart` مسؤولاً عن موجات الأعداء العاديين فقط.
+- أُضيف توجيه إنشاء المرحلة في `GameScreen` بحيث يختار مولّد الزعيم أو مولّد الأعداء حسب نوع المرحلة، مع الحفاظ على مسار موجات التحدي.
+- أُضيفت اختبارات منفصلة لإنشاء الزعيم، وعُدلت اختبارات مولّد الأعداء لتثبت أنه لا ينشئ زعيماً.
+- حُدّث جرد الملفات ليشمل ملف إنشاء الزعيم واختباره.
+
+ما تبقى لإكمال 1.1.3:
+- فصل قرارات حركة الزعيم عن ذكاء الأعداء العاديين.
+- فصل قواعد هجمات الزعيم وضرر التلامس والهجوم المساحي عن `EnemyAttackRules`.
+- فصل دورة تحديث الزعيم ومقذوفاته عن حلقة تحديث الأعداء في `GameScreen` مع إبقاء واجهات العرض وحالة الجولة متوافقة.
+- إضافة اختبارات تغطي تفاعل دورة الزعيم مع اللاعب ومراحل الزعيم، ثم مراجعة التكامل بين النظامين.
+
+التحقق:
+- لم تُشغّل اختبارات Flutter بعد لهذه الدفعة؛ يلزم تشغيل التحليل والاختبارات المستهدفة قبل اعتمادها.
+- وفق اتفاقية التحقق المرحلي، لا يُطلب Android Emulator بعد هذه الدفعة الصغيرة؛ يُجمع مع تحقق مجموعة التغييرات المتكاملة أو عند الحاجة لإثبات سلوك لا تغطيه الاختبارات الآلية.
+- لا تُعتبر المهمة 1.1.3 مكتملة، ولا يتغير نص القائمة التفصيلية أو ترقيمها.
+
+
+### ضبط تشغيل Android Emulator حسب اتفاقية التحقق المرحلي
+- عُدّل `.github/workflows/android-emulator-qa.yml` ليعمل عبر `workflow_dispatch` فقط؛ لم يعد يبدأ تلقائياً مع كل push أو تحديث PR.
+- تبقى Flutter CI والتحليل والاختبارات الآلية تعمل تلقائياً، ويُشغّل المحاكي يدوياً عند اكتمال مجموعة مترابطة أو مهمة رئيسية/عندما يلزم إثبات سلوك فعلي.
+- هذا التعديل يطبق الاتفاقية المتفق عليها ويمنع تكرار اختبار المحاكي لكل بند صغير.
+
+
+### استكمال المهمة 1.1.3 — فصل حركة الزعيم والتحقق من فشل الدفعة الأولى
+
+- اكتُشف فشل Flutter CI رقم 43526188017 واختبار Android QA رقم 43526188031 على commit 133a207؛ التحليل نجح لكن الاختبارات فشلت بسبب بقاء اختبار قديم داخل enemy_spawn_test يتوقع أن موجة الأعداء تعيد زعيماً في المرحلة 15، وهو سلوك أزيل عمداً عند فصل مولّد الزعيم.
+- نُقل التحقق من صحة HP والسرعة المتدرجة للزعيم إلى test/boss_spawn_test.dart (حيث كان الاختبار المكافئ موجوداً بالفعل)، وحُذف التوقع المتعارض من test/enemy_spawn_test.dart. Commit: 4dfd191f9fdb32f2ca4b620c1aa491e9524b37da.
+- فُصلت قرارات حركة الزعيم عن enemy_ai.dart إلى lib/boss_movement.dart، وأصبحت enemy_ai.dart تحوي سلوك الأعداء العاديين فقط. GameScreen يوجّه حركة الزعيم إلى decideBossMovement وحركة بقية الأنواع إلى decideEnemyMovement. Commits: b079990560928bace2b8e22949f08531bede5350، 76b0e9dfda4a870fd9c844f759b002da3ecd909b، 3276eef30a26e989fd6f422caac782b71cb312db.
+- أُضيفت اختبارات مستقلة لحركة الزعيم في test/boss_movement_test.dart، وحُدّثت اختبارات enemy_ai لاختبار الأنواع العادية فقط. Commits: bdda8ad86febdd2a2203ae30e75141aa7e53f5ac و f4191ee46007b1a18f1dab44b5aefd1967e6815f.
+- Flutter CI على commit bdda8ad86febdd2a2203ae30e75141aa7e53f5ac بدأ (run 43526757888)؛ لم تكن نتيجته النهائية معروفة عند آخر تحديث. يلزم التأكد من أحدث تشغيل بعد آخر commit.
+- لم يُشغّل Android Emulator؛ التغييرات ما زالت ضمن دفعة إعادة هيكلة واختبارات وحدة، وفق الاتفاقية لا يُشغّل المحاكي بعد كل بند صغير.
+- ما يزال ضمن 1.1.3 فصل قواعد هجمات الزعيم وضرر التلامس/الهجوم المساحي عن EnemyAttackRules، ثم عزل دورة تحديث الزعيم ومقذوفاته عن حلقة الأعداء، وإضافة اختبارات تكامل للنظامين. المهمة غير مكتملة.
+
+
+### استكمال المهمة 1.1.3 — فصل قواعد هجمات الزعيم
+
+- أُنشئ `lib/boss_attack_rules.dart` لنقل قواعد ضرر تماس الزعيم، وضرر/نطاق الهجوم المساحي، ومدة الهجوم، والتبريد حسب الغضب، وإطار إصابة التلامس.
+- أصبحت `EnemyAttackRules` مقتصرة على ضرر وتوقيت هجمات الأعداء العاديين؛ لم تعد تحتوي فروعاً أو ثوابت خاصة بالزعيم.
+- وُصلت `GameScreen` بالقواعد المنفصلة مع الحفاظ على قيم الضرر والتوقيت والنطاق السابقة.
+- أُضيف `test/boss_attack_rules_test.dart`، ونُقحت اختبارات `enemy_attack_rules_test.dart` لتتحقق من قواعد الأعداء العاديين فقط.
+- أُصلح أيضاً خطأ تحليل Dart في اختيار حركة boss مقابل enemy: أصبح كل فرع يقرأ نوع القرار الصحيح بدلاً من دمج نوعين مختلفين في متغير مشترك. وأزيل import غير مستخدم من `boss_movement.dart`.
+- فشل Flutter CI run `43526823027` على SHA `b1dae4390a60f11b7aea57ee95504511a951db29` في التحليل بسبب getters `speedMultiplier` و`angle` التي استُنتج نوعها `Object`، إضافة إلى import غير مستخدم. تم إصلاح السببين في commits هذه الدفعة؛ لم تُشغّل الاختبارات في ذلك الـ run بسبب فشل التحليل.
+- جرد الملفات محدّث: 60 ملف lib و60 ملف test. هذه الأعداد هي الحالية في الجرد، ولا تغيّر حقيقة أن عدد 166 يخص لقطة الجرد التاريخية الأصلية.
+- لم يُشغّل Android Emulator؛ ما زلنا ضمن دفعة إعادة هيكلة داخلية ولا حاجة لتشغيله بعد كل تعديل صغير.
+- المتبقي في 1.1.3: عزل دورة تحديث الزعيم ومقذوفاته عن حلقة الأعداء، وإضافة اختبارات تفاعل/تكامل تغطي اللاعب ومراحل الزعيم، ثم إعادة التحقق من CI. المهمة ما زالت قيد التنفيذ.
+
+
+### استكمال المهمة 1.1.3 — عزل دورة الزعيم ومقذوفاته
+
+- أُنشئ `lib/boss_system.dart` كطبقة محاكاة مستقلة للزعيم، وتدير انتقال مراحل الصحة، وتبريد الرشقات، وإنشاء المقذوفات، وجدولة الهجوم المساحي وإطار تأثيره، وقرار الحركة.
+- أصبحت `GameScreen` تستدعي `_updateBossEnemy` للزعيم ثم تتابع الأعداء العاديين في مسار منفصل؛ أزيلت تفاصيل `BossCombat` و`BossMovement` وتكوين الرشقات من حلقة الأعداء العاديين.
+- أُضيفت `test/boss_system_test.dart` لاختبار انتقال المرحلة الثالثة والرشقات الخماسية، بدء الهجوم المساحي وتوقيت إصابته مرة واحدة، وعدم إطلاقه خارج النطاق.
+- فُصل تحديث مقذوفات الزعيم عن مقذوفات الأعداء عبر `_advanceBossProjectiles` و`_advanceEnemyProjectiles`. تُعلّم مقذوفات الزعيم بحقل `source: boss`، وتستخدم واجهة حركة مخصصة `advanceBossProjectile` في `boss_projectiles.dart` مع إعادة استخدام هندسة التصادم المشتركة.
+- أُضيف اختبار حركة/اصطدام مقذوف الزعيم في `test/boss_projectiles_test.dart`. حُوفظ على نفس بيانات العرض داخل قائمة المقذوفات المشتركة كي لا تتغير واجهة الساحة أو بنية checkpoint.
+- فُصلت آثار الإنذار المرئي للرشقة والهجوم المساحي والإنذار الدوري، للحفاظ على توقيتات وتأثيرات كل حدث كما كانت قبل إعادة الهيكلة.
+- حُدّث `PROJECT_FILE_INVENTORY.md` إلى 61 ملفاً في `lib/` و61 في `test/`. رقم 166 يبقى عدد لقطة الجرد التاريخية الأصلية فقط.
+- تحقق Flutter CI run `43528380450` (إعادة تشغيل job على commit `9cf799b6bcc611e68875942c754627ba68b972a0`): نجح تحليل Dart ونجحت جميع اختبارات Flutter، ونجحت خطوة توليد ملفات Android؛ كان بناء APK ما يزال جارياً عند آخر قراءة. التعديل اللاحق في `GameScreen` فصل فقط مؤثرات الإنذار المتزامنة للحفاظ على الأثر السابق.
+- لم يُشغّل Android Emulator؛ لم نصل بعد إلى نقطة إغلاق المهمة، وسيُشغّل يدوياً عند اكتمال المجموعة المتكاملة إذا أمكن، وفق اتفاقية عدم تشغيله بعد كل بند صغير.
+- ما يزال مطلوباً: إضافة اختبار تكاملي يربط ناتج دورة الزعيم بتأثير الهجوم على اللاعب (الضرر/المراوغة/الحماية المؤقتة)، مراجعة كل مسارات التفاعل بعد الفصل، ثم تحقق CI نهائي على أحدث commit. المهمة 1.1.3 ما زالت قيد التنفيذ.
+
+
+### حزمة 1.1 — بدء فصل تكوين الغرف عن شاشة اللعب (1.1.4)
+
+- أُنشئ `lib/room_encounter.dart` كمنسّق مستقل يربط عنوان الغرفة بمولّد الزعيم أو موجة الأعداء العاديين.
+- نُقل منطق اختيار مولّد المواجهة من `GameScreen` إلى `RoomEncounterFactory`، وأصبحت الشاشة تطلب roster الغرفة من النظام المستقل.
+- نُقل أيضاً إنشاء تعزيزات غرفة التحدي إلى المصنع، مع جعل `hp` و`maxHp` يتدرجان معاً بنسبة 1.2 حتى تبقى نسبة شريط الصحة صحيحة. احتُفظ بسلوك التوجيه الحالي حتى عندما يكون stage+2 غرفة زعيم.
+- أُضيفت `test/room_encounter_test.dart` لاختبار توجيه غرف الزعماء، وموجات الأعداء العادية، وثبات البذرة العشوائية، وتعزيزات التحدي.
+- جرى تحديث جرد الملفات إلى 62 ملفاً في `lib/` و62 في `test/`.
+- هذا جزء من تنفيذ حزمة 1.1 وليس إغلاقاً للمهمة 1.1.4؛ ما زال يلزم فصل انتقالات الغرف/الحالة ومراجعة بقية البنود.
+
+
+### حزمة 1.1 — اتساق القراءة والكتابة ومنع تعارض الحفظ (1.1.11)
+
+- اكتُشفت فجوة في `ProgressStore`: الكتابات كانت متسلسلة، لكن `load()` لم يكن ينتظر الكتابة الجارية، ما قد يسمح بقراءة snapshot جزئي أثناء كتابة عدة مفاتيح أو rollback.
+- أصبح `ProgressStore.load()` ينتظر طابور الكتابات قبل قراءة التقدم، وبذلك يرى snapshot مكتمل بعد نجاح الكتابة أو استعادة القيم السابقة بعد فشلها.
+- أُضيف اختبار بتخزين مؤجل يثبت أن القراءة لا تكتمل قبل انتهاء كتابة snapshot، ثم تتحقق من القيم النهائية.
+- هذا يعالج جزءاً من 1.1.11؛ ما زالت مراجعة جميع عمليات الشراء والحفظ المتزامنة مطلوبة قبل إغلاق البند.
+
+
+## حزمة التنفيذ المتكاملة للمهمة 1.1
+
+طلب المستخدم تنفيذ جميع بنود 1.1 كحزمة مترابطة بدلاً من التوقف وطلب الإذن بعد كل بند. يُنفّذ العمل على دفعات داخل الحزمة مع احترام الاعتماديات، والاختبارات المستهدفة لكل تغيير، ثم اختبار تكامل شامل عند اكتمال 1.1. لا يعني أسلوب الحزمة وضع علامة اكتمال على بند قبل التحقق منه.
+
+### تدقيق أولي لحالة بنود 1.1
+
+| البند | الحالة الحالية | ما تحقق / ما تبقى |
+|---|---|---|
+| 1.1.1 | مكتمل | جرد الملفات ووظائفها موثق؛ تُحدّثه الإضافات الجديدة. |
+| 1.1.2 | مكتمل | واجهة PlayerSystem وفصل استدعاءات اللاعب عن تفاصيل القتال مع اختبارات. |
+| 1.1.3 | قيد الإكمال | فصل spawn والحركة وقواعد هجمات الزعيم ومحاكاته ومقذوفاته؛ يلزم التحقق النهائي من التكامل وCI. |
+| 1.1.4 | قيد التنفيذ | RoomFlow وRoomLayout موجودان، وأُضيف RoomEncounterFactory لفصل إنشاء مواجهات الغرف؛ يلزم فصل بقية تنسيق انتقالات الغرف عن GameScreen. |
+| 1.1.5 | يحتاج تدقيق تكامل | WeaponCatalog وEquipmentCatalog منفصلان ولكل منهما اختبارات؛ يلزم التحقق من فصل إدارة التجهيز والتأثيرات وعدم بقاء اقتران غير ضروري. |
+| 1.1.6 | يحتاج تدقيق تكامل | ShopEconomy وResourceEconomy موجودان مع اختبارات معاملات؛ يلزم مراجعة مسارات واجهات المتجر والشراء المتزامن. |
+| 1.1.7 | يحتاج تدقيق تكامل | ProgressStore وRunCheckpointStore منفصلان عن الواجهات؛ يلزم تدقيق كل عمليات القراءة/الكتابة والاستعادة والفشل. |
+| 1.1.8 | قيد التنفيذ | GameRunState وGameRunSession موجودان؛ يلزم استكمال نقل الحالة التي ما زالت مملوكة مباشرة إلى GameScreen وتوحيد مصدرها. |
+| 1.1.9 | يحتاج تحقق تكامل | GameRunLifecycle يوحّد حالات active/paused/reward/dying/gameOver؛ يلزم مراجعة جميع الانتقالات والمسارات غير المتزامنة. |
+| 1.1.10 | يحتاج تدقيق | GameTimerRegistry ينظم المؤقتات؛ يلزم جرد الحركات والمؤثرات والأحداث ومصادر التوقيت المتبقية. |
+| 1.1.11 | قيد التنفيذ | الكتابات متسلسلة، وأُضيف انتظار القراءة لطابور الكتابة لمنع رؤية snapshot جزئي؛ يلزم اختبار تعارض معاملات الشراء والحفظ الأخرى. |
+| 1.1.12 | يحتاج تحقق | GameRunSession يلغي المؤقتات وGameScreen يزيل observer ويتخلص من AnimationController؛ يلزم تدقيق انتقالات الشاشات والأصوات والحوارات والمهام غير المتزامنة. |
+| 1.1.13 | لم يُغلق | يلزم قياس الأداء واستهلاك الذاكرة وتحديد نقاط الاختناق قبل أي تحسينات. |
+| 1.1.14 | لم يُغلق | يلزم تشغيل مجموعة اختبارات الانحدار والتكامل كاملة ثم Android Emulator QA في نقطة التحقق النهائية للحزمة. |
+
+### تغييرات الحزمة الأخيرة
+
+- `352e9b704a8c690e1d05489fa64eafe875d46d26`: إنشاء `lib/room_encounter.dart`.
+- `0a45a65e3581d0eaa801f2e7c60edd5f1830e8ef`: اختبارات RoomEncounterFactory.
+- `9fbcdbedb6c2d8d5ddaef7e7a5669eb049eec5ec`: توصيل GameScreen بمصنع مواجهات الغرف.
+- `699b7dcc76ecbdb9e17250c874a6e3f6eb41453d`: تحديث جرد الملفات إلى 62 lib و62 test.
+- `f343f04dc49263ab242805ef3369eba376edd717`: جعل ProgressStore.load ينتظر اكتمال طابور الحفظ.
+- `e43b617f2f99158b18b22a63a55384276034b7b3`: اختبار عدم قراءة snapshot جزئي.
+- لم يُشغّل المحاكي بعد؛ يُحجز للتحقق المجمّع عند اكتمال حزمة 1.1.
+- CI على commit `1d1287d2ae1896f7a353c2474807d5780fa6afd2` بدأ، ولم تكن نتيجته النهائية معروفة عند كتابة هذا التحديث.
+
+
+### حزمة 1.1 — استكمال توحيد حالة الجولة (1.1.8)
+
+- نُقلت قيمة تبريد عوائق الغرفة `roomHazardCooldownTicks` من متغير مستقل داخل `GameScreen` إلى `GameRunState`، فأصبحت جزءاً من مصدر حالة الجولة الموحد.
+- أصبح `captureRunCheckpoint` يلتقط القيمة مباشرة من حالة الجولة، وأصبح restore يعيدها إلى الحالة نفسها بدلاً من إعادة تعيينها من واجهة الشاشة.
+- حُدّثت اختبارات الحالة والـ checkpoint للتحقق من القيمة الافتراضية وذهابها وعودتها مع الحفظ.
+- لم يتغير سلوك التبريد أثناء اللعب أو عند الانتقال بين الغرف؛ التغيير يزيل ازدواجية ملكية الحالة فقط.
+
+
+### حزمة 1.1 — فصل قواعد أخطار الغرف ومراجعة كلفة الإطار (1.1.4 و1.1.13)
+
+- أُنشئ `lib/room_hazard_system.dart` لنقل حساب إصابة اللاعب بالعائق البيئي، مهلة التبريد، المراوغة، تقليل الضرر، والحد الأدنى للصحة من حلقة شاشة اللعب إلى نظام مستقل.
+- أصبحت `GameScreen` تمرر لقطة الحالة إلى النظام وتعرض أثر المراوغة أو الإصابة فقط؛ حُوفظ على ضرر العائق 8 نقاط، والتبريد 45 tick، وعلى تأثير تقليل ضرر المعدات.
+- أُضيفت اختبارات `test/room_hazard_system_test.dart` لتغطية الضرر والمراوغة والتبريد والمعدات والإحداثيات غير الصالحة.
+- خُزّن تخطيط الغرفة الحالي في حالة الشاشة ويُحدّث عند تبديل المرحلة/المواجهة، بدلاً من إنشاء `RoomLayout` وقوائم props جديدة كل 16ms أثناء تحديث القتال.
+- أصبحت إحصاءات المعدات `EquipmentStats` تُحسب مرة واحدة عند الحاجة لكل جلسة لعب، بدلاً من إعادة تجميعها مع كل اصطدام في كل إطار؛ التجهيز لا يتغير أثناء الجولة.
+- جرى تحديث جرد الملفات إلى 63 ملفاً في `lib/` و63 في `test/`.
+- هذه تحسينات ضمن الحزمة، ولا تُغلق مراجعة الأداء حتى قياس التشغيل على Android Emulator.
+
+
+### تحديث حزمة 1.1 — حفظ الجولة وتحسينات الغرف والأداء (2026-11-14)
+
+- عُزلت قواعد أخطار الغرف في `RoomHazardSystem`؛ الشاشة تتولى عرض أثر الإصابة/المراوغة فقط، مع الحفاظ على ضرر 8 نقاط وتبريد 45 tick ومراعاة تقليل ضرر المعدات.
+- خُزّن تخطيط الغرفة الحالي بدلاً من إعادة بناء `RoomLayout` وقوائم العناصر في كل إطار 16ms، وحُسبت إحصاءات المعدات مرة واحدة لكل جلسة بدلاً من إعادة تجميعها داخل حلقات الاصطدام.
+- أُصلح `ProgressStore.save` كي يتعامل مع قيمة SharedPreferences قديمة/تالفة من نوع غير صحيح أثناء حفظ snapshot، مع اختبار يغطي استعادة الحفظ.
+- أصبحت حالة نقص الجواهر في `ResourceEconomy` مميزة باسم `insufficientGems` بدلاً من إعادة استخدام حالة نقص العملات.
+- أُضيف حفظ checkpoint قبل الخروج من الجولة إلى القائمة؛ وعند العودة إلى القائمة الرئيسية يعاد تحميل checkpoint عبر `RouteAware` حتى يظهر خيار متابعة الجولة.
+- أُضيفت تغطية إلى اختبار Android integration لمسار بدء اللعبة، تحريك اللاعب، المهارة الخاصة، الإيقاف، الخروج مع حفظ الجولة، وظهور خيار استكمال الجولة.
+- أُضيف تسجيل تشخيصي لفشل حفظ/مسح checkpoint، بدلاً من إسكات فشل المسح أو طباعته فقط.
+- هذه التغييرات لا تُغلق 1.1 بعد؛ يلزم تشغيل Flutter CI على آخر SHA، ثم تشغيل Android Emulator QA على النسخة النهائية ومعالجة أي خطأ يظهر.
+
+### مراجعة بنود 1.1 المتبقية قبل التحقق النهائي
+
+- 1.1.3: فصل إنشاء الأعداء والزعماء، الحركة، قواعد الهجوم، دورة الزعيم والمقذوفات منفذ مع اختبارات؛ ينتظر تحقق CI والتكامل النهائي.
+- 1.1.4: فصل توجيه الغرف وإنشاء المواجهات وأخطار البيئة عن الشاشة؛ ينتظر اختبار انتقالات المراحل والغرف على المحاكي.
+- 1.1.5: WeaponCatalog وEquipmentCatalog منفصلان، والواجهة تستدعيهما بشكل مستقل؛ يلزم تحقق مسارات التجهيز وتأثيرات السلاح والمعدات في تشغيل فعلي.
+- 1.1.6: ShopEconomy وResourceEconomy منفصلان عن واجهة المتجر؛ عمليات الشراء محمية بقفل `_walletBusy` وتُحفظ قبل اعتماد الرصيد؛ يلزم اختبار واجهة الشراء على الجهاز.
+- 1.1.7: ProgressStore وRunCheckpointStore منفصلان عن الواجهات، مع استعادة القيم التالفة وحفظ/استكمال الجولة؛ ينتظر اختبار الاستئناف على الجهاز.
+- 1.1.8: حالة الجولة الأساسية، قوائم الكيانات، المهارات وتبريد عوائق الغرفة مملوكة لـ GameRunState ضمن GameRunSession؛ يلزم التأكد من round-trip النهائي للـ checkpoint.
+- 1.1.9: GameRunLifecycle يدير اللعب والإيقاف والمكافآت والاختيار والموت والنهاية؛ ينتظر اختبار الانتقالات الفعلية في Android integration.
+- 1.1.10: GameTimerRegistry يملك المؤقتات الدورية للقتال والتصويب والتبريد والحفظ، وAnimationController يُتلف مع الشاشة؛ ينتظر اختبار الخروج/إعادة الدخول.
+- 1.1.11: ProgressStore يصفّ عمليات snapshot، ينتظر القراءة الكتابة القائمة، ويتراجع عند فشل الكتابة؛ عمليات المتجر تمنع التداخل عبر قفل الواجهة؛ يلزم التحقق النهائي من سيناريوهات الحفظ المتزامنة.
+- 1.1.12: إزالة WidgetsBindingObserver والمؤقتات وAnimationController عند التخلص من الشاشة، وحفظ checkpoint قبل الخروج؛ ينتظر اختبار المحاكي.
+- 1.1.13: أزيلت إعادة إنشاء RoomLayout وإعادة تجميع EquipmentStats من كل إطار؛ يلزم قياس الأداء الفعلي وقراءة logcat على المحاكي.
+- 1.1.14: لا تُغلق قبل نجاح التحليل والاختبارات وبناء APK واختبار Android Emulator النهائي على آخر SHA.
+
+### CI بعد آخر دفعة كود
+
+- التشغيلان `43531159398` و`43531150752` كانا على SHA `6128ee519acd564956ccdc9193936b890ed860d7`، وهي نسخة سبقت إضافة تسجيل تشخيصي لمسح checkpoint.
+- لا يُسجّل نجاح نهائي لأي منهما؛ كانا قيد التنفيذ عند آخر قراءة، ويجب الاعتماد على تشغيل CI جديد بعد اكتمال كل تغييرات الحزمة.
+
+
+- آخر commit يضم تدقيق 1.1 وتحسينات حفظ checkpoint: `6b14603fa07c0edd4c713b259e2cd34cb3a40690`. يجري الآن تشغيل تحقق تلقائي على هذا التغيير؛ لا تُعلن المهمة مكتملة قبل نجاحه وAndroid Emulator QA.
+
+
+### إصلاح توافق checkpoints القديمة واختبار تشغيل المحاكي
+
+- كشف تدقيق التوافق أن checkpoint الإصدار 1 المحفوظ قبل إضافة `hazardCooldownTicks` كان سيُرفض عند الاستعادة. أصبح الحقل اختيارياً عند القراءة وتُستخدم قيمة 0 للملفات القديمة، مع اختبار رجعي يحاكي snapshot سابقاً.
+- أول محاولة Android Emulator QA لم تصل إلى تشغيل التطبيق: محاكي API 35 استغرق 578 ثانية للإقلاع، ثم انقطع ADB عند أمر ضبط `accelerometer_rotation` داخل action قبل تنفيذ سكربت الاختبار. لم تكن هذه نتيجة فشل للعبة؛ لم يبدأ اختبار التطبيق ولم يُنتج artifact.
+- ستُعاد المحاولة بمحاكي أخف (API 34 / Pixel 2)، مع مهلة إقلاع أطول وإلغاء تعطيل الحركات من action لتجنب أمر ADB الإضافي الذي انقطع بعد الإقلاع.
+
+
+## Session checkpoint — 2026-11-14 (restore milestone-only emulator QA)
+
+### Mission 1.1 verification state
+- Active branch: `feature/visual-overhaul-home-hub`; PR #48 remains open against `feature/procedural-game-audio-v2`.
+- Current branch head before this checkpoint: `05db3c388cc3f709cd7deb7c16855d54cec14ade`.
+- Latest Flutter CI run `43533338264` completed successfully on that exact head. Dart analysis, the full Flutter unit/widget test suite, Android project generation, and Android debug APK build passed.
+- Android Emulator QA run `43533331309` completed as **cancelled**. Its setup, dependency installation, Dart analysis, and Flutter tests passed; the emulator step itself was cancelled, so there is still no successful on-device gameplay evidence.
+- Inspection found a temporary `push` trigger had been left in `.github/workflows/android-emulator-qa.yml`, despite the agreed manual-only milestone policy. Removed that push trigger; the workflow now uses `workflow_dispatch` only. Flutter CI remains automatic.
+- No emulator success is claimed. The emulator workflow must be started manually at the next planned milestone; this session's connector does not expose a workflow-dispatch action.
+
+### Exact next action
+1. Manually dispatch Android Emulator QA on the latest branch head after this workflow-only correction; inspect whether the integration test launches the app, completes the resume/exit flow, and uploads screenshot/logcat evidence.
+2. If the emulator fails before the app launches, diagnose the runner/ADB issue separately from game-code failures. If the app test fails, inspect the integration-test and logcat evidence and fix the actual regression.
+3. Continue the remaining 1.1.3–1.1.14 integration audit only after the emulator evidence is available; do not mark the 1.1 package complete until all listed requirements have evidence.
+4. Keep PR #48 open; do not merge or change its base/head without user direction.
+
+## استكمال تدقيق 1.1 — تحسين كلفة محاكاة المقذوفات (2026-11-14)
+
+- روجعت حدود ملكية حالة الجولة: GameRunSession يملك GameRunState وGameRunLifecycle وGameTimerRegistry، وحقول الجولة/قوائم الكيانات في GameScreen أصبحت getters/setters إلى الحالة الموحدة؛ لا تزال الشاشة منسقاً لحلقة المحاكاة وليست مفصولة بالكامل عن كل قرار لعب.
+- روجعت دورة الغرف: RoomFlow.complete يحدد الغرفة التالية ومكافأة المرحلة، وRoomEncounterFactory ينشئ roster المواجهة، وRoomLayout يُخزّن في الشاشة ويُحدّث عند الانتقال بدلاً من إعادة إنشائه كل إطار.
+- روجعت أنظمة التجهيز والاقتصاد والحفظ: WeaponCatalog وEquipmentCatalog منفصلان، ShopEconomy وResourceEconomy مستقلان عن الواجهة، الشراء في القائمة محمي بقفل _walletBusy ويُحفظ قبل اعتماد الرصيد، وProgressStore وRunCheckpointStore يصفّان الكتابة وتنتظر القراءة اكتمال الكتابة.
+- روجعت دورة الحياة: GameRunLifecycle يضبط حالات اللعب/الإيقاف/المكافآت/الاختيار/الموت/النهاية، وGameRunSession.dispose ينهي الجولة ويلغي المؤقتات، وGameScreen.dispose يزيل observer ويتخلص من AnimationController.
+- تحسين فعلي في lib/game_screen.dart: أصبح تكوين قائمة أهداف الأسهم مرة واحدة لكل tick بدلاً من إعادة بنائها لكل سهم، وأزيلت خريطة مؤقتة كانت تُنشأ لكل مقذوف في كل tick. لم تتغير معادلات الحركة أو التصادم أو الضرر.
+- Commit التحسين: d944e45d9a93471e63fc56596507a450bee5f626.
+- بدأ Flutter CI تلقائياً على هذا الـ SHA: run 43581212334؛ كان قيد التنفيذ عند تحديث هذا السجل، لذلك لا نسجل نجاح تحليل أو اختبارات أو APK قبل ظهور النتيجة النهائية.
+- لا تزال 1.1.13 بحاجة إلى قياس أداء فعلي وقراءة logcat على المحاكي، ولا تزال 1.1.14 بحاجة إلى نجاح CI النهائي واختبار Android Emulator على آخر SHA. لم تُغلق المهمة 1.1، ولم يتغير PR #48 أو فرعه الأساسي.
+
+- مزامنة التوثيق بعد التحسين: جرى تحديث سجل التقدم وجرد الملفات على الفرع نفسه؛ آخر commit توثيق قبل تشغيل CI التالي هو 61aa43d9b9d4eb026d606f8a05793a5233d3c991. تشغيلات CI السابقة أُلغيت بسبب وصول commits توثيقية متتابعة أثناء تشغيلها، لذا يلزم اعتماد تشغيل واحد مستقر على آخر SHA.

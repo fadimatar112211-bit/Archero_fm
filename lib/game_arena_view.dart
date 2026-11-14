@@ -42,6 +42,7 @@ class GameArenaView extends StatelessWidget {
     required this.onArenaSizeChanged,
     required this.onPlayerDrag,
     required this.onPause,
+    required this.onExitToMenu,
     required this.onSpecialSkill,
     required this.onCollectChest,
   });
@@ -74,6 +75,7 @@ class GameArenaView extends StatelessWidget {
   final void Function(double width, double height) onArenaSizeChanged;
   final void Function(Offset delta, double width, double height) onPlayerDrag;
   final VoidCallback onPause;
+  final VoidCallback onExitToMenu;
   final VoidCallback onSpecialSkill;
   final VoidCallback onCollectChest;
 
@@ -179,7 +181,7 @@ class GameArenaView extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (isPaused) GamePauseOverlay(onResume: onPause),
+                  if (isPaused) GamePauseOverlay(onResume: onPause, onExit: onExitToMenu),
                   if (showMysteryChest)
                     MysteryChestOverlay(onCollect: onCollectChest),
                 ],

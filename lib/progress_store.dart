@@ -92,6 +92,9 @@ class ProgressStore {
   }
 
   static Future<Map<String, int>> load() async {
+    // Reads must observe a complete committed snapshot, never the middle of
+    // another save's multi-key write/rollback sequence.
+    await _pendingWrite;
     final prefs = await _preferencesProvider();
     return {
       for (final key in _defaults.keys)
@@ -176,7 +179,8 @@ class ProgressStore {
     final nextWrite = _pendingWrite.then((_) async {
       final prefs = await _preferencesProvider();
       final previousValues = <String, int>{
-        for (final key in values.keys) key: _validValue(key, prefs.getInt(key)),
+        for (final key in values.keys)
+          key: _validValue(key, _readStoredInt(prefs, key)),
       };
       final writtenKeys = <String>[];
 
