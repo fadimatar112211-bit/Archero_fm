@@ -699,11 +699,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           FilledButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const ArcheroSoundApp()),
-                (route) => false,
-              );
+              Navigator.popUntil(context, (route) => route.isFirst);
             },
             child: const Text('العودة للقائمة الرئيسية'),
           ),
@@ -1116,12 +1112,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                               ),
                               TextButton(
                                 onPressed: () {
-                                  Navigator.pushAndRemoveUntil(
+                                  Navigator.popUntil(
                                     context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const ArcheroSoundApp(),
-                                    ),
-                                    (route) => false,
+                                    (route) => route.isFirst,
                                   );
                                 },
                                 child: const Text('الخروج إلى القائمة'),
