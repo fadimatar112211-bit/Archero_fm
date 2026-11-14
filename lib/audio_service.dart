@@ -1,5 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 
+import 'game_diagnostics.dart';
+
 /// Owns the game's audio output so UI and combat code do not depend on
 /// audioplayers directly. Sound failures are intentionally non-fatal.
 class GameAudio {
@@ -21,7 +23,8 @@ class GameAudio {
     try {
       await _player.stop();
       await _player.play(UrlSource(url));
-    } catch (_) {
+    } catch (error, stackTrace) {
+      GameDiagnostics.record('audio.play', error, stackTrace);
       // Gameplay must remain available when audio or network access fails.
     }
   }
@@ -29,7 +32,8 @@ class GameAudio {
   static Future<void> dispose() async {
     try {
       await _player.dispose();
-    } catch (_) {
+    } catch (error, stackTrace) {
+      GameDiagnostics.record('audio.dispose', error, stackTrace);
       // Cleanup must not interrupt screen teardown.
     }
   }
