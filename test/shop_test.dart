@@ -12,6 +12,7 @@ void main() {
     heroAtkUpgrade = 0;
     bestStage = 1;
     bestScore = 0;
+    progressSaveOperation = saveProgress;
   });
 
   testWidgets('health purchase deducts coins, upgrades health and persists',
@@ -67,4 +68,22 @@ void main() {
     expect(prefs.getInt('coins'), isNull);
     expect(prefs.getInt('hpUpgrade'), isNull);
   });
+  testWidgets('purchase rolls back when saving progress fails', (tester) async {
+    progressSaveOperation = () async {
+      throw StateError('simulated storage failure');
+    };
+
+    await tester.pumpWidget(const ArcheroSoundApp());
+    await tester.tap(find.text('صحة +25 (50)'));
+    await tester.pumpAndSettle();
+
+    expect(globalCoins, 150);
+    expect(heroHpUpgrade, 0);
+    expect(find.text('رصيدك: 150'), findsOneWidget);
+    expect(
+      find.text('تعذّر حفظ عملية الشراء. لم يتم اعتماد الترقية، حاول مجدداً.'),
+      findsOneWidget,
+    );
+  });
+
 }
