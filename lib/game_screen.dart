@@ -9,6 +9,7 @@ import 'game_progress.dart';
 import 'enemy_wave_factory.dart';
 import 'arrow_volley_factory.dart';
 import 'player_movement.dart';
+import 'enemy_damage_resolver.dart';
 import 'sprite_sheet_frame.dart';
 import 'world_theme.dart';
 
@@ -289,23 +290,20 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
         final dy = (arrow['y'] as double) - (enemy['y'] as double);
         if (sqrt(dx * dx + dy * dy) <
             (enemy['radius'] as double) + 5) {
-          final hitType = switch (enemy['type']) {
-            'tank' => 'metalHit',
-            'stalker' => 'shadowHit',
-            'runner' => 'sparkHit',
-            'boss' => 'bossHit',
-            _ => 'impact',
-          };
+          final hitType = EnemyDamageResolver.effectFor(
+            enemy['type'] as String,
+          );
           combatEffects.add({
             'x': enemy['x'], 'y': enemy['y'], 'type': hitType, 'life': 16,
           });
-          enemy['hitTicks'] = 9;
-          enemy['hp'] = (enemy['hp'] as double) -
-              (35 * attackPowerMultiplier);
+          final defeated = EnemyDamageResolver.applyDamage(
+            enemy: enemy,
+            damage: 35 * attackPowerMultiplier,
+          );
           arrows.removeAt(i);
           arrowRemoved = true;
 
-          if ((enemy['hp'] as double) <= 0) {
+          if (defeated) {
             defeatedSprites.add({'x': enemy['x'], 'y': enemy['y'], 'type': enemy['type'], 'boss': enemy['type'] == 'boss', 'life': 24});
             combatEffects.add({
               'x': enemy['x'], 'y': enemy['y'],
