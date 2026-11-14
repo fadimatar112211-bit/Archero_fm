@@ -4,6 +4,9 @@ name: Android Emulator QA
 # not after every small subtask. Flutter CI continues to run automatically.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/visual-overhaul-home-hub
 
 permissions:
   contents: read
