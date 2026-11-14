@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 export 'combat_painters.dart';
 export 'hero_catalog.dart';
 import 'audio_service.dart';
+import 'game_diagnostics.dart';
 import 'combat_painters.dart';
 import 'hero_catalog.dart';
 import 'progress_store.dart';
@@ -13,7 +14,16 @@ import 'world_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final progress = await ProgressStore.load();
+  GameDiagnostics.install();
+
+  late final Map<String, int> progress;
+  try {
+    progress = await ProgressStore.load();
+  } catch (error, stackTrace) {
+    GameDiagnostics.record('progress.load', error, stackTrace);
+    progress = ProgressStore.defaults;
+  }
+
   globalCoins = progress['coins']!;
   heroHpUpgrade = progress['hpUpgrade']!;
   heroAtkUpgrade = progress['atkUpgrade']!;
@@ -32,13 +42,20 @@ int heroAtkUpgrade = 0;
 int bestStage = 1;
 int bestScore = 0;
 
-Future<void> saveProgress() => ProgressStore.save(
-  coins: globalCoins,
-  hpUpgrade: heroHpUpgrade,
-  atkUpgrade: heroAtkUpgrade,
-  bestStage: bestStage,
-  bestScore: bestScore,
-);
+Future<void> saveProgress() async {
+  try {
+    await ProgressStore.save(
+      coins: globalCoins,
+      hpUpgrade: heroHpUpgrade,
+      atkUpgrade: heroAtkUpgrade,
+      bestStage: bestStage,
+      bestScore: bestScore,
+    );
+  } catch (error, stackTrace) {
+    GameDiagnostics.record('progress.save', error, stackTrace);
+    rethrow;
+  }
+}
 
 
 class ArcheroSoundApp extends StatelessWidget {
