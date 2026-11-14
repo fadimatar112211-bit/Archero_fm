@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 export 'combat_painters.dart';
 export 'hero_catalog.dart';
 export 'game_screen.dart';
+export 'game_progress.dart';
 export 'sprite_sheet_frame.dart';
 import 'audio_service.dart';
 import 'game_progress.dart';
