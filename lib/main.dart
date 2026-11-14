@@ -85,7 +85,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     });
 
     try {
-      await saveProgress();
+      await progressSaveOperation();
     } catch (_) {
       // Roll back the in-memory purchase when persistence fails. This keeps
       // the visible balance and upgrade values consistent with saved data.
