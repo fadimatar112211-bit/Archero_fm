@@ -38,9 +38,9 @@
 - `lib/progress_store.dart` و`lib/main.dart`: توفير قيم افتراضية آمنة عند فشل تحميل التقدم، وتسجيل أخطاء الحفظ وإعادة تمريرها حتى يمكن للمتجر التراجع عن الشراء.
 - `lib/main.dart`: إزالة التنفيذ المباشر لمشغل الصوت والإبقاء على واجهة توافقية `playRealSound`، وتوحيد شراء ترقيات الصحة والهجوم في مسار واحد مع rollback عند فشل حفظ التقدم.
 - `test/audio_service_test.dart`: اختبار أن معرف الصوت غير المعروف لا يرمي خطأ.
-- `test/hero_catalog_test.dart` و`test/game_diagnostics_test.dart` و`test/enemy_wave_factory_test.dart` و`test/arrow_volley_factory_test.dart` و`test/player_movement_test.dart` و`test/enemy_damage_resolver_test.dart` و`test/enemy_attack_factory_test.dart` و`test/coin_pickup_resolver_test.dart`: اختبارات مستقلة للوحدات المفصولة.
+- `test/hero_catalog_test.dart` و`test/game_diagnostics_test.dart` و`test/enemy_wave_factory_test.dart` و`test/arrow_volley_factory_test.dart` و`test/player_movement_test.dart` و`test/enemy_damage_resolver_test.dart` و`test/enemy_attack_factory_test.dart` و`test/coin_pickup_resolver_test.dart` و`test/game_screen_lifecycle_test.dart`: اختبارات مستقلة للوحدات المفصولة ودورة حياة شاشة اللعب.
 - `test/shop_test.dart`: إضافة حالة تحقّق أن عملية الشراء تتراجع إذا فشل الحفظ.
-- `.github/workflows/build-apk.yml`: عدم حذف مجلد Android الموجود. ينشأ المشروع فقط إذا كانت ملفات منصة Android غائبة، حفاظاً على أي إعدادات مخصصة مستقبلية.
+- `.github/workflows/build-apk.yml`: عدم حذف مجلد Android الموجود. ينشأ المشروع فقط إذا كانت ملفات منصة Android غائبة، مع إلغاء تشغيلات البناء القديمة عند وجود تشغيل أحدث على الفرع نفسه.
 - `PROJECT_FILE_INVENTORY.md`: وثيقة جرد الملفات ووظائفها المرجعية؛ لا تُعد وحدها إنجازاً لأي بند من بنود الفصل المعماري 1.1–1.16.
 
 ## التحقق المطلوب قبل الإغلاق
