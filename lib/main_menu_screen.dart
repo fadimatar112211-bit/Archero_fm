@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -16,6 +17,9 @@ import 'resource_economy.dart';
 import 'achievement_system.dart';
 import 'game_settings_screen.dart';
 
+final RouteObserver<ModalRoute<void>> mainMenuRouteObserver =
+    RouteObserver<ModalRoute<void>>();
+
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
 
@@ -23,7 +27,8 @@ class MainMenuScreen extends StatefulWidget {
   State<MainMenuScreen> createState() => _MainMenuScreenState();
 }
 
-class _MainMenuScreenState extends State<MainMenuScreen> {
+class _MainMenuScreenState extends State<MainMenuScreen> with RouteAware {
+  ModalRoute<void>? _subscribedRoute;
   final ScrollController _menuScrollController = ScrollController();
   final GlobalKey _shopSectionKey = GlobalKey();
   final GlobalKey _equipmentSectionKey = GlobalKey();
@@ -37,7 +42,26 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of<void>(context);
+    if (route != null && route != _subscribedRoute) {
+      if (_subscribedRoute != null) {
+        mainMenuRouteObserver.unsubscribe(this);
+      }
+      _subscribedRoute = route;
+      mainMenuRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPopNext() {
+    unawaited(_loadRunCheckpoint());
+  }
+
+  @override
   void dispose() {
+    mainMenuRouteObserver.unsubscribe(this);
     _menuScrollController.dispose();
     super.dispose();
   }

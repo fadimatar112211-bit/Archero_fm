@@ -83,6 +83,7 @@ class ArcheroSoundApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
+      navigatorObservers: [mainMenuRouteObserver],
       home: const MainMenuScreen(),
     );
   }

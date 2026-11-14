@@ -52,5 +52,16 @@ void main() {
     await tester.tap(find.text('المهارة الخاصة'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(tester.takeException(), isNull);
+
+    // Leaving a fresh run must persist its checkpoint before the route closes,
+    // then refresh the main-menu resume action when the root route reappears.
+    await tester.tap(find.byIcon(Icons.pause));
+    await tester.pump();
+    expect(find.text('متابعة اللعب'), findsOneWidget);
+    await tester.tap(find.text('الخروج إلى القائمة'));
+    await tester.pumpAndSettle(const Duration(milliseconds: 100));
+    expect(find.text('ARCHERO · SOUND EDITION'), findsOneWidget);
+    expect(find.textContaining('متابعة الجولة المحفوظة'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

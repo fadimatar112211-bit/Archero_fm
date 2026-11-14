@@ -220,6 +220,12 @@ class _GameScreenState extends State<GameScreen>
     if (runSession.isRestored) unawaited(saveProgressSafely());
   }
 
+  Future<void> _exitToMenu() async {
+    await _persistRunCheckpoint();
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
   Future<void> _persistRunCheckpoint() async {
     if (gameOverShown ||
         (runLifecycle.phase != GameRunPhase.active &&
@@ -1238,6 +1244,7 @@ class _GameScreenState extends State<GameScreen>
         onArenaSizeChanged: _syncArenaSize,
         onPlayerDrag: _handlePlayerDrag,
         onPause: _togglePause,
+        onExitToMenu: _exitToMenu,
         onSpecialSkill: _useSpecialSkill,
         onCollectChest: _collectChest,
       );
