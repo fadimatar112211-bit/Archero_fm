@@ -459,39 +459,33 @@ class _GameScreenState extends State<GameScreen>
       final isBossProjectile = shot['source'] == 'boss';
       if (isBossProjectile != bossProjectiles) continue;
 
-      final motion = {
-        'x': shot['x'] as double,
-        'y': shot['y'] as double,
-        'velocityX': shot['vx'] as double,
-        'velocityY': shot['vy'] as double,
-        'life': shot['life'] as int,
-        'targetX': playerX,
-        'targetY': playerY,
-        'arenaWidth': arenaWidth,
-        'arenaHeight': arenaHeight,
-      };
+      final x = shot['x'] as double;
+      final y = shot['y'] as double;
+      final velocityX = shot['vx'] as double;
+      final velocityY = shot['vy'] as double;
+      final life = shot['life'] as int;
       final step = bossProjectiles
           ? advanceBossProjectile(
-              x: motion['x'] as double,
-              y: motion['y'] as double,
-              velocityX: motion['velocityX'] as double,
-              velocityY: motion['velocityY'] as double,
-              life: motion['life'] as int,
-              targetX: motion['targetX'] as double,
-              targetY: motion['targetY'] as double,
-              arenaWidth: motion['arenaWidth'] as double,
-              arenaHeight: motion['arenaHeight'] as double,
+              x: x,
+              y: y,
+              velocityX: velocityX,
+              velocityY: velocityY,
+              life: life,
+              targetX: playerX,
+              targetY: playerY,
+              arenaWidth: arenaWidth,
+              arenaHeight: arenaHeight,
             )
           : advanceEnemyProjectile(
-              x: motion['x'] as double,
-              y: motion['y'] as double,
-              velocityX: motion['velocityX'] as double,
-              velocityY: motion['velocityY'] as double,
-              life: motion['life'] as int,
-              targetX: motion['targetX'] as double,
-              targetY: motion['targetY'] as double,
-              arenaWidth: motion['arenaWidth'] as double,
-              arenaHeight: motion['arenaHeight'] as double,
+              x: x,
+              y: y,
+              velocityX: velocityX,
+              velocityY: velocityY,
+              life: life,
+              targetX: playerX,
+              targetY: playerY,
+              arenaWidth: arenaWidth,
+              arenaHeight: arenaHeight,
             );
       shot['x'] = step.x;
       shot['y'] = step.y;
@@ -692,6 +686,13 @@ class _GameScreenState extends State<GameScreen>
     _advanceBossProjectiles();
     _advanceEnemyProjectiles();
 
+    // Build the target snapshot once per simulation tick, not once per arrow.
+    final arrowTargets = enemies.map((enemy) => PlayerTarget(
+      x: enemy['x'] as double,
+      y: enemy['y'] as double,
+      radius: enemy['radius'] as double,
+    )).toList(growable: false);
+
     // تحريك الأسهم وفحص اصطدامها بالأعداء.
     for (int i = arrows.length - 1; i >= 0; i--) {
       final arrow = arrows[i];
@@ -702,11 +703,7 @@ class _GameScreenState extends State<GameScreen>
         velocityY: arrow['vy'] as double,
         arenaWidth: arenaWidth,
         arenaHeight: arenaHeight,
-        targets: enemies.map((enemy) => PlayerTarget(
-          x: enemy['x'] as double,
-          y: enemy['y'] as double,
-          radius: enemy['radius'] as double,
-        )).toList(growable: false),
+        targets: arrowTargets,
       );
       arrow['x'] = movement.x;
       arrow['y'] = movement.y;
