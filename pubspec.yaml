@@ -22,8 +22,4 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/player.svg
-    - assets/enemy_melee.svg
-    - assets/enemy_ranged.svg
-    - assets/boss.svg
-    - assets/spritesheets/
+    - assets/
