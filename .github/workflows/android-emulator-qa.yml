@@ -52,12 +52,11 @@ jobs:
       - name: Run app on Android emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 34
           target: google_apis
           arch: x86_64
-          profile: pixel_6
-          emulator-boot-timeout: 600
-          disable-animations: true
+          profile: pixel_2
+          emulator-boot-timeout: 900
           script: |
             mkdir -p artifacts
             test_status=0

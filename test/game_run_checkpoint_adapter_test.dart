@@ -49,6 +49,24 @@ void main() {
     expect(restored.coins.single['x'], 120.0);
   });
 
+  test('restores version-1 checkpoints created before room hazard cooldown existed', () {
+    final current = captureRunCheckpoint(
+      heroType: 2,
+      run: GameRunState(initialStage: 3),
+    );
+    final legacy = RunCheckpoint(
+      heroType: current.heroType,
+      stage: current.stage,
+      state: Map<String, Object?>.from(current.state)
+        ..remove('hazardCooldownTicks'),
+    );
+
+    final restored = restoreRunCheckpointState(legacy);
+    expect(restored, isNotNull);
+    expect(restored!.stage, 3);
+    expect(restored.roomHazardCooldownTicks, 0);
+  });
+
   test('rejects structurally invalid run state instead of restoring partial data', () {
     final checkpoint = RunCheckpoint(
       heroType: 1,

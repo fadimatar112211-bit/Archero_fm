@@ -52,7 +52,8 @@ RunCheckpoint captureRunCheckpoint({
 GameRunState? restoreRunCheckpointState(RunCheckpoint checkpoint) {
   final data = checkpoint.state;
   try {
-    final hazardCooldown = data['hazardCooldownTicks'];
+    // Older version-1 checkpoints predate room hazards; treat the field as zero.
+    final hazardCooldown = data['hazardCooldownTicks'] ?? 0;
     final lastDamageAt = data['lastDamageAt'];
     if (hazardCooldown is! int || hazardCooldown < 0 ||
         data['arenaInitialized'] is! bool ||
