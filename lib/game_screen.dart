@@ -10,6 +10,7 @@ import 'enemy_wave_factory.dart';
 import 'arrow_volley_factory.dart';
 import 'player_movement.dart';
 import 'enemy_damage_resolver.dart';
+import 'enemy_attack_factory.dart';
 import 'sprite_sheet_frame.dart';
 import 'world_theme.dart';
 
@@ -344,14 +345,12 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       var areaAttackTicks = (enemy['areaAttackTicks'] as int?) ?? 0;
       if (areaAttackTicks > 0) areaAttackTicks--;
       if (type == 'ranged' && distance >= 105 && distance <= 255 && attackCooldown == 0) {
-        final shotAngle = atan2(dy, dx);
-        enemyProjectiles.add({
-          'x': enemy['x'], 'y': enemy['y'],
-          // مقذوف أبطأ قليلاً ليمنح اللاعب وقتاً أوضح للمراوغة.
-          'vx': cos(shotAngle) * 3.8, 'vy': sin(shotAngle) * 3.8,
-          'damage': 6.0,
-          'life': 110,
-        });
+        enemyProjectiles.add(EnemyAttackFactory.rangedProjectile(
+          enemyX: (enemy['x'] as num).toDouble(),
+          enemyY: (enemy['y'] as num).toDouble(),
+          targetX: playerX,
+          targetY: playerY,
+        ));
         attackTicks = 12;
         attackCooldown = 108;
         combatEffects.add({'x': enemy['x'], 'y': enemy['y'], 'type': 'rangedShot', 'life': 12});
