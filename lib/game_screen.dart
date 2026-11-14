@@ -8,6 +8,7 @@ import 'combat_painters.dart';
 import 'game_progress.dart';
 import 'enemy_wave_factory.dart';
 import 'arrow_volley_factory.dart';
+import 'player_movement.dart';
 import 'sprite_sheet_frame.dart';
 import 'world_theme.dart';
 
@@ -671,12 +672,16 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                 if (isPaused || showMysteryChest || gameOverShown) return;
                 setState(() {
                   if (details.delta.distanceSquared > 0.25) playerMoveTicks = 8;
-                  playerX = (playerX + details.delta.dx)
-                      .clamp(22.0, width - 22.0)
-                      .toDouble();
-                  playerY = (playerY + details.delta.dy)
-                      .clamp(105.0, height - 35.0)
-                      .toDouble();
+                  final nextPosition = PlayerMovement.applyDelta(
+                    position: Offset(playerX, playerY),
+                    delta: details.delta,
+                    minX: 22,
+                    maxX: width - 22,
+                    minY: 105,
+                    maxY: height - 35,
+                  );
+                  playerX = nextPosition.dx;
+                  playerY = nextPosition.dy;
                 });
               },
               child: Stack(
