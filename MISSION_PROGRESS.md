@@ -877,3 +877,14 @@ Commits:
 2. If the emulator fails before the app launches, diagnose the runner/ADB issue separately from game-code failures. If the app test fails, inspect the integration-test and logcat evidence and fix the actual regression.
 3. Continue the remaining 1.1.3–1.1.14 integration audit only after the emulator evidence is available; do not mark the 1.1 package complete until all listed requirements have evidence.
 4. Keep PR #48 open; do not merge or change its base/head without user direction.
+
+## استكمال تدقيق 1.1 — تحسين كلفة محاكاة المقذوفات (2026-11-14)
+
+- روجعت حدود ملكية حالة الجولة: GameRunSession يملك GameRunState وGameRunLifecycle وGameTimerRegistry، وحقول الجولة/قوائم الكيانات في GameScreen أصبحت getters/setters إلى الحالة الموحدة؛ لا تزال الشاشة منسقاً لحلقة المحاكاة وليست مفصولة بالكامل عن كل قرار لعب.
+- روجعت دورة الغرف: RoomFlow.complete يحدد الغرفة التالية ومكافأة المرحلة، وRoomEncounterFactory ينشئ roster المواجهة، وRoomLayout يُخزّن في الشاشة ويُحدّث عند الانتقال بدلاً من إعادة إنشائه كل إطار.
+- روجعت أنظمة التجهيز والاقتصاد والحفظ: WeaponCatalog وEquipmentCatalog منفصلان، ShopEconomy وResourceEconomy مستقلان عن الواجهة، الشراء في القائمة محمي بقفل _walletBusy ويُحفظ قبل اعتماد الرصيد، وProgressStore وRunCheckpointStore يصفّان الكتابة وتنتظر القراءة اكتمال الكتابة.
+- روجعت دورة الحياة: GameRunLifecycle يضبط حالات اللعب/الإيقاف/المكافآت/الاختيار/الموت/النهاية، وGameRunSession.dispose ينهي الجولة ويلغي المؤقتات، وGameScreen.dispose يزيل observer ويتخلص من AnimationController.
+- تحسين فعلي في lib/game_screen.dart: أصبح تكوين قائمة أهداف الأسهم مرة واحدة لكل tick بدلاً من إعادة بنائها لكل سهم، وأزيلت خريطة مؤقتة كانت تُنشأ لكل مقذوف في كل tick. لم تتغير معادلات الحركة أو التصادم أو الضرر.
+- Commit التحسين: d944e45d9a93471e63fc56596507a450bee5f626.
+- بدأ Flutter CI تلقائياً على هذا الـ SHA: run 43581212334؛ كان قيد التنفيذ عند تحديث هذا السجل، لذلك لا نسجل نجاح تحليل أو اختبارات أو APK قبل ظهور النتيجة النهائية.
+- لا تزال 1.1.13 بحاجة إلى قياس أداء فعلي وقراءة logcat على المحاكي، ولا تزال 1.1.14 بحاجة إلى نجاح CI النهائي واختبار Android Emulator على آخر SHA. لم تُغلق المهمة 1.1، ولم يتغير PR #48 أو فرعه الأساسي.
