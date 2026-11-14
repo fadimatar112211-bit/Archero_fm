@@ -9,6 +9,8 @@ class ProgressStore {
     'bestScore': 0,
   };
 
+  static Map<String, int> get defaults => Map.unmodifiable(_defaults);
+
   static int _validValue(String key, int? value) {
     final fallback = _defaults[key]!;
     final candidate = value ?? fallback;
