@@ -71,29 +71,50 @@ class MainMenuScreen extends StatefulWidget {
 }
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
-  Future<void> _buyHealth() async {
-    if (globalCoins < 50) {
-      _message('عملاتك لا تكفي لشراء ترقية الصحة.');
-      return;
-    }
-    setState(() {
-      globalCoins -= 50;
-      heroHpUpgrade += 25;
-    });
-    await saveProgress();
-    await playRealSound('coin');
-  }
+  Future<void> _buyHealth() => _purchaseUpgrade(
+    cost: 50,
+    apply: () => heroHpUpgrade += 25,
+    rollback: () => heroHpUpgrade -= 25,
+    insufficientMessage: 'عملاتك لا تكفي لشراء ترقية الصحة.',
+  );
 
-  Future<void> _buyAttack() async {
-    if (globalCoins < 70) {
-      _message('عملاتك لا تكفي لشراء ترقية الهجوم.');
+  Future<void> _buyAttack() => _purchaseUpgrade(
+    cost: 70,
+    apply: () => heroAtkUpgrade += 15,
+    rollback: () => heroAtkUpgrade -= 15,
+    insufficientMessage: 'عملاتك لا تكفي لشراء ترقية الهجوم.',
+  );
+
+  Future<void> _purchaseUpgrade({
+    required int cost,
+    required void Function() apply,
+    required void Function() rollback,
+    required String insufficientMessage,
+  }) async {
+    if (globalCoins < cost) {
+      _message(insufficientMessage);
       return;
     }
+
     setState(() {
-      globalCoins -= 70;
-      heroAtkUpgrade += 15;
+      globalCoins -= cost;
+      apply();
     });
-    await saveProgress();
+
+    try {
+      await saveProgress();
+    } catch (_) {
+      // Roll back the in-memory purchase when persistence fails. This keeps
+      // the visible balance and upgrade values consistent with saved data.
+      globalCoins += cost;
+      rollback();
+      if (!mounted) return;
+      setState(() {});
+      _message('تعذّر حفظ عملية الشراء. لم يتم اعتماد الترقية، حاول مجدداً.');
+      return;
+    }
+
+    if (!mounted) return;
     await playRealSound('coin');
   }
 
