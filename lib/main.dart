@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'audio_service.dart';
 import 'progress_store.dart';
 import 'world_theme.dart';
 
@@ -36,26 +36,6 @@ Future<void> saveProgress() => ProgressStore.save(
   bestScore: bestScore,
 );
 
-final AudioPlayer globalAudioPlayer = AudioPlayer();
-
-Future<void> playRealSound(String type) async {
-  const soundUrls = <String, String>{
-    'shoot': 'https://www.soundjay.com/buttons/sounds/button-16.mp3',
-    'hit': 'https://www.soundjay.com/buttons/sounds/button-3.mp3',
-    'coin': 'https://www.soundjay.com/buttons/sounds/button-7.mp3',
-    'special': 'https://www.soundjay.com/buttons/sounds/beep-07.mp3',
-  };
-
-  final url = soundUrls[type];
-  if (url == null) return;
-
-  try {
-    await globalAudioPlayer.stop();
-    await globalAudioPlayer.play(UrlSource(url));
-  } catch (_) {
-    // تستمر اللعبة حتى لو لم يتوفر اتصال بالإنترنت أو تعذر تحميل الصوت.
-  }
-}
 
 class ArcheroSoundApp extends StatelessWidget {
   const ArcheroSoundApp({super.key});
