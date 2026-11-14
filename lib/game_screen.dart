@@ -11,6 +11,7 @@ import 'arrow_volley_factory.dart';
 import 'player_movement.dart';
 import 'enemy_damage_resolver.dart';
 import 'enemy_attack_factory.dart';
+import 'coin_pickup_resolver.dart';
 import 'sprite_sheet_frame.dart';
 import 'world_theme.dart';
 
@@ -502,9 +503,12 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     // جمع العملات.
     var collectedCoin = false;
     for (int i = coins.length - 1; i >= 0; i--) {
-      final dx = playerX - (coins[i]['x'] as double);
-      final dy = playerY - (coins[i]['y'] as double);
-      if (sqrt(dx * dx + dy * dy) < 34) {
+      if (CoinPickupResolver.isCollected(
+        playerX: playerX,
+        playerY: playerY,
+        coinX: coins[i]['x'] as double,
+        coinY: coins[i]['y'] as double,
+      )) {
         globalCoins += 10;
         collectedCoin = true;
         coins.removeAt(i);
@@ -512,7 +516,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       }
     }
 
-    if (collectedCoin) saveProgress();
+    if (collectedCoin) unawaited(saveProgress().catchError((_) {}));
 
     if (playerHp <= 0) {
       playerHp = 0;
@@ -536,7 +540,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     stage++;
     bestStage = max(bestStage, stage);
     playerHp = min(playerMaxHp, playerHp + 35);
-    saveProgress();
+    unawaited(saveProgress().catchError((_) {}));
 
     if (stage % 2 == 0) {
       setState(() => showMysteryChest = true);
@@ -597,7 +601,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       showMysteryChest = false;
       stageTransitioning = false;
     });
-    saveProgress();
+    unawaited(saveProgress().catchError((_) {}));
     playRealSound('coin');
     _spawnEnemies();
   }
@@ -607,7 +611,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     gameOverShown = true;
     bestStage = max(bestStage, stage);
     bestScore = max(bestScore, score);
-    saveProgress();
+    await saveProgress().catchError((_) {});
     gameLoop?.cancel();
     shootLoop?.cancel();
     cooldownLoop?.cancel();
