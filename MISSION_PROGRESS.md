@@ -41,7 +41,7 @@
 - `test/hero_catalog_test.dart` و`test/game_diagnostics_test.dart` و`test/enemy_wave_factory_test.dart` و`test/arrow_volley_factory_test.dart` و`test/player_movement_test.dart` و`test/enemy_damage_resolver_test.dart` و`test/enemy_attack_factory_test.dart` و`test/coin_pickup_resolver_test.dart`: اختبارات مستقلة للوحدات المفصولة.
 - `test/shop_test.dart`: إضافة حالة تحقّق أن عملية الشراء تتراجع إذا فشل الحفظ.
 - `.github/workflows/build-apk.yml`: عدم حذف مجلد Android الموجود. ينشأ المشروع فقط إذا كانت ملفات منصة Android غائبة، حفاظاً على أي إعدادات مخصصة مستقبلية.
-- `PROJECT_FILE_INVENTORY.md`: جرد الملفات ووظائفها (المهمة 1.1.1 من الخطة السابقة).
+- `PROJECT_FILE_INVENTORY.md`: وثيقة جرد الملفات ووظائفها المرجعية؛ لا تُعد وحدها إنجازاً لأي بند من بنود الفصل المعماري 1.1–1.16.
 
 ## التحقق المطلوب قبل الإغلاق
 
